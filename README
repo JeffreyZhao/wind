@@ -2,7 +2,7 @@
 
 The core feature of Jscex is a compiler which turns a normal JavaScript function into a monadic one:
 
-    var monadicFunction = eval(builderName, function () {
+    var monadicFunction = eval(builderName, function (arg0, arg1, ...) {
         ... 
     });
 
