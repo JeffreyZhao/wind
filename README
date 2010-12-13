@@ -6,7 +6,7 @@ The core feature of Jscex is a compiler which turns a normal JavaScript function
         ... 
     });
 
-As the most common usage, we use the <code>$async</code> builder for asynchronous programming (this sample can be found in <code>samples/async/move.html</code>):
+As the most common usage, we use the $async builder for asynchronous programming (this sample can be found in samples/async/move.html):
 
     var moveAsync = eval(Jscex.compile("$async", function (e, startPos, endPos, duration) {
         for (var t = 0; t < duration; t += 50) {
@@ -67,6 +67,6 @@ We can express our algorithms linearly, the compiler would generate the code as 
         });
     };
     
-Currently <code>Jscex</code> and <code>Jscex.Async</code> are just prototypes for simplifing asynchronous programming. In theory, we can do more in Jscex with different types of builders.
+Currently Jscex and Jscex.Async are just prototypes for simplifing asynchronous programming. In theory, we can do more in Jscex with different types of builders.
 
 For more information, please search for "F#", "Computation Expressions" and "Asynchronous Workflow" in your favourite search engines.
