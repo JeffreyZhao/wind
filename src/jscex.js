@@ -106,7 +106,7 @@ Jscex.ScriptCompiler = function(builderName) {
             this.visitFor(node);
         } else if (token == "if") {
             this.visitIf(node);
-        } else if (token = "function") {
+        } else if (token == "function") {
             this.visitFunction(node);
         } else {
             alert("unrecognized node type: " + token);
