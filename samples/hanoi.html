@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Hanoi Samples</title>
+    
+    <script language="javascript" type="text/javascript" src="../src/narcissus.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex.async.js"></script>
+    <script>
+        var dishesInStick = [0, 0, 0];
+        var dishes = [];
+        var dishCount = 0;
+        
+        var bottomLength = 300;
+        var stickX = 200;
+        var stickBottom = 250;
+        var stickWidth = 6;
+        var stickHeight = 200;
+        var dishMinWidth = 50;
+        var dishIndentWidth = 20;
+        var dishHeight = 20;
+        
+        var getDishWidth = function(n) {
+            return dishMinWidth + n * dishIndentWidth;
+        }
+        
+        var getDishLeft = function(n, stick) {
+            return stickX + stick * bottomLength - getDishWidth(n) / 2;
+        }
+        
+        var getDishTop = function(level) {
+            return stickBottom - level * dishHeight;
+        }
+        
+        var init = function(n) {
+            dishCount = n;
+            dishesInStick[0] = n;
+        
+            for (var i = 0; i < 3; i++) {
+                var stick = document.createElement("div");
+                stick.style.position = "absolute";
+                stick.style.backgroundColor = "black";
+                stick.style.width = stickWidth;
+                stick.style.height = stickHeight;
+                stick.style.top = stickBottom - stickHeight;
+                stick.style.left = stickX + bottomLength * i - stickWidth / 2;
+                document.body.appendChild(stick);
+            }
+        
+            for (var i = n - 1; i >= 0; i--) {            
+                var dish = document.createElement("div");
+                dish.style.position = "absolute";
+                dish.style.backgroundColor = "red";
+                
+                dish.style.width = getDishWidth(i);
+                dish.style.height = dishHeight;
+                dish.style.top = getDishTop(dishCount - i);
+                dish.style.left = getDishLeft(i, 0);
+                dish.style.textAlign = "center";
+                dish.style.color = "white";
+                dish.innerHTML = i.toString();
+                
+                document.body.appendChild(dish);
+
+                dishes[i] = dish;
+            }
+        }
+        
+        var moveAsync = eval(Jscex.compile("$async", function(e, startPos, endPos, duration) {
+            for (var t = 0; t < duration; t += 50) {
+                e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
+                e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
+                $await(Jscex.Async.sleep(50));
+            }
+
+            e.style.left = endPos.x;
+            e.style.top = endPos.y;
+        }));
+        
+        var moveDishAsync = eval(Jscex.compile("$async", function(n, a, b) {
+            var startPos = {
+                x: getDishLeft(n, a),
+                y: getDishTop(dishesInStick[a])
+            };
+            
+            var endPos = {
+                x: getDishLeft(n, b),
+                y: getDishTop(dishesInStick[b] + 1)
+            };
+            
+            $await(moveAsync(dishes[n], startPos, endPos, 500));
+            
+            dishesInStick[a]--;
+            dishesInStick[b]++;
+        }));
+
+        var hanoiAsync = eval(Jscex.compile("$async", function(n, from, to, mid) {
+            if (n > 0) {
+                $await(hanoiAsync(n - 1, from, mid, to));
+            }
+            
+            $await(moveDishAsync(n, from, to));
+
+            if (n > 0) {
+                $await(hanoiAsync(n - 1, mid, to, from));
+            }
+        }));
+
+    </script>
+</head>
+<body>
+    <script>
+        var n = 0;
+        
+        var m = window.location.toString().match(/n=(\d)/);
+        if (m) {
+            n = parseInt(m[1], 10);
+        }
+        
+        if (n < 1 || n > 9) {
+            n = 5;
+        }
+        
+        init(n);
+        Jscex.Async.start(hanoiAsync(n - 1, 0, 2, 1));
+    </script>
+
+    <input type="button" value="Next" id="btnNext" />
+    
+</body>
+</html>
+

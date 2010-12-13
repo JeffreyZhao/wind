@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Jscex Animation</title>
+    
+    <script language="javascript" type="text/javascript" src="../src/narcissus.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex.async.js"></script>
+    
+    <script type="text/javascript">
+        var moveAsync = eval(Jscex.compile("$async", function(e, startPos, endPos, duration) {
+            for (var t = 0; t < duration; t += 50) {
+                e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
+                e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
+                $await(Jscex.Async.sleep(50));
+            }
+
+            e.style.left = endPos.x;
+            e.style.top = endPos.y;
+        }));
+        
+        var moveSquareAsync = eval(Jscex.compile("$async", function(e) {
+            $await(moveAsync(e, {x:100, y:100}, {x:400, y:100}, 1000));
+            $await(moveAsync(e, {x:400, y:100}, {x:400, y:400}, 1000));
+            $await(moveAsync(e, {x:400, y:400}, {x:100, y:400}, 1000));
+            $await(moveAsync(e, {x:100, y:400}, {x:100, y:100}, 1000));
+        }));
+    </script>
+</head>
+<body>
+    <div id="moveBox" style="background-color:blue; position:absolute; width:50px; height:50px;"></div>
+    <div id="moveSquareBox" style="background-color:red; position:absolute; width:50px; height:50px;"></div>
+    <script type="text/javascript">
+        var moveBox = document.getElementById("moveBox");
+        Jscex.Async.start(moveAsync(moveBox, {x:0, y:0}, {x:300, y:0}, 1000));
+
+        var moveSquareBox = document.getElementById("moveSquareBox");
+        Jscex.Async.start(moveSquareAsync(moveSquareBox));
+    </script>
+</body>
+</html>
+
