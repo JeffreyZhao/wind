@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Jscex Ball</title>
+    
+    <script language="javascript" type="text/javascript" src="../../src/narcissus.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
+    
+    <script type="text/javascript">
+    </script>
+</head>
+<body>
+    <div id="fps">&nbsp;</div>
+    <div id="time">&nbsp;</div>
+    <canvas id="canvas" height="400" width="400" style="border:solid 1px black; cursor:none;">
+    </canvas>
+
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext ? canvas.getContext("2d") : null;
+
+        var r = 5;
+        var br = 3;
+        var pos = {x: 200, y: 200};
+        var offset = {x: canvas.offsetLeft, y: canvas.offsetTop};
+        var playing = true;
+
+        canvas.onmousemove = function(ev) {
+            pos = {x: ev.clientX - offset.x, y: ev.clientY - offset.y};
+        }
+
+        var head = {};
+        var tail = head;
+
+        var inArea = function (pos) {
+            return (pos.x >= 0) && (pos.x <= 400) && (pos.y >= 0) && (pos.y <= 400);
+        }
+        
+        var getLength = function (p1, p2) {
+            return Math.sqrt(
+                (p1.x - p2.x) * (p1.x - p2.x) +
+                (p1.y - p2.y) * (p1.y - p2.y));
+        };
+
+        var addNode = function (node) {
+            tail.next = node;
+            node.prev = tail;
+            tail = node;
+        }
+
+        var removeNode = function (node) {
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
+            node.next = node.prev = null;
+        }
+
+        var spawnBulletAsync = eval(Jscex.compile("$async", function (f) {
+            var node = {pos: {x: 0, y: 0}};
+            addNode(node);
+            
+            for (var t = 0; inArea(node.pos) && playing; t += 20) {
+
+                $await(Jscex.Async.sleep(20));
+
+                var length = getLength(pos, node.pos);
+                if (length < r + br - 2) {
+                    alert("Time: " + (new Date() - beginTime).toString() + "ms");
+                    playing = false;
+                }
+
+                node.pos = f(t);
+            }
+
+            if (node) {
+                removeNode(node);
+            }
+        }));
+
+        var swapXY = function (pos) {
+            var t = pos.x;
+            pos.x = pos.y;
+            pos.y = t;
+        }
+
+        var randomF = function () {
+            var startPos = {x: 0, y: Math.random() * 400};
+            var endPos = {x: 400, y: Math.random() * 400};
+
+            if (Math.random() > 0.5) {
+                swapXY(startPos);
+                swapXY(endPos);
+            }
+            
+            var length = getLength(startPos, endPos);
+            var totalTime = length / (400 / 1000);
+
+            return function(t) {
+                return {
+                    x: startPos.x + (endPos.x - startPos.x) * t / totalTime,
+                    y: startPos.y + (endPos.y - startPos.y) * t / totalTime
+                };
+            };
+        }
+
+        var paintLoop = function () {
+           
+            ctx.clearRect(0, 0, 400, 400);
+
+            ctx.fillStyle = "#000000";
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+
+            if (playing) {
+                ctx.fillStyle = "#ff0000";
+                for (var node = head.next; node; node = node.next) {
+                    ctx.beginPath();
+                    ctx.arc(node.pos.x, node.pos.y, br, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            frameCount++;
+
+            setTimeout(paintLoop, 0);
+        }
+
+        paintLoop();
+
+        var frameCount = 0;
+        setInterval(function() {
+            document.getElementById("fps").innerHTML = "FPS: " + frameCount;
+            frameCount = 0;
+        }, 1000);
+
+        setInterval(function () {
+            Jscex.Async.start(spawnBulletAsync(randomF()));
+        }, 50);
+
+        var beginTime = new Date();
+        var timeDiv = document.getElementById("time");
+        var showTimeAsync = eval(Jscex.compile("$async", function () {
+            while (playing) {
+                timeDiv.innerHTML = new Date() - beginTime + "ms";
+                $await(Jscex.Async.sleep(100));
+            }
+        }));
+
+        Jscex.Async.start(showTimeAsync());
+
+    </script>
+</body>
+</html>
+
