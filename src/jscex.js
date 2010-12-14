@@ -406,11 +406,14 @@ Jscex.ScriptCompiler = function(builderName) {
     this.visitWhile = function(node) {
         var sb = this._sb;
         
-        sb.append(builderName).appendLine(".While(");
+        sb.append(builderName).appendLine(".Loop(");
         this._indentLevel++;
 
         this._appendIndents();
         sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+
+        this._appendIndents();
+        sb.appendLine("null, ");
 
         this._appendIndents();
         sb.append(builderName).appendLine(".Delay(function() {");
@@ -444,7 +447,7 @@ Jscex.ScriptCompiler = function(builderName) {
         }
         
         this._appendIndents();
-        sb.append("return ").append(builderName).appendLine(".For(");
+        sb.append("return ").append(builderName).appendLine(".Loop(");
         this._indentLevel++;
         
         this._appendIndents()

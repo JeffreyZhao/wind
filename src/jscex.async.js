@@ -26,38 +26,12 @@ Jscex.AsyncBuilder.prototype.Bind = function (task, onNormal) {
     };
 };
 
-Jscex.AsyncBuilder.prototype.While = function (condition, body) {
-    return {
-        start: function (callback) {
-            var loop = function (result) {
-                try {
-                    if (condition()) {
-                        body.start(function (type, value, target) {
-                            if (type == "normal") {
-                                loop();
-                            } else {
-                                callback("normal", value);
-                            }
-                        });
-                    } else {
-                        callback("normal", result);
-                    }
-                } catch (ex) {
-                    callback("throw", ex);
-                }
-            }
-
-            loop();
-        }
-    };
-};
-
-Jscex.AsyncBuilder.prototype.For = function (condition, update, body) {
+Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
     return {
         start: function (callback) {
             var loop = function (result, skipUpdate) {
                 try {
-                    if (!skipUpdate) {
+                    if (update && !skipUpdate) {
                         update();
                     }
 

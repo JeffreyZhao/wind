@@ -36,7 +36,7 @@
     // Pseudocode, cannot work
     var deal = function() {
         var req = new XMLHttpRequest();
-        req.open("GET", "/tool.php?s=2&m=5");
+        req.open("GET", "tool.php?s=2&m=5");
         var text = req.receive(); // cannot receive;
         var count = parseInt(text, 10); 
         
@@ -67,7 +67,7 @@
     
     var dealAsync = eval(Jscex.compile("$async", function() {
         var req = new XMLHttpRequest();
-        req.open("GET", "/tool.php?s=2&m=5");
+        req.open("GET", "tool.php?s=2&m=5");
         var text = $await(req.receiveAsync());
         var count = parseInt(text, 10);
         
