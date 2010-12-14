@@ -166,7 +166,7 @@ Jscex.Async = {
                 var eventName = "on" + ev;
                 var handler = function(ev) {
                     ele[eventName] = null;
-                    callback("normal");
+                    callback("normal", ev);
                 }
 
                 ele[eventName] = handler;
