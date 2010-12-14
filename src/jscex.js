@@ -375,16 +375,26 @@ Jscex.ScriptCompiler = function(builderName) {
         
         sb.append(builderName).appendLine(".Delay(function() {");
         this._indentLevel++;
-        
         this._appendIndents();
-        sb.append("if (").append(node.condition.getSource()).appendLine(") {");
-        this._indentLevel++;
+
+        while (true) {
+            sb.append("if (").append(node.condition.getSource()).appendLine(") {");
+            this._indentLevel++;
+            
+            this.visitStatements(node.thenPart);
+            
+            this._indentLevel--;
+            this._appendIndents();
+            sb.append("} else ");
+
+            if (node.elsePart && this._getToken(node.elsePart) == "if") {
+                node = node.elsePart;
+            } else {
+                break;
+            }
+        }
         
-        this.visitStatements(node.thenPart);
-        
-        this._indentLevel--;
-        this._appendIndents();
-        sb.appendLine("} else {")
+        sb.appendLine("{");
         
         this._indentLevel++;
         if (node.elsePart) {
