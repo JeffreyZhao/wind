@@ -22,19 +22,18 @@
                 (p1.y - p2.y) * (p1.y - p2.y));
         };
 
-        var swapXY = function (pos) {
-            var t = pos.x;
-            pos.x = pos.y;
-            pos.y = t;
-        }
+        var randomF = function (options) {
+            var startPos;
+            var endPos;
 
-        var randomF = function () {
-            var startPos = {x: 0, y: Math.random() * 400};
-            var endPos = {x: 400, y: Math.random() * 400};
+            var topToBottom = Math.random() > 0.5;
 
-            if (Math.random() > 0.5) {
-                swapXY(startPos);
-                swapXY(endPos);
+            if (topToBottom) {
+                startPos = {x: Math.random() * options.width, y: 0};
+                endPos = {x: Math.random() * options.width, y: options.height};
+            } else {
+                startPos = {x: 0, y: Math.random() * options.height};
+                endPos = {x: options.width, y: Math.random() * options.height};
             }
 
             if (Math.random() > 0.5) {
@@ -111,7 +110,7 @@
             paintLoop();
 
             var spawnBulletLoop = function () {
-                Jscex.Async.start(bulletFlyAsync(_this, randomF()));
+                Jscex.Async.start(bulletFlyAsync(_this, randomF(options)));
                 setTimeout(spawnBulletLoop, 50)
             }
             spawnBulletLoop();
@@ -187,7 +186,7 @@
         var timeArea = document.getElementById("time");
         var game = new BulletGame(
             canvas, {
-                width: 400,
+                width: 600,
                 height: 400,
                 radius: 5,
                 bulletRadius: 3,
