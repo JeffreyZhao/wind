@@ -9,7 +9,7 @@ Jscex.compile = function(builderName, func) {
     var compiler = new Jscex.ScriptCompiler(builderName);
     var compiledCode = compiler.compile(funcAst);
     
-    if (typeof(console) != "undifined" && console.log) {
+    if (typeof(console) != "undefined" && console.log) {
         console.log(funcCode + "\n\n>>>\n\n" + compiledCode);
     }
     
