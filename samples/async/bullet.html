@@ -55,28 +55,6 @@
     </script>
 
     <script>
-
-        var bulletFlyAsync = eval(Jscex.compile("$async", function (game, f) {
-            var options = game._options;
-            var bullet = {pos: {x: 0, y: 0}};
-            game._addBullet(bullet);
-            
-            for (var t = 0; game._playing && game._inArea(bullet.pos); t += 20) {
-
-                $await(Jscex.Async.sleep(20));
-
-                if (getLength(game._pos, bullet.pos) < options.radius + options.bulletRadius - 2) {
-                    alert("Time: " + game._getPassedTime() + "ms");
-                    game._playing = false;
-                }
-
-                bullet.pos = f(t);
-            }
-
-            game._removeBullet(bullet);
-        }));
-
-
         var BulletGame = function(canvas, options) {
             this._options = options;
             this._ctx = canvas.getContext("2d");
@@ -110,7 +88,7 @@
             paintLoop();
 
             var spawnBulletLoop = function () {
-                Jscex.Async.start(bulletFlyAsync(_this, randomF(options)));
+                Jscex.Async.start(_this._bulletFlyAsync(randomF(options)));
                 setTimeout(spawnBulletLoop, 50)
             }
             spawnBulletLoop();
@@ -178,6 +156,26 @@
             return new Date() - this._beginTime;
         }
 
+        BulletGame.prototype._bulletFlyAsync = eval(Jscex.compile("$async", function (f) {
+            var options = this._options;
+            var bullet = {pos: {x: 0, y: 0}};
+
+            this._addBullet(bullet);
+            
+            for (var t = 0; this._playing && this._inArea(bullet.pos); t += 20) {
+
+                $await(Jscex.Async.sleep(20));
+
+                if (getLength(this._pos, bullet.pos) < options.radius + options.bulletRadius - 2) {
+                    alert("Time: " + this._getPassedTime() + "ms");
+                    this._playing = false;
+                }
+
+                bullet.pos = f(t);
+            }
+
+            this._removeBullet(bullet);
+        }));
     </script>
 
     <script>

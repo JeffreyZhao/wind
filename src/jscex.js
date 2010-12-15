@@ -42,7 +42,7 @@ Jscex.ScriptCompiler = function(builderName) {
         this._indentLevel++;
 
         this._appendIndents();
-        sb.append("return ").append(builderName).appendLine(".Delay(function() {");
+        sb.append("return ").append(builderName).appendLine(".Start(this, function() {");
 
         this._indentLevel++;
         this.visitStatements(node.body);
