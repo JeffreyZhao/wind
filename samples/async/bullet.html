@@ -36,6 +36,12 @@
                 swapXY(startPos);
                 swapXY(endPos);
             }
+
+            if (Math.random() > 0.5) {
+                var t = startPos;
+                startPos = endPos;
+                endPos = t;
+            }
             
             var length = getLength(startPos, endPos);
             var totalTime = length / (400 / 1500);
