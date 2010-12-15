@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-    <title>Jscex Ball</title>
+    <title>Jscex Bullet</title>
     
     <script language="javascript" type="text/javascript" src="../../src/narcissus.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
@@ -93,7 +93,7 @@
             }
             
             var length = getLength(startPos, endPos);
-            var totalTime = length / (400 / 1000);
+            var totalTime = length / (400 / 1500);
 
             return function(t) {
                 return {
@@ -144,7 +144,7 @@
         var timeDiv = document.getElementById("time");
         var showTimeAsync = eval(Jscex.compile("$async", function () {
             while (playing) {
-                timeDiv.innerHTML = new Date() - beginTime + "ms";
+                timeDiv.innerHTML = "Time: " + (new Date() - beginTime) + "ms";
                 $await(Jscex.Async.sleep(100));
             }
         }));
