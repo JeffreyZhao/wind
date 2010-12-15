@@ -10,16 +10,17 @@ Jscex.AsyncBuilder = function () { }
 Jscex.AsyncBuilder.prototype.Bind = function (task, onNormal) {
     return {
         start: function (callback) {
-            task.start.call(this, function (type, value, target) {
+            var _this = this;
+            task.start.call(_this, function (type, value, target) {
                 if (type == "normal") {
                     try {
-                        var nextTask = onNormal.call(this, value);
-                        nextTask.start.call(this, callback);
+                        var nextTask = onNormal.call(_this, value);
+                        nextTask.start.call(_this, callback);
                     } catch (ex) {
-                        callback.call(this, "throw", ex);
+                        callback("throw", ex);
                     }
                 } else {
-                    callback.call(this, type, value, target);
+                    callback(type, value, target);
                 }
             });
         }
@@ -29,30 +30,31 @@ Jscex.AsyncBuilder.prototype.Bind = function (task, onNormal) {
 Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
     return {
         start: function (callback) {
+            var _this = this;
             var loop = function (result, skipUpdate) {
                 try {
                     if (update && !skipUpdate) {
-                        update.call(this);
+                        update.call(_this);
                     }
 
-                    if (condition.call(this)) {
-                        body.start.call(this, function (type, value, target) {
+                    if (condition.call(_this)) {
+                        body.start.call(_this, function (type, value, target) {
                             if (type == "throw") {
-                                callback.call(this, "throw", value);
+                                callback("throw", value);
                             } else {
-                                loop.call(this);
+                                loop(this);
                             }
                         });
                     } else {
-                        callback.call(this, "normal", result);
+                        callback("normal", result);
                     }
 
                 } catch (ex) {
-                    callback.call(this, "throw", ex);
+                    callback("throw", ex);
                 }
             }
             
-            loop.call(this, null, true);
+            loop(null, true);
         }
     };
 }
@@ -64,7 +66,7 @@ Jscex.AsyncBuilder.prototype.Start = function (_this, generator) {
                 var task = generator.call(_this);
                 task.start.call(_this, callback);
             } catch (ex) {
-                callback.call(_this, "throw", ex);
+                callback("throw", ex);
             }
         }
     };
@@ -73,11 +75,12 @@ Jscex.AsyncBuilder.prototype.Start = function (_this, generator) {
 Jscex.AsyncBuilder.prototype.Delay = function (generator) {
     return {
         start: function (callback) {
+            var _this = this;
             try {
-                var task = generator.call(this);
-                task.start.call(this, callback);
+                var task = generator.call(_this);
+                task.start.call(_this, callback);
             } catch (ex) {
-                callback.call(this, "throw", ex);
+                callback("throw", ex);
             }
         }
     };
@@ -86,15 +89,16 @@ Jscex.AsyncBuilder.prototype.Delay = function (generator) {
 Jscex.AsyncBuilder.prototype.Combine = function (t1, t2) {
     return {
         start: function (callback) {
-            t1.start.call(this, function (type, value, target) {
+            var _this = this;
+            t1.start.call(_this, function (type, value, target) {
                 if (type == "normal") {
                     try {
-                        t2.start.call(this, callback);
+                        t2.start.call(_this, callback);
                     } catch (ex) {
-                        callback.call(this, "throw", ex);
+                        callback("throw", ex);
                     }
                 } else {
-                    callback.call(this, type, value, target);
+                    callback(type, value, target);
                 }
             });
         }
@@ -104,7 +108,7 @@ Jscex.AsyncBuilder.prototype.Combine = function (t1, t2) {
 Jscex.AsyncBuilder.prototype.Return = function (result) {
     return {
         start: function (callback) {
-            callback.call(this, "normal", result);
+            callback("normal", result);
         }
     };
 };
@@ -117,9 +121,8 @@ Jscex.Async = {
     sleep: function (delay) {
         return {
             start: function (callback) {
-                var _this = this;
                 setTimeout(
-                    function () { callback.call(_this, "normal"); },
+                    function () { callback("normal"); },
                     delay);
             }
         };
@@ -177,12 +180,11 @@ Jscex.Async = {
     onEventAsync: function (ele, ev) {
         return {
             start: function (callback) {
-                var _this = this;
                 var eventName = "on" + ev;
 
                 var handler = function(ev) {
                     ele[eventName] = null;
-                    callback.call(_this, "normal", ev);
+                    callback("normal", ev);
                 }
 
                 ele[eventName] = handler;
