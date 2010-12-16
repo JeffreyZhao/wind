@@ -16,6 +16,68 @@
     <canvas id="canvas"></canvas>
 
     <script>
+    
+    var SoftTimer = function (interval) {
+        this._currentTime = new Date();
+
+        this._timeoutHead = {};
+        this._timeoutTail = {};
+        this._timeoutHead.next = this._timeoutTail;
+        this._timeoutTail.prev = this._timeoutHead;
+
+        var _this = this;
+        var updateLoop = function () {
+            _this._update();
+            setTimeout(updateLoop, interval);
+        }
+        setTimeout(updateLoop, interval);
+    }
+    SoftTimer.prototype.setTimeout = function (onTimeout, ms) {
+        var timeout = {
+            onTimeout: onTimeout,
+            beginTime: this._currentTime,
+            wait: ms
+        };
+
+        this._timeoutTail.prev.next = timeout;
+        timeout.prev = this._timeoutTail.prev;
+        timeout.next = this._timeoutTail;
+        this._timeoutTail.prev = timeout;
+    }
+    SoftTimer.prototype._update = function () {
+        var currTime = this._currentTime = new Date();
+        var timeoutToRemove = [];
+
+        for (var timeout = this._timeoutHead.next; timeout != this._timeoutTail; timeout = timeout.next) {
+            if (currTime - timeout.beginTime >= timeout.wait) {
+                timeoutToRemove.push(timeout);
+                try {
+                    timeout.onTimeout();
+                } catch (ex) { }
+            }
+        }
+
+        for (var i = 0; i < timeoutToRemove.length; i++) {
+            var timeout = timeoutToRemove[i];
+            timeout.prev.next = timeout.next;
+            timeout.next.prev = timeout.prev;
+            timeout.next = timeout.prev = null;
+        }
+    }
+    SoftTimer.prototype.setTimeoutAsync = function (delay) {
+        var _this = this;
+        return {
+            start: function (callback) {
+                _this.setTimeout(
+                    function () { callback("normal"); },
+                    delay);
+            }
+        }
+    }
+
+    </script>
+
+    <script>
         var getLength = function (p1, p2) {
             return Math.sqrt(
                 (p1.x - p2.x) * (p1.x - p2.x) +
@@ -68,6 +130,8 @@
             this._playing = true;
             this._frameCount = 0;
             this._beginTime = new Date();
+
+            this._timer = new SoftTimer(10);
 
             canvas.style.border = "solid 1px black";
             canvas.width = options.width;
@@ -172,7 +236,7 @@
             
             for (var t = 0; this._playing && this._inArea(bullet.pos); t += 20) {
 
-                $await(Jscex.Async.sleep(20));
+                $await(this._timer.setTimeoutAsync(20));
 
                 this._tryHit(bullet.pos);
                 
