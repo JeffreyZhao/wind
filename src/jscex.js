@@ -174,7 +174,11 @@ Jscex.ScriptCompiler = function(builderName) {
 
         this._appendIndents();
         sb.append("return ").append(builderName).append(".Return(");
-        this.visit(node.expression);
+
+        if (node.expression) {
+            this.visit(node.expression);
+        }
+
         sb.appendLine(");");
     }
 
@@ -277,7 +281,7 @@ Jscex.ScriptCompiler = function(builderName) {
         } else if (token == "return") {
             // debugger;
             var expr = node.expression;
-            if (this._getToken(expr) == "CALL") {
+            if (expr && this._getToken(expr) == "CALL") {
                 var callee = expr[0];
                 if (this._getToken(callee) == "IDENTIFIER" && callee.value == binder) {
                     return {
@@ -311,7 +315,7 @@ Jscex.ScriptCompiler = function(builderName) {
         if (!bindInfo) {
             var token = this._getToken(stmt);
             if (token == "return") {
-                this.visit(stmt);
+                this.visitReturn(stmt);
             } else if (token == "while" || token == "try" || token == "if" || token == "for") {
                 var isLast = (index == nodeArray.length - 1);
                 if (isLast) {
