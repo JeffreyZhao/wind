@@ -76,15 +76,9 @@
         }
     }
 
-    var HardTimer = function () { }
-    HardTimer.prototype.setTimeoutAsync = function (delay) {
-        return {
-            start: function (callback) {
-                setTimeout(
-                    function() { callback("normal"); },
-                    delay);
-            }
-        };
+    var NativeTimer = function () { }
+    NativeTimer.prototype.setTimeoutAsync = function (delay) {
+        return Jscex.Async.sleep(delay);
     }
 
     </script>
@@ -146,7 +140,7 @@
             if (options.useSoftTimer) {
                 this._timer = new SoftTimer(10);
             } else {
-                this._timer = new HardTimer();
+                this._timer = new NativeTimer();
             }
 
             canvas.style.border = "solid 1px black";
