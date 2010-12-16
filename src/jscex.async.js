@@ -12,15 +12,17 @@ Jscex.AsyncBuilder.prototype.Bind = function (task, generator) {
         start: function (callback) {
             var _this = this;
             task.start.call(_this, function (type, value, target) {
-                if (type != "throw") {
+                if (type == "normal" || type == "return") {
                     try {
                         var nextTask = generator.call(_this, value);
                         nextTask.start.call(_this, callback);
                     } catch (ex) {
                         callback("throw", ex);
                     }
+                } else if (type == "throw") {
+                    callback("throw", value, target);
                 } else {
-                    callback(type, value, target);
+                    throw 'Invalid type for "Bind": ' + type;
                 }
             });
         }
@@ -39,12 +41,14 @@ Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
 
                     if (condition.call(_this)) {
                         body.start.call(_this, function (type, value, target) {
-                            if (type == "normal") {
+                            if (type == "normal" || type == "continue") {
                                 loop(false);
-                            } else if (type == "throw") {
-                                callback("throw", value);
+                            } else if (type == "throw" || type == "return") {
+                                callback(type, value);
+                            } else if (type == "break") {
+                                callback("normal");
                             } else {
-                                callback(type, value, target);
+                                throw 'Invalid type for "Loop": ' + type;
                             }
                         });
                     } else {
@@ -66,7 +70,13 @@ Jscex.AsyncBuilder.prototype.Start = function (_this, generator) {
         start: function (callback) {
             try {
                 var task = generator.call(_this);
-                task.start.call(_this, callback);
+                task.start.call(_this, function (type, value, target) {
+                    if (type == "break" || type == "continue") {
+                        throw 'Invalid type for "Start": ' + type;
+                    } else {
+                        callback(type, value, target);
+                    }
+                });
             } catch (ex) {
                 callback("throw", ex);
             }
@@ -93,7 +103,7 @@ Jscex.AsyncBuilder.prototype.Combine = function (t1, t2) {
         start: function (callback) {
             var _this = this;
             t1.start.call(_this, function (type, value, target) {
-                if (type == "normal" || type == "break") {
+                if (type == "normal") {
                     try {
                         t2.start.call(_this, callback);
                     } catch (ex) {
