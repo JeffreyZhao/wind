@@ -40,7 +40,7 @@ We can express our algorithms linearly, the compiler would generate the code as 
                             e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
                             e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
                             return $async.Bind(Jscex.Async.sleep(50), function () {
-                            return $async.Return();
+                            return $async.Normal();
                         });
                     })
                 );
@@ -48,7 +48,7 @@ We can express our algorithms linearly, the compiler would generate the code as 
             $async.Delay(function () {
                 e.style.left = endPos.x;
                 e.style.top = endPos.y;
-                return $async.Return();
+                return $async.Normal();
             }));
         });
     };
@@ -59,7 +59,7 @@ We can express our algorithms linearly, the compiler would generate the code as 
                 return $async.Bind(moveAsync(e, {x: 400, y: 100}, {x: 400, y: 400}, 1000), function() {
                     return $async.Bind(moveAsync(e, {x: 400, y: 400}, {x: 100, y: 400}, 1000), function() {
                         return $async.Bind(moveAsync(e, {x: 100, y: 400}, {x: 100, y: 100}, 1000), function() {
-                            return $async.Return();
+                            return $async.Normal();
                         });
                     });
                 });
