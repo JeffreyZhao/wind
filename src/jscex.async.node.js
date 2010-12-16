@@ -9,7 +9,7 @@ Jscex.Async.Node.Path.extend = function (path) {
         return {
             start: function (callback) {
                 path.exists(filepath, function (exists) {
-                    callback("normal", exists);
+                    callback("return", exists);
                 });
             }
         };
@@ -22,7 +22,7 @@ Jscex.Async.Node.FileSystem.extend = function (fs) {
             start: function (callback) {
                 fs.readFile(filepath, function (error, data) {
                     var result = { error: error, data: data };
-                    callback("normal", result);
+                    callback("return", result);
                 });
             }
         };

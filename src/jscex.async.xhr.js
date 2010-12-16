@@ -19,7 +19,7 @@ XMLHttpRequest.prototype.receiveAsync = function() {
         start: function(callback) {
             _this.onreadystatechange = function() {
                 if (_this.readyState == 4) {
-                    callback("normal", _this.responseText);
+                    callback("return", _this.responseText);
                 }
             }
 

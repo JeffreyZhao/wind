@@ -177,7 +177,7 @@ Jscex.Async = {
 
                     done--;
                     if (done <= 0) {
-                        callback("normal", results);
+                        callback("return", results);
                     }
                 }
                 
@@ -204,7 +204,7 @@ Jscex.Async = {
 
                 var handler = function(ev) {
                     ele[eventName] = null;
-                    callback("normal", ev);
+                    callback("return", ev);
                 }
 
                 ele[eventName] = handler;
