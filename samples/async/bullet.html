@@ -11,6 +11,7 @@
     </script>
 </head>
 <body>
+    <div id="softTimer">&nbsp;</div>
     <div id="fps">&nbsp;</div>
     <div id="time">&nbsp;</div>
     <canvas id="canvas"></canvas>
@@ -32,11 +33,11 @@
         }
         setTimeout(updateLoop, interval);
     }
-    SoftTimer.prototype.setTimeout = function (onTimeout, ms) {
+    SoftTimer.prototype.setTimeout = function (onTimeout, delay) {
         var timeout = {
             onTimeout: onTimeout,
             beginTime: this._currentTime,
-            wait: ms
+            delay: delay
         };
 
         this._timeoutTail.prev.next = timeout;
@@ -49,7 +50,7 @@
         var timeoutToRemove = [];
 
         for (var timeout = this._timeoutHead.next; timeout != this._timeoutTail; timeout = timeout.next) {
-            if (currTime - timeout.beginTime >= timeout.wait) {
+            if (currTime - timeout.beginTime >= timeout.delay) {
                 timeoutToRemove.push(timeout);
                 try {
                     timeout.onTimeout();
@@ -73,6 +74,17 @@
                     delay);
             }
         }
+    }
+
+    var HardTimer = function () { }
+    HardTimer.prototype.setTimeoutAsync = function (delay) {
+        return {
+            start: function (callback) {
+                setTimeout(
+                    function() { callback("normal"); },
+                    delay);
+            }
+        };
     }
 
     </script>
@@ -131,7 +143,12 @@
             this._frameCount = 0;
             this._beginTime = new Date();
 
-            this._timer = new SoftTimer(10);
+            console.log(options.useSoftTimer);
+            if (options.useSoftTimer) {
+                this._timer = new SoftTimer(10);
+            } else {
+                this._timer = new HardTimer();
+            }
 
             canvas.style.border = "solid 1px black";
             canvas.width = options.width;
@@ -251,6 +268,10 @@
         var canvas = document.getElementById("canvas");
         var fpsArea = document.getElementById("fps");
         var timeArea = document.getElementById("time");
+        
+        var useSoftTimer = window.location.toString().toLowerCase().indexOf("?softtimer=true") > 0;
+        document.getElementById("softTimer").innerHTML = "SoftTimer: " + useSoftTimer;
+
         var game = new BulletGame(
             canvas, {
                 width: 600,
@@ -258,7 +279,8 @@
                 radius: 5,
                 bulletRadius: 3,
                 updateFps: function (fps) { fpsArea.innerHTML = "FPS: " + fps; },
-                updateTime: function (ms) { timeArea.innerHTML = "Time: " + ms + "ms"; }
+                updateTime: function (ms) { timeArea.innerHTML = "Time: " + ms + "ms"; },
+                useSoftTimer: useSoftTimer
             });
     </script>
 </body>
