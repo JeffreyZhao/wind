@@ -292,20 +292,16 @@ Jscex.ScriptCompiler = function(builderName) {
         return null;
     }
 
-    this.visitStatements = function(nodeArray, index, returnArgName) {
+    this.visitStatements = function(nodeArray, index) {
         if (arguments.length <= 1) {
             index = 0;
-        }
-
-        if (arguments.length <= 2) {
-            returnArgName = "";
         }
 
         var sb = this._sb;
 
         if (index >= nodeArray.length) {
             this._appendIndents();
-            sb.append("return ").append(builderName).append(".Return(").append(returnArgName).appendLine(");");
+            sb.append("return ").append(builderName).appendLine(".Normal();");
             return;
         }
 
@@ -359,7 +355,8 @@ Jscex.ScriptCompiler = function(builderName) {
             
             this._indentLevel++;
             if (bindInfo.isReturn) {
-                this.visitStatements(nodeArray, nodeArray.length, bindInfo.argName);
+                this._appendIndents();
+                sb.append("return ").append(builderName).append(".Return(").append(bindInfo.argName).appendLine(");");
             } else {
                 this.visitStatements(nodeArray, index + 1);
             }
@@ -401,7 +398,7 @@ Jscex.ScriptCompiler = function(builderName) {
             this.visitStatements(node.elsePart);
         } else {
             this._appendIndents();
-            sb.append("return ").append(builderName).appendLine(".Return();");
+            sb.append("return ").append(builderName).appendLine(".Normal();");
         }
         
         this._indentLevel--;

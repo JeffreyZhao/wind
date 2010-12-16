@@ -108,10 +108,18 @@ Jscex.AsyncBuilder.prototype.Combine = function (t1, t2) {
 Jscex.AsyncBuilder.prototype.Return = function (result) {
     return {
         start: function (callback) {
-            callback("normal", result);
+            callback("return", result);
         }
     };
 };
+
+Jscex.AsyncBuilder.prototype.Normal = function () {
+    return {
+        start: function (callback) {
+            callback("normal");
+        }
+    }
+}
 
 Jscex.AsyncBuilder.prototype.binder = "$await";
 
