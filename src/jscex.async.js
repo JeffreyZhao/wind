@@ -129,6 +129,22 @@ Jscex.AsyncBuilder.prototype.Normal = function () {
     }
 }
 
+Jscex.AsyncBuilder.prototype.Break = function () {
+    return {
+        start: function (_this, callback) {
+            callback("break");
+        }
+    }
+}
+
+Jscex.AsyncBuilder.prototype.Continue = function () {
+    return {
+        start: function (_this, callback) {
+            callback("continue");
+        }
+    }
+}
+
 Jscex.AsyncBuilder.prototype.binder = "$await";
 
 var $async = new Jscex.AsyncBuilder();

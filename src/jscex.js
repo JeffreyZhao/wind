@@ -90,6 +90,10 @@ Jscex.ScriptCompiler = function(builderName) {
             this.visitBinaryOp(node);
         } else if (token == "return") {
             this.visitReturn(node);
+        } else if (token == "break") {
+            this.visitBreak(node);
+        } else if (token == "continue") {
+            this.visitContinue(node);
         } else if (token == "OBJECT_INIT") {
             this.visitObjectInit(node);
         } else if (token == "PROPERTY_INIT") {
@@ -180,6 +184,16 @@ Jscex.ScriptCompiler = function(builderName) {
         }
 
         sb.appendLine(");");
+    }
+
+    this.visitBreak = function (node) {
+        this._appendIndents();
+        this._sb.append("return ").append(builderName).appendLine(".Break();");
+    }
+
+    this.visitContinue = function (node) {
+        this._appendIndents();
+        this._sb.append("return ").append(builderName).appendLine(".Continue();");
     }
 
     this.visitPlus = function(node) {
@@ -314,8 +328,8 @@ Jscex.ScriptCompiler = function(builderName) {
 
         if (!bindInfo) {
             var token = this._getToken(stmt);
-            if (token == "return") {
-                this.visitReturn(stmt);
+            if (token == "return" || token == "break" || token == "continue") {
+                this.visit(stmt);
             } else if (token == "while" || token == "try" || token == "if" || token == "for") {
                 var isLast = (index == nodeArray.length - 1);
                 if (isLast) {
