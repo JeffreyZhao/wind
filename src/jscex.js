@@ -112,10 +112,22 @@ Jscex.ScriptCompiler = function(builderName) {
             this.visitIf(node);
         } else if (token == "function") {
             this.visitFunction(node);
+        } else if (token == "try") {
+            this.visitTry(node);
+        } else if (token == "throw") {
+            this.visitThrow(node);
         } else {
             alert("unrecognized node type: " + token);
             debugger;
         }
+    }
+
+    this.visitThrow = function (node) {
+        this._appendIndents();
+
+        this._sb.append("return ").append(builderName).append(".Throw(");
+        this.visit(node.exception);
+        this._sb.appendLine(");")
     }
 
     this.visitFunction = function(node) {
@@ -328,7 +340,7 @@ Jscex.ScriptCompiler = function(builderName) {
 
         if (!bindInfo) {
             var token = this._getToken(stmt);
-            if (token == "return" || token == "break" || token == "continue") {
+            if (token == "return" || token == "break" || token == "continue" || token == "throw") {
                 this.visit(stmt);
             } else if (token == "while" || token == "try" || token == "if" || token == "for") {
                 var isLast = (index == nodeArray.length - 1);
@@ -383,6 +395,38 @@ Jscex.ScriptCompiler = function(builderName) {
             this._appendIndents();
             sb.appendLine("});");
         }
+    }
+    
+    this.visitTry = function (node) {
+        var sb = this._sb;
+
+        sb.append(builderName).appendLine(".Try(");
+        this._indentLevel++;
+        this._appendIndents();
+        
+        // debugger;
+        sb.append(builderName).appendLine(".Delay(function () {");
+        this._indentLevel++;
+
+        this.visitStatements(node.tryBlock);
+
+        this._indentLevel--;
+        this._appendIndents();
+        sb.append("}), ");
+
+        var catchClause = node.catchClauses[0];
+        sb.appendLine("function(" + catchClause.varName + ") {");
+
+        this._indentLevel++;
+        this.visitStatements(catchClause.block);
+
+        this._indentLevel--;
+        this._appendIndents();
+        sb.appendLine("}");
+
+        this._indentLevel--;
+        this._appendIndents();
+        sb.append(")");
     }
     
     this.visitIf = function(node) {
@@ -475,8 +519,12 @@ Jscex.ScriptCompiler = function(builderName) {
         sb.append("return ").append(builderName).appendLine(".Loop(");
         this._indentLevel++;
         
-        this._appendIndents()
-        sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+        this._appendIndents();
+        if (node.condition) {
+            sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+        } else {
+            sb.appendLine("null,");
+        }
         
         this._appendIndents();
         sb.append("function() { ").append(node.update.getSource()).appendLine("; },");

@@ -37,7 +37,7 @@ Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
                         update.call(_this);
                     }
 
-                    if (condition.call(_this)) {
+                    if (!condition || condition.call(_this)) {
                         body.start(_this, function (type, value, target) {
                             if (type == "normal" || type == "continue") {
                                 loop(false);
@@ -126,7 +126,7 @@ Jscex.AsyncBuilder.prototype.Normal = function () {
         start: function (_this, callback) {
             callback("normal");
         }
-    }
+    };
 }
 
 Jscex.AsyncBuilder.prototype.Break = function () {
@@ -134,13 +134,44 @@ Jscex.AsyncBuilder.prototype.Break = function () {
         start: function (_this, callback) {
             callback("break");
         }
-    }
+    };
 }
 
 Jscex.AsyncBuilder.prototype.Continue = function () {
     return {
         start: function (_this, callback) {
             callback("continue");
+        }
+    };
+}
+
+Jscex.AsyncBuilder.prototype.Throw = function (ex) {
+    return {
+        start: function (_this, callback) {
+            callback("error", ex);
+        }
+    };
+}
+
+Jscex.AsyncBuilder.prototype.Try = function (tryBlock, catchGenerator) {
+    return {
+        start: function (_this, callback) {
+            try {
+                tryBlock.start(_this, function (type, value, target) {
+                    if (type == "error") {
+                        try {
+                            var task = catchGenerator.call(_this, value);
+                            task.start(_this, callback);
+                        } catch (ex) {
+                            callback(type, ex);
+                        }
+                    } else {
+                        callback(type, value, target);
+                    }
+                });
+            } catch (ex) {
+                callback("error", ex);
+            }
         }
     }
 }
