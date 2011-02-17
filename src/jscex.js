@@ -88,12 +88,16 @@ Jscex.ScriptCompiler = function(builderName) {
             this.visitVar(node);
         } else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "%") {
             this.visitBinaryOp(node);
+        } else if (token == "do") {
+            this.visitDoWhile(node);
         } else if (token == "return") {
             this.visitReturn(node);
         } else if (token == "break") {
             this.visitBreak(node);
         } else if (token == "continue") {
             this.visitContinue(node);
+        } else if (token == "UNARY_MINUS") {
+            this.visitUnaryMinus(node);
         } else if (token == "OBJECT_INIT") {
             this.visitObjectInit(node);
         } else if (token == "PROPERTY_INIT") {
@@ -120,6 +124,11 @@ Jscex.ScriptCompiler = function(builderName) {
             alert("unrecognized node type: " + token);
             debugger;
         }
+    }
+    
+    this.visitUnaryMinus = function (node) {
+        this._sb.append("-");
+        this.visit(node[0]);
     }
 
     this.visitThrow = function (node) {
@@ -342,7 +351,7 @@ Jscex.ScriptCompiler = function(builderName) {
             var token = this._getToken(stmt);
             if (token == "return" || token == "break" || token == "continue" || token == "throw") {
                 this.visit(stmt);
-            } else if (token == "while" || token == "try" || token == "if" || token == "for") {
+            } else if (token == "while" || token == "try" || token == "if" || token == "for" || token == "do") {
                 var isLast = (index == nodeArray.length - 1);
                 if (isLast) {
                     this._appendIndents();
@@ -492,13 +501,48 @@ Jscex.ScriptCompiler = function(builderName) {
         this._indentLevel--;
 
         this._appendIndents();
-        sb.appendLine("})");
+        sb.appendLine("}),");
+        
+        this._appendIndents();
+        sb.appendLine("false")
+        
         this._indentLevel--;
 
         this._appendIndents();
         sb.append(")");
         // debugger;
     }
+    
+    this.visitDoWhile = function (node) {
+        var sb = this._sb;
+        
+        sb.append(builderName).appendLine(".Loop(");
+        this._indentLevel++;
+
+        this._appendIndents();
+        sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+
+        this._appendIndents();
+        sb.appendLine("null, ");
+
+        this._appendIndents();
+        sb.append(builderName).appendLine(".Delay(function() {");
+
+        this._indentLevel++;
+        this.visitStatements(node.body);
+        this._indentLevel--;
+
+        this._appendIndents();
+        sb.appendLine("}),");
+        
+        this._appendIndents();
+        sb.appendLine("true")
+        
+        this._indentLevel--;
+
+        this._appendIndents();
+        sb.append(")");
+    };
     
     this.visitFor = function(node) {
         var sb = this._sb;
@@ -537,7 +581,11 @@ Jscex.ScriptCompiler = function(builderName) {
         this._indentLevel--;
         
         this._appendIndents();
-        sb.appendLine("})");
+        sb.appendLine("}),");
+        
+        this._appendIndents();
+        sb.appendLine("false");
+        
         this._indentLevel--;
         
         this._appendIndents();

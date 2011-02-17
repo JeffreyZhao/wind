@@ -28,9 +28,24 @@ Jscex.AsyncBuilder.prototype.Bind = function (task, generator) {
     };
 };
 
-Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
+Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body, bodyFirst) {
     return {
         start: function (_this, callback) {
+            
+            var startBody = function (skipUpdate) {
+                body.start(_this, function (type, value, target) {
+                    if (type == "normal" || type == "continue") {
+                        loop(skipUpdate);
+                    } else if (type == "throw" || type == "return") {
+                        callback(type, value);
+                    } else if (type == "break") {
+                        callback("normal");
+                    } else {
+                        throw 'Invalid type for "Loop": ' + type;
+                    }
+                });
+            }
+        
             var loop = function (skipUpdate) {
                 try {
                     if (update && !skipUpdate) {
@@ -38,17 +53,7 @@ Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
                     }
 
                     if (!condition || condition.call(_this)) {
-                        body.start(_this, function (type, value, target) {
-                            if (type == "normal" || type == "continue") {
-                                loop(false);
-                            } else if (type == "throw" || type == "return") {
-                                callback(type, value);
-                            } else if (type == "break") {
-                                callback("normal");
-                            } else {
-                                throw 'Invalid type for "Loop": ' + type;
-                            }
-                        });
+                        startBody(false);
                     } else {
                         callback("normal");
                     }
@@ -58,7 +63,11 @@ Jscex.AsyncBuilder.prototype.Loop = function (condition, update, body) {
                 }
             }
             
-            loop(true);
+            if (bodyFirst) {
+                startBody(true);
+            } else {
+                loop(true);
+            }
         }
     };
 }
