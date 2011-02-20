@@ -70,3 +70,5 @@ We can express our algorithms linearly, the compiler would generate the code as 
 Currently Jscex and Jscex.Async are just prototypes for simplifing asynchronous programming. In theory, we can do more in Jscex with different types of builders.
 
 For more information, please search for "F#", "Computation Expressions" and "Asynchronous Workflow" in your favourite search engines.
+
+- jeffz (jeffz[at]live[dot]com)
