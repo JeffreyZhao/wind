@@ -71,4 +71,4 @@ Currently Jscex and Jscex.Async are just prototypes for simplifing asynchronous 
 
 For more information, please search for "F#", "Computation Expressions" and "Asynchronous Workflow" in your favourite search engines.
 
-- jeffz (jeffz[at]live[dot]com)
+\- jeffz (jeffz[at]live[dot]com)
