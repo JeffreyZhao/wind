@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Sorting Animations</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />     
+    <script language="javascript" type="text/javascript" src="../../src/narcissus.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script></head>
+<body style="margin:5px;">
+    <div style="margin-bottom:5px;">
+        <a href="?bubble">Bubble Sort</a> |
+        <a href="?selection">Selection Sort</a> |
+        <a href="?quick">Quick Sort</a>
+    </div>
+    <canvas id="canvas" height="300" width="300" style="border:solid 1px black">
+        <div id="clockText" style="font-size:20pt;">Your browser doesn't support canvas.</div>
+    </canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext ? canvas.getContext("2d") : null;
+
+        var repaint = function (array) {
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.beginPath();
+
+            for (var i = 0; i < array.length; i++)
+            {
+                var x = 2 + i * 3;
+                var height = array[i] * 3 * canvas.height / canvas.width;
+                
+                ctx.moveTo(x, canvas.height);
+                ctx.lineTo(x, canvas.height - height);
+            }
+            
+            ctx.stroke();
+        }
+
+        var compareAsync = eval(Jscex.compile("$async", function (x, y) {
+            $await(Jscex.Async.sleep(10));
+            return x - y;
+        }));
+
+        var swapAsync = eval(Jscex.compile("$async", function (array, x, y) {
+            var t = array[x];
+            array[x] = array[y];
+            array[y] = t;
+
+            repaint(array);
+
+            $await(Jscex.Async.sleep(20));
+        }));
+
+        var bubbleSortAsync = eval(Jscex.compile("$async", function (array) {
+            for (var x = 0; x < array.length; x++) {
+                for (var y = 0; y < array.length - x; y++) {
+                    var r = $await(compareAsync(array[y], array[y + 1]));
+                    if(r > 0) {
+                        $await(swapAsync(array, y, y + 1));
+                    }
+                }
+            }
+        }));
+
+        var selectionSortAsync = eval(Jscex.compile("$async", function (array) {
+            for(var j = 0; j < array.length - 1; j++) {
+                var mi = j;
+                for (var i = j + 1; i < array.length; i++) {
+                    var r = $await(compareAsync(array[i], array[mi]));
+                    if (r < 0) { mi = i; }
+                }
+                $await(swapAsync(array, mi, j));
+            }            
+        }));
+
+        var _partitionAsync = eval(Jscex.compile("$async", function (array, begin, end) {
+            var i = begin;
+            var j = end;
+            var pivot = array[Math.floor((begin + end) / 2)];
+
+            while (i <= j) {
+                while (true) {
+                    var r = $await(compareAsync(array[i], pivot));
+                    if (r < 0) { i++; } else { break; }
+                }
+
+                while (true) {
+                    var r = $await(compareAsync(array[j], pivot));
+                    if (r > 0) { j--; } else { break; }
+                }
+
+                if (i <= j) {
+                    $await(swapAsync(array, i, j));
+                    i++;
+                    j--;
+                }
+            }
+
+	        return i;
+        }));
+        
+        var _quickSortAsync = eval(Jscex.compile("$async", function (array, begin, end) {
+            var index = $await(_partitionAsync(array, begin, end));
+
+            if (begin < index - 1) {
+                $await(_quickSortAsync(array, begin, index - 1));
+            }
+
+            if (index < end) {
+                $await(_quickSortAsync(array, index, end));
+            }
+        }));
+
+        var quickSortAsync = eval(Jscex.compile("$async", function (array) {
+            $await(_quickSortAsync(array, 0, array.length - 1));
+        }));
+
+        if (ctx) {
+            var array = [];
+            for (var i = 1; i < canvas.width / 3; i++) {
+                array.push(i);
+            }
+
+            array.sort(function() { return (Math.round(Math.random()) - 0.5); });
+
+            repaint(array);
+
+            var sort = eval(window.location.search.substring(1) + "SortAsync");
+            Jscex.Async.start(sort(array));
+        }
+
+    </script>
+</body>
+</html>
+
