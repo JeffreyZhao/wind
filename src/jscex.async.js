@@ -157,7 +157,7 @@ Jscex.AsyncBuilder.prototype.Continue = function () {
 Jscex.AsyncBuilder.prototype.Throw = function (ex) {
     return {
         start: function (_this, callback) {
-            callback("error", ex);
+            callback("throw", ex);
         }
     };
 }
@@ -167,7 +167,7 @@ Jscex.AsyncBuilder.prototype.Try = function (tryBlock, catchGenerator) {
         start: function (_this, callback) {
             try {
                 tryBlock.start(_this, function (type, value, target) {
-                    if (type == "error") {
+                    if (type == "throw") {
                         try {
                             var task = catchGenerator.call(_this, value);
                             task.start(_this, callback);
@@ -179,7 +179,7 @@ Jscex.AsyncBuilder.prototype.Try = function (tryBlock, catchGenerator) {
                     }
                 });
             } catch (ex) {
-                callback("error", ex);
+                callback("throw", ex);
             }
         }
     }
@@ -200,13 +200,19 @@ Jscex.Async = {
         };
     },
     
-    startImmediately: function (task) {
-        task.start(function () {});
+    startImmediately: function (task, onSuccess, onError) {
+        task.start(function (type, value, target) {
+            if (onSuccess && (type == "normal" || type == "return")) {
+                onSuccess(value);
+            } else if (onError && type == "throw") {
+                onError(value);
+            }
+        });
     },
     
-    start: function(task) {
+    start: function(task, onSuccess, onError) {
         setTimeout(function() {
-            Jscex.Async.startImmediately(task);
+            Jscex.Async.startImmediately(task, onSuccess, onError);
         }, 0);
     },
     
