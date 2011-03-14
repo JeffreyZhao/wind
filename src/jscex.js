@@ -488,7 +488,15 @@ Jscex.ScriptCompiler = function(builderName) {
         this._indentLevel++;
 
         this._appendIndents();
-        sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+        sb.appendLine("function () {");
+
+        this._indentLevel++;
+        this._appendIndents();
+        sb.append("return ").append(node.condition.getSource()).appendLine(";")
+        
+        this._indentLevel--;
+        this._appendIndents();
+        sb.appendLine("},");
 
         this._appendIndents();
         sb.appendLine("null, ");
@@ -510,7 +518,6 @@ Jscex.ScriptCompiler = function(builderName) {
 
         this._appendIndents();
         sb.append(")");
-        // debugger;
     }
     
     this.visitDoWhile = function (node) {
@@ -565,13 +572,30 @@ Jscex.ScriptCompiler = function(builderName) {
         
         this._appendIndents();
         if (node.condition) {
-            sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+            // sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
+            sb.appendLine("function () {");
+            
+            this._indentLevel++;
+            this._appendIndents();
+            sb.append("return ").append(node.condition.getSource()).appendLine(";");
+
+            this._indentLevel--;
+            this._appendIndents();
+            sb.appendLine("},");
         } else {
             sb.appendLine("null,");
         }
         
         this._appendIndents();
-        sb.append("function() { ").append(node.update.getSource()).appendLine("; },");
+        sb.appendLine("function () { ");
+        
+        this._indentLevel++;
+        this._appendIndents();
+        sb.append(node.update.getSource()).appendLine(";");
+
+        this._indentLevel--;
+        this._appendIndents();
+        sb.appendLine("},");
         
         this._appendIndents();
         sb.append(builderName).appendLine(".Delay(function() {");
