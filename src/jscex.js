@@ -280,8 +280,8 @@ var Jscex = (function () {
                     ._writeLine(".Delay(function() {");
                 this._indentLevel++;
 
-                var bodyBlock = ast[4];
-                this._visitStatements(bodyBlock[1]);
+                var body = ast[4];
+                this._visit(body);
                 this._indentLevel--;
                 
                 this._writeIndents()
@@ -314,9 +314,27 @@ var Jscex = (function () {
 
             "binary": function (ast) {
                 var op = ast[1], left = ast[2], right = ast[3];
-                this._write("(")._visit(left)._write(") ")
-                    ._write(op)
-                    ._write(" (")._visit(right)._write(")");
+
+                function needBracket(item) {
+                    var type = item[0];
+                    return !(type == "num" || type == "name" || type == "dot");
+                }
+
+                var lnb = needBracket(left);
+                if (lnb) {
+                    this._write("(")._visit(left)._write(") ");
+                } else {
+                    this._visit(left)._write(" ");
+                }
+
+                this._write(op);
+
+                var rnb = needBracket(right);
+                if (rnb) {
+                    this._write(" (")._visit(right)._write(")");
+                } else {
+                    this._write(" ")._visit(right);
+                }
             },
 
             "sub": function (ast) {
