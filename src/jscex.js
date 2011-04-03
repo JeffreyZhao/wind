@@ -64,7 +64,6 @@ var Jscex = (function () {
             }
 
             var type = stmt[0];
-            // debugger;
             if (type == "stat") {
                 var expr = stmt[1];
                 if (expr[0] == "call") {
@@ -73,8 +72,40 @@ var Jscex = (function () {
                         checkBindArgs(expr[2]);
                         return {
                             expression: expr[2][0],
-                            argName: "" 
+                            argName: "",
+                            isReturn: false
                         };
+                    }
+                }
+            } else if (type == "var") {
+                var defs = stmt[1];
+                if (defs.length == 1) {
+                    var item = defs[0];
+                    var name = item[0];
+                    var expr = item[1];
+                    if (expr && expr[0] == "call") {
+                        var callee = expr[1];
+                        if (callee[0] == "name" && callee[1] == this._binder) {
+                            checkBindArgs(expr[2]);
+                            return {
+                                expression: expr[2][0],
+                                argName: name,
+                                isReturn: false
+                            };                            
+                        }
+                    }
+                }
+            } else if (type == "return") {
+                var expr = stmt[1];
+                if (expr && expr[0] == "call") {
+                    var callee = expr[1];
+                    if (callee[0] == "name" && callee[1] == this._binder) {
+                        checkBindArgs(expr[2]);
+                        return {
+                            expression: expr[2][0],
+                            argName: "$$__$$__",
+                            isReturn: true 
+                        };                            
                     }
                 }
             }
@@ -126,7 +157,9 @@ var Jscex = (function () {
 
                 var type = stmt[0];
                 if (type == "return" || type == "break" || type == "continue" || type == "throw") {
-                    this._visit(stmt);
+                    this._writeIndents()
+                        ._visit(stmt)
+                        ._writeLine();
                 } else if (type == "while" || type == "try" || type == "if" || type == "for" || type == "do") {
                     var isLast = (index == statements.length - 1);
                     if (isLast) {
@@ -171,13 +204,18 @@ var Jscex = (function () {
         },
 
         _visit: function (ast) {
+
             var type = ast[0];
+
+            function throwUnsupportedError() {
+                throw new Error('"' + type + '" is not currently supported.');
+            }
+
             var visitor = this._visitors[type];
             if (visitor) {
                 visitor.call(this, ast);
             } else {
-                debugger;
-                throw new Error("Unsupported type: " + type);
+                throwUnsupportedError();
             }
 
             return this;
@@ -215,8 +253,31 @@ var Jscex = (function () {
                 this._write("}");
             },
 
+            "array": function (ast) {
+                this._write("[");
+
+                var items = ast[1];
+                for (var i = 0, len = items.length; i < len; i++) {
+                    this._visit(items[i]);
+                    if (i < len - 1) this._write(", ");
+                }
+
+                this._write("]");
+            },
+
             "num": function (ast) {
                 this._write(ast[1]);
+            },
+
+            "regexp": function (ast) {
+                this._write("/")
+                    ._write(ast[1])
+                    ._write("/")
+                    ._write(ast[2]);
+            },
+
+            "string": function (ast) {
+                this._write(JSON.stringify(ast[1]));
             },
 
             "for": function (ast) {
@@ -365,6 +426,12 @@ var Jscex = (function () {
                 this._visit(item)._write(op);
             },
 
+            "unary-prefix": function (ast) {
+                var op = ast[1];
+                var item = ast[2];
+                this._write(op)._visit(item);
+            },
+
             "assign": function (ast) {
                 var op = ast[1];
                 var name = ast[2];
@@ -462,6 +529,37 @@ var Jscex = (function () {
                     ._write(")");
             },
 
+            "do": function (ast) {
+                this._write(this._builderName)
+                    ._writeLine(".Loop(");
+                this._indentLevel++;
+
+                var condition = ast[1];
+                this._writeIndents()
+                    ._write("function () { return ")
+                    ._visit(condition)
+                    ._writeLine("; },")
+                    ._writeIndents()
+                    ._writeLine("null, ")
+                    ._writeIndents()
+                    ._write(this._builderName)
+                    ._writeLine(".Delay(function () {");
+                this._indentLevel++;
+
+                var body = ast[2];
+                this._visit(body);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("}),")
+                    ._writeIndents()
+                    ._writeLine("true");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write(")");
+            },
+
             "if": function (ast) {
 
                 this._write(this._builderName)
@@ -490,7 +588,7 @@ var Jscex = (function () {
                         break;
                     }
                 }
-                
+    
                 this._writeLine("{");
                 this._indentLevel++;
 
@@ -511,6 +609,80 @@ var Jscex = (function () {
 
                 this._writeIndents()
                     ._write("})");
+            },
+
+            "return": function (ast) {
+                this._write("return ")
+                    ._write(this._builderName)
+                    ._write(".Return(");
+
+                var value = ast[1];
+                if (value) this._visit(value);
+                
+                this._write(");");
+            },
+
+            "break": function (ast) {
+                this._write("return ")
+                    ._write(this._builderName)
+                    ._write(".Break();");
+            },
+
+            "continue": function (ast) {
+                this._write("return ")
+                    ._write(this._builderName)
+                    ._write(".Continue();");
+            },
+
+            "throw": function (ast) {
+                this._write("return ")
+                    ._write(this._builderName)
+                    ._write(".Throw(")
+                    ._visit(ast[1])
+                    ._write(");");
+            },
+
+            "conditional": function (ast) {
+                this._write("(")
+                    ._visit(ast[1])
+                    ._write(") ? (")
+                    ._visit(ast[2])
+                    ._write(") : (")
+                    ._visit(ast[3])
+                    ._write(")");
+            },
+
+            "try": function (ast) {
+                this._write(this._builderName)
+                    ._writeLine(".Try(");
+                this._indentLevel++;
+
+                this._writeIndents()
+                    ._write(this._builderName)
+                    ._writeLine(".Delay(function () {");
+                this._indentLevel++;
+
+                this._visitStatements(ast[1]);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("}), ");
+
+                var catchClause = ast[2];
+                this._write("function (")
+                    ._write(catchClause[0])
+                    ._writeLine(") {");
+                this._indentLevel++;
+
+                this._visitStatements(catchClause[1]);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("}");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write(")");
             }
         }
     };
