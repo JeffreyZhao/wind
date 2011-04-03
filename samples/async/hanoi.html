@@ -3,7 +3,7 @@
 <head>
     <title>Hanoi Samples</title>
     
-    <script language="javascript" type="text/javascript" src="../../src/narcissus.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
     <script>
@@ -66,7 +66,7 @@
             }
         }
         
-        var moveAsync = eval(Jscex.compile("$async", function(e, startPos, endPos, duration) {
+        var moveAsync = eval(Jscex.compile($async, function(e, startPos, endPos, duration) {
             for (var t = 0; t < duration; t += 50) {
                 e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
                 e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
@@ -77,7 +77,7 @@
             e.style.top = endPos.y;
         }));
         
-        var moveDishAsync = eval(Jscex.compile("$async", function(n, a, b) {
+        var moveDishAsync = eval(Jscex.compile($async, function(n, a, b) {
             var startPos = {
                 x: getDishLeft(n, a),
                 y: getDishTop(dishesInStick[a])
@@ -94,7 +94,7 @@
             dishesInStick[b]++;
         }));
 
-        var hanoiAsync = eval(Jscex.compile("$async", function(n, from, to, mid) {
+        var hanoiAsync = eval(Jscex.compile($async, function(n, from, to, mid) {
             if (n > 0) {
                 $await(hanoiAsync(n - 1, from, mid, to));
             }

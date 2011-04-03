@@ -3,7 +3,7 @@
 <head>
     <title>Jscex Bullet</title>
     <meta http-equiv="X-UA-Compatible" content="IE=9" />     
-    <script language="javascript" type="text/javascript" src="../../src/narcissus.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
     
@@ -238,7 +238,7 @@
             }
         }
 
-        BulletGame.prototype._bulletFlyAsync = eval(Jscex.compile("$async", function (f) {
+        BulletGame.prototype._bulletFlyAsync = eval(Jscex.compile($async, function (f) {
             var options = this._options;
             var bullet = {pos: {x: 0, y: 0}};
 

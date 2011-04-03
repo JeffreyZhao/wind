@@ -319,6 +319,34 @@ var Jscex = (function () {
                     ._write(" (")._visit(right)._write(")");
             },
 
+            "sub": function (ast) {
+                var prop = ast[1], index = ast[2];
+
+                function needBracket() {
+                    return !(prop[0] == "name")
+                }
+
+                var nb = needBracket();
+                if (nb) {
+                    this._write("(")
+                        ._visit(prop)
+                        ._write(")[")
+                        ._visit(index)
+                        ._write("]");
+                } else {
+                    this._visit(prop)
+                        ._write("[")
+                        ._visit(index)
+                        ._write("]");
+                }
+            },
+
+            "unary-postfix": function (ast) {
+                var op = ast[1];
+                var item = ast[2];
+                this._visit(item)._write(op);
+            },
+
             "assign": function (ast) {
                 var op = ast[1];
                 var name = ast[2];
@@ -338,12 +366,12 @@ var Jscex = (function () {
             },
 
             "dot": function (ast) {
-                function needBracket(ast) {
+                function needBracket() {
                     var leftOp = ast[1][0];
                     return !(leftOp == "dot" || leftOp == "name");
                 }
 
-                var nb = needBracket(ast);
+                var nb = needBracket();
                 if (nb) {
                     this._write("(")
                         ._visit(ast[1])
@@ -414,6 +442,57 @@ var Jscex = (function () {
 
                 this._writeIndents()
                     ._write(")");
+            },
+
+            "if": function (ast) {
+
+                this._write(this._builderName)
+                    ._writeLine(".Delay(function() {");
+                this._indentLevel++;
+
+                this._writeIndents();
+                while (true) {
+                    var condition = ast[1];
+                    this._write("if (")
+                        ._visit(condition)
+                        ._writeLine(") {");
+                    this._indentLevel++;
+                    
+                    var thenPart = ast[2];
+                    this._visit(thenPart);
+                    this._indentLevel--;
+
+                    this._writeIndents()
+                        ._write("} else ");
+
+                    var elsePart = ast[3];
+                    if (elsePart && elsePart[0] == "if") {
+                        ast = elsePart;
+                    } else {
+                        break;
+                    }
+                }
+                
+                this._writeLine("{");
+                this._indentLevel++;
+
+                var elsePart = ast[3];
+                if (elsePart) {
+                    this._visit(elsePart);
+                } else {
+                    this._writeIndents()
+                        ._write("return ")
+                        ._write(this._builderName)
+                        ._writeLine(".Normal();");
+                }
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("}");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("})");
             }
         }
     };
