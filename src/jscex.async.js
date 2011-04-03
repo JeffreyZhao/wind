@@ -186,6 +186,7 @@ Jscex.AsyncBuilder.prototype.Try = function (tryBlock, catchGenerator) {
 }
 
 Jscex.AsyncBuilder.prototype.binder = "$await";
+Jscex.AsyncBuilder.prototype.name = "$async";
 
 var $async = new Jscex.AsyncBuilder();
 

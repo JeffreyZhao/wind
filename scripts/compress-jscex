@@ -1,0 +1,25 @@
+# pre-processing for Closure Compiler
+sed \
+    -e 's/var Jscex =/window["Jscex"] =/' \
+    -e 's/\._writeLine(/._write(/g' \
+    -e 's/this\._write();//g' \
+    -e 's/\._write()//g' \
+    -e 's/this\._writeIndents();//g' \
+    -e 's/\._writeIndents()//g' \
+    -e 's/this\._indentLevel = 0;//g' \
+    -e 's/this\._indentLevel++;//g' \
+    -e 's/this\._indentLevel--;//g' \
+    -e 's/checkBindArgs([^;]*;//g' \
+    -e 's/needBracket([^;]*;/true;/g' \
+    ../src/jscex.js > ../bin/jscex.tmp.js
+
+#    -e 's/printlog([^;]*;//g' \
+
+# use Closure Compiler to compress
+java -jar ../tools/compiler.jar --js ../bin/jscex.tmp.js --js_output_file ../bin/jscex.tmp.min.js --compilation_level ADVANCED_OPTIMIZATIONS
+
+# post-processing
+sed 's/window\.Jscex=/var Jscex=/' ../bin/jscex.tmp.min.js > ../bin/jscex.min.js
+
+# remove temp files
+#rm ../bin/jscex-uglifyjs.tmp*.js

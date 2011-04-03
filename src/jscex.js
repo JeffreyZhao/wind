@@ -1,626 +1,446 @@
-var Jscex = {};
-Jscex.compile = function(builderName, func) {
-    var funcCode = func.toString();
-    
-    var code = "var f = " + funcCode + ";";
-    var ast = Narcissus.parse(code, "temp", 1);
-    var funcAst = ast[0][0].initializer;
+var Jscex = (function () {
 
-    var compiler = new Jscex.ScriptCompiler(builderName);
-    var compiledCode = compiler.compile(funcAst);
-    
-    if (typeof(console) != "undefined" && console.log) {
-        console.log(funcCode + "\n\n>>>\n\n" + compiledCode);
+    /**
+     * @constructor
+     */
+    function CodeGenerator(builder) {
+        this._builderName = builder["name"];
+        this._binder = builder["binder"];
+        this._indentLevel = 0;
     }
-    
-    return "(function() {\n\nreturn " + compiledCode + "\n\n})();"
-}
+    CodeGenerator.prototype = {
 
-Jscex.StringBuilder = function() {
-    this._parts = [];
-}
-Jscex.StringBuilder.prototype.append = function(s) {
-    this._parts.push(s);
-    return this;
-}
-Jscex.StringBuilder.prototype.appendLine = function(s) {
-    this._parts.push(s);
-    this._parts.push("\n");
-    return this;
-}
-Jscex.StringBuilder.prototype.toString = function() {
-    return this._parts.join("");
-}
+        _write: function (s) {
+            this._buffer.push(s);
+            return this;
+        },
 
-Jscex.ScriptCompiler = function(builderName) {
-    var binder = eval(builderName).binder;
+        _writeLine: function (s) {
+            this._write(s)._write("\n")
+            return this;
+        },
 
-    this.compile = function(node) {
-        var sb = this._sb = new Jscex.StringBuilder();
-
-        sb.append("function(").append(node.params.join(", ")).appendLine(") {");
-        this._indentLevel++;
-
-        this._appendIndents();
-        sb.append("return ").append(builderName).appendLine(".Start(this, function() {");
-
-        this._indentLevel++;
-        this.visitStatements(node.body);
-        this._indentLevel--;
-
-        this._appendIndents();
-        sb.appendLine("});");
-        this._indentLevel--;
-
-        sb.appendLine("};");
-
-        return sb.toString();
-    }
-
-    this._indentLevel = 0;
-    this._appendIndents = function() {
-        for (var i = 0; i < this._indentLevel; i++) {
-            this._sb.append("    ");
-        }
-    }
-
-    this.visit = function(node) {
-        var token = this._getToken(node);
-        if (token == "while") {
-            this.visitWhile(node);
-        } else if (token == ";") {
-            this.visitSemicolon(node);
-        } else if (token == ".") {
-            this.visitDot(node);
-        } else if (token == "CALL") {
-            this.visitCall(node);
-        } else if (token == "IDENTIFIER") {
-            this.visitIdentifier(node);
-        } else if (token == "STRING") {
-            this.visitString(node);
-        } else if (token == "new") {
-            this.visitNew(node);
-        } else if (token == "NEW_WITH_ARGS") {
-            this.visitNewWithArgs(node);
-        } else if (token == "NUMBER") {
-            this.visitNumber(node);
-        } else if (token == "var") {
-            this.visitVar(node);
-        } else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "%") {
-            this.visitBinaryOp(node);
-        } else if (token == "do") {
-            this.visitDoWhile(node);
-        } else if (token == "return") {
-            this.visitReturn(node);
-        } else if (token == "break") {
-            this.visitBreak(node);
-        } else if (token == "continue") {
-            this.visitContinue(node);
-        } else if (token == "UNARY_MINUS") {
-            this.visitUnaryMinus(node);
-        } else if (token == "OBJECT_INIT") {
-            this.visitObjectInit(node);
-        } else if (token == "PROPERTY_INIT") {
-            this.visitPropertyInit(node);
-        } else if (token == "GROUP") {
-            this.visitGroup(node);
-        } else if (token == "ARRAY_INIT") {
-            this.visitArrayInit(node);
-        } else if (token == "debugger") {
-            this.visitDebugger(node);
-        } else if (token == "INDEX") {
-            this.visitIndex(node);
-        } else if (token == "for") {
-            this.visitFor(node);
-        } else if (token == "if") {
-            this.visitIf(node);
-        } else if (token == "function") {
-            this.visitFunction(node);
-        } else if (token == "try") {
-            this.visitTry(node);
-        } else if (token == "throw") {
-            this.visitThrow(node);
-        } else {
-            alert("unrecognized node type: " + token);
-            debugger;
-        }
-    }
-    
-    this.visitUnaryMinus = function (node) {
-        this._sb.append("-");
-        this.visit(node[0]);
-    }
-
-    this.visitThrow = function (node) {
-        this._appendIndents();
-
-        this._sb.append("return ").append(builderName).append(".Throw(");
-        this.visit(node.exception);
-        this._sb.appendLine(");")
-    }
-
-    this.visitFunction = function(node) {
-        this._sb.append(node.getSource());
-    }
-    
-    this.visitDebugger = function(node) {
-        this._appendIndents();
-        this._sb.append(node.getSource()).appendLine(";");
-    }
-    
-    this.visitIndex = function(node) {
-        this._sb.append(node.getSource());
-    }
-    
-    this.visitGroup = function(node) {
-        this._sb.append(node.getSource());
-    }
-    
-    this.visitObjectInit = function(node) {
-        var sb = this._sb;
-        
-        sb.append("{");
-        if (node.length > 0) {
-            this.visit(node[0]);
-            for (var i = 1; i < node.length; i++) {
-                sb.append(", ");
-                this.visit(node[i]);
+        _writeIndents: function () {
+            for (var i = 0; i < this._indentLevel; i++) {
+                this._write("    ");
             }
-        }
-        sb.append("}");
-    }
-    
-    this.visitPropertyInit = function(node) {
-        this.visit(node[0]);
-        this._sb.append(": ");
-        this.visit(node[1]);
-    };
+            return this;
+        },
 
-    this.visitArrayInit = function(node) {
-        var sb = this._sb;
+        generate: function (ast) {
+            this._buffer = [];
 
-        sb.append("[");
-        if (node.length > 0) {
-            this.visit(node[0]);
-            for (var i = 1; i < node.length; i++) {
-                sb.append(", ");
-                this.visit(node[i]);
-            }
-        }
-        sb.append("]");
-    };
-    
-    this.visitBinaryOp = function(node) {
-        this._sb.append(node.getSource());
-    }
+            var params = ast[2], statements = ast[3];
 
-    this.visitReturn = function(node) {
-        var sb = this._sb;
+            this._write("function (")
+                ._write(params.join(", "))
+                ._writeLine(") {");
+            this._indentLevel++;
 
-        this._appendIndents();
-        sb.append("return ").append(builderName).append(".Return(");
+            this._writeIndents()
+                ._write("return ")
+                ._write(this._builderName)
+                ._writeLine(".Start(this, function () {");
+            this._indentLevel++;
 
-        if (node.expression) {
-            this.visit(node.expression);
-        }
+            this._visitStatements(statements);
+            this._indentLevel--;
 
-        sb.appendLine(");");
-    }
+            this._writeIndents()
+                ._writeLine("});");
+            this._indentLevel--;
 
-    this.visitBreak = function (node) {
-        this._appendIndents();
-        this._sb.append("return ").append(builderName).appendLine(".Break();");
-    }
+            this._writeLine("};");
 
-    this.visitContinue = function (node) {
-        this._appendIndents();
-        this._sb.append("return ").append(builderName).appendLine(".Continue();");
-    }
+            return this._buffer.join("");
+        },
 
-    this.visitPlus = function(node) {
-        this.visit(node[0]);
-        this._sb.append(" + ");
-        this.visit(node[1]);
-    }
+        _getBindInfo: function (stmt) {
 
-    this.visitVar = function(node) {
-        var sb = this._sb;
-
-        this._appendIndents();
-        sb.append("var ");
-        this.visit(node[0]);
-        sb.appendLine(";");
-    }
-
-    this.visitNumber = function(node) {
-        this._sb.append(node.getSource());
-    }
-
-    this.visitNewWithArgs = function(node) {
-        this._sb.append(node.getSource());
-    }
-
-    this.visitNew = function(node) {
-        this._sb.append(node.getSource());
-    }
-
-    this.visitString = function(node) {
-        this._sb.append(node.getSource());
-    }
-
-    this.visitList = function(node) {
-        var items = node;
-        if (items.length > 0) {
-            this.visit(items[0]);
-            for (var i = 1; i < items.length; i++) {
-                this._sb.append(", ");
-                this.visit(items[i]);
-            }
-        }
-    }
-
-    this.visitIdentifier = function(node) {
-        var sb = this._sb;
-
-        sb.append(node.value);
-        if (node.initializer) {
-            sb.append(" = ");
-            this.visit(node.initializer);
-        }
-    }
-
-    this.visitDot = function(node) {
-        this._sb.append(node.getSource());
-    }
-
-    this.visitCall = function(node) {
-        this._sb.append(node.getSource());
-    }
-
-    this.visitAssign = function(node) {
-        this.visit(node[0]);
-        this._sb.append(" = ");
-        this.visit(node[1]);
-    }
-
-    this.visitSemicolon = function(node) {
-        this._appendIndents();
-        this._sb.append(node.getSource()).appendLine(";");
-    }
-
-    this._getBindInfo = function(node) {
-        var token = this._getToken(node);
-        if (token == ";") {
-            var expr = node.expression;
-            if (this._getToken(expr) == "CALL") {
-                var callee = expr[0];
-                if (this._getToken(callee) == "IDENTIFIER" && callee.value == binder) {
-                    return {
-                        expression: expr[1][0],
-                        argName: ""
-                    };
+            function checkBindArgs(args) {
+                if (args.length != 1) {
+                    throw new Error("Bind expression must has one and only one arguments.");
                 }
             }
-        } else if (token == "var") {
-            var idExpr = node[0];
-            var expr = idExpr.initializer;
-            if (expr && this._getToken(expr) == "CALL") {
-                var callee = expr[0];
-                if (this._getToken(callee) == "IDENTIFIER" && callee.value == binder) {
-                    return {
-                        expression: expr[1][0],
-                        argName: idExpr.value
-                    };
-                }
-            }
-        } else if (token == "return") {
+
+            var type = stmt[0];
             // debugger;
-            var expr = node.expression;
-            if (expr && this._getToken(expr) == "CALL") {
-                var callee = expr[0];
-                if (this._getToken(callee) == "IDENTIFIER" && callee.value == binder) {
-                    return {
-                        expression: expr[1][0],
-                        argName: "$$__$$__",
-                        isReturn: true
-                    };
+            if (type == "stat") {
+                var expr = stmt[1];
+                if (expr[0] == "call") {
+                    var callee = expr[1];
+                    if (callee[0] == "name" && callee[1] == this._binder) {
+                        checkBindArgs(expr[2]);
+                        return {
+                            expression: expr[2][0],
+                            argName: "" 
+                        };
+                    }
                 }
             }
-        }
-        
-        return null;
-    }
 
-    this.visitStatements = function(nodeArray, index) {
-        if (arguments.length <= 1) {
-            index = 0;
-        }
+            return null;
+        },
 
-        var sb = this._sb;
+        _visitStatements: function (statements, index) {
+            if (arguments.length <= 1) index = 0;
 
-        if (index >= nodeArray.length) {
-            this._appendIndents();
-            sb.append("return ").append(builderName).appendLine(".Normal();");
-            return;
-        }
+            if (index >= statements.length) {
+                this._writeIndents()
+                    ._write("return ")
+                    ._write(this._builderName)
+                    ._writeLine(".Normal();");
+                return this;
+            }
 
-        var stmt = nodeArray[index];
-        var bindInfo = this._getBindInfo(stmt);
+            var stmt = statements[index];
+            var bindInfo = this._getBindInfo(stmt);
 
-        if (!bindInfo) {
-            var token = this._getToken(stmt);
-            if (token == "return" || token == "break" || token == "continue" || token == "throw") {
-                this.visit(stmt);
-            } else if (token == "while" || token == "try" || token == "if" || token == "for" || token == "do") {
-                var isLast = (index == nodeArray.length - 1);
-                if (isLast) {
-                    this._appendIndents();
-                    sb.append("return ");
-                    this.visit(stmt);
-                    sb.appendLine(";");
+            if (bindInfo) {
+                this._writeIndents()
+                    ._write("return ")
+                    ._write(this._builderName)
+                    ._write(".Bind(")
+                    ._visit(bindInfo.expression)
+                    ._write(", function (")
+                    ._write(bindInfo.argName)
+                    ._writeLine(") {");
+                this._indentLevel++;
+
+                if (bindInfo.isReturn) {
+                    this._writeIndents()
+                        ._write("return ")
+                        ._write(this._builderName)
+                        ._write(".Return(")
+                        ._write(bindInfo.argName)
+                        ._writeLine(");");
                 } else {
-                    this._appendIndents();
-                    sb.append("return ").append(builderName).appendLine(".Combine(");
-                    this._indentLevel++;
-                    
-                    this._appendIndents();
-                    this.visit(stmt);
-                    sb.appendLine(",");
-                    
-                    this._appendIndents();
-                    sb.append(builderName).appendLine(".Delay(function() {");
-                    this._indentLevel++;
-
-                    this.visitStatements(nodeArray, index + 1);
-                    this._indentLevel--;
-
-                    this._appendIndents();
-                    sb.appendLine("})");
-                    this._indentLevel--;
-
-                    this._appendIndents();
-                    sb.appendLine(");");
+                    this._visitStatements(statements, index + 1);
                 }
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("});");
+
             } else {
-                this.visit(stmt);
-                this.visitStatements(nodeArray, index + 1);
+
+                var type = stmt[0];
+                if (type == "return" || type == "break" || type == "continue" || type == "throw") {
+                    this._visit(stmt);
+                } else if (type == "while" || type == "try" || type == "if" || type == "for" || type == "do") {
+                    var isLast = (index == statements.length - 1);
+                    if (isLast) {
+                        this._writeIndents()
+                            ._write("return ")
+                            ._visit(stmt)
+                            ._writeLine(";");
+                    } else {
+                        this._writeIndents()
+                            ._write("return ")
+                            ._write(this._builderName)
+                            ._writeLine(".Combine(");
+                        this._indentLevel++;
+                        
+                        this._writeIndents()
+                            ._visit(stmt)
+                            ._writeLine(",")
+                            ._writeIndents()
+                            ._write(this._builderName)
+                            ._writeLine(".Delay(function() {");
+                        this._indentLevel++;
+
+                        this._visitStatements(statements, index + 1);
+                        this._indentLevel--;
+
+                        this._writeIndents()
+                            ._writeLine("})");
+                        this._indentLevel--;
+
+                        this._writeIndents()
+                            ._writeLine(");");
+                    }
+                } else {
+                    this._writeIndents()
+                        ._visit(stmt)
+                        ._writeLine()
+                        ._visitStatements(statements, index + 1);
+                }
             }
 
-        } else {
-            this._appendIndents();
-            sb.append("return ").append(builderName).append(".Bind(");
-            this.visit(bindInfo.expression);
-            sb.append(", function(").append(bindInfo.argName).appendLine(") {");
-            
-            this._indentLevel++;
-            if (bindInfo.isReturn) {
-                this._appendIndents();
-                sb.append("return ").append(builderName).append(".Return(").append(bindInfo.argName).appendLine(");");
+            return this;
+        },
+
+        _visit: function (ast) {
+            var type = ast[0];
+            var visitor = this._visitors[type];
+            if (visitor) {
+                visitor.call(this, ast);
             } else {
-                this.visitStatements(nodeArray, index + 1);
+                debugger;
+                throw new Error("Unsupported type: " + type);
             }
-            this._indentLevel--;
 
-            this._appendIndents();
-            sb.appendLine("});");
-        }
-    }
-    
-    this.visitTry = function (node) {
-        var sb = this._sb;
+            return this;
+        },
 
-        sb.append(builderName).appendLine(".Try(");
-        this._indentLevel++;
-        this._appendIndents();
+        _visitors: {
+
+            "call": function (ast) {
+                this._visit(ast[1])
+                    ._write("(");
+
+                var args = ast[2];
+                for (var i = 0, len = args.length; i < len; i++) {
+                    this._visit(args[i]);
+                    if (i < len - 1) this._write(", ");
+                }
+
+                this._write(")");
+            },
+
+            "name": function (ast) {
+                this._write(ast[1]);
+            },
+
+            "object": function (ast) {
+                this._write("{");
+                
+                var items = ast[1];
+                for (var i = 0, len = items.length; i < len; i++) {
+                    this._write(JSON.stringify(items[i][0]))._write(": ");
+                    this._visit(items[i][1]);
+                    if (i < len - 1) this._write(", ");
+                }
+
+                this._write("}");
+            },
+
+            "num": function (ast) {
+                this._write(ast[1]);
+            },
+
+            "for": function (ast) {
         
-        // debugger;
-        sb.append(builderName).appendLine(".Delay(function () {");
-        this._indentLevel++;
+                this._write(this._builderName)
+                    ._writeLine(".Delay(function() {");
+                this._indentLevel++;
+                
+                var setup = ast[1];
+                if (setup) {
+                    this._writeIndents();
+                    if (setup[0] == "var") {
+                        this._visit(setup);
+                    } else {
+                        this._visit(setup)
+                            ._write(";");
+                    }
+                    this._writeLine();
+                }
+                
+                this._writeIndents()
+                    ._write("return ")
+                    ._write(this._builderName)
+                    ._writeLine(".Loop(");
+                this._indentLevel++;
+                
+                this._writeIndents();
+                var condition = ast[2];
+                if (condition) {
+                    this._writeLine("function () {");
+                    this._indentLevel++;
 
-        this.visitStatements(node.tryBlock);
+                    this._writeIndents()
+                        ._write("return ")
+                        ._visit(condition)
+                        ._writeLine(";");
+                    this._indentLevel--;
 
-        this._indentLevel--;
-        this._appendIndents();
-        sb.append("}), ");
+                    this._writeIndents()
+                        ._writeLine("},");
+                } else {
+                    this._writeLine("null,");
+                }
+                
+                this._writeIndents()
+                    ._writeLine("function () { ");
+                this._indentLevel++;
 
-        var catchClause = node.catchClauses[0];
-        sb.appendLine("function(" + catchClause.varName + ") {");
+                var update = ast[3];
+                if (update) {
+                    this._writeIndents()
+                        ._visit(update)
+                        ._writeLine(";");
+                }
+                this._indentLevel--;
 
-        this._indentLevel++;
-        this.visitStatements(catchClause.block);
+                this._writeIndents()
+                    ._writeLine("},")
+                    ._writeIndents()
+                    ._write(this._builderName)
+                    ._writeLine(".Delay(function() {");
+                this._indentLevel++;
 
-        this._indentLevel--;
-        this._appendIndents();
-        sb.appendLine("}");
+                var bodyBlock = ast[4];
+                this._visitStatements(bodyBlock[1]);
+                this._indentLevel--;
+                
+                this._writeIndents()
+                    ._writeLine("}),")
+                    ._writeIndents()
+                    ._writeLine("false");
+                this._indentLevel--;
+                
+                this._writeIndents()
+                    ._writeLine(");");
+                this._indentLevel--;
 
-        this._indentLevel--;
-        this._appendIndents();
-        sb.append(")");
-    }
-    
-    this.visitIf = function(node) {
-        var sb = this._sb;
-        
-        sb.append(builderName).appendLine(".Delay(function() {");
-        this._indentLevel++;
-        this._appendIndents();
+                this._writeIndents()
+                    ._write("})");
+            },
 
-        while (true) {
-            sb.append("if (").append(node.condition.getSource()).appendLine(") {");
-            this._indentLevel++;
-            
-            this.visitStatements(node.thenPart);
-            
-            this._indentLevel--;
-            this._appendIndents();
-            sb.append("} else ");
+            "var": function (ast) {
+                this._write("var ");
 
-            if (node.elsePart && this._getToken(node.elsePart) == "if") {
-                node = node.elsePart;
-            } else {
-                break;
+                var items = ast[1];
+                for (var i = 0, len = items.length; i < len; i++) {
+                    this._write(items[i][0])
+                        ._write(" = ")
+                        ._visit(items[i][1]);
+                    if (i < len - 1) this._write(", ");
+                }
+
+                this._write(";");
+            },
+
+            "binary": function (ast) {
+                var op = ast[1], left = ast[2], right = ast[3];
+                this._write("(")._visit(left)._write(") ")
+                    ._write(op)
+                    ._write(" (")._visit(right)._write(")");
+            },
+
+            "assign": function (ast) {
+                var op = ast[1];
+                var name = ast[2];
+                var value = ast[3];
+
+                this._visit(name);
+                if ((typeof op) == "string") {
+                    this._write(" ")._write(op)._write("= ");
+                } else {
+                    this._write(" = ");
+                }
+                this._visit(value);
+            },
+
+            "stat": function (ast) {
+                this._visit(ast[1])._write(";");
+            },
+
+            "dot": function (ast) {
+                function needBracket(ast) {
+                    var leftOp = ast[1][0];
+                    return !(leftOp == "dot" || leftOp == "name");
+                }
+
+                var nb = needBracket(ast);
+                if (nb) {
+                    this._write("(")
+                        ._visit(ast[1])
+                        ._write(").")
+                        ._write(ast[2]);
+                } else {
+                    this._visit(ast[1])
+                        ._write(".")
+                        ._write(ast[2]);
+                }
+            },
+
+            "block": function (ast) {
+                this._visitStatements(ast[1]);
+            },
+
+            "new": function (ast) {
+                var ctor = ast[1];
+
+                this._write("new ")
+                    ._visit(ctor)
+                    ._write("(");
+
+                var args = ast[2];
+                for (var i = 0, len = args.length; i < len; i++) {
+                    this._visit(args[i]);
+                    if (i < len - 1) this._write(", ");
+                }
+
+                this._write(")");
+            },
+
+            "while": function (ast) {
+                
+                this._write(this._builderName)
+                    ._writeLine(".Loop(");
+                this._indentLevel++;
+
+                this._writeIndents()
+                    ._writeLine("function () {");
+                this._indentLevel++;
+
+                var condition = ast[1];
+                this._writeIndents()
+                    ._write("return ")
+                    ._visit(condition)
+                    ._writeLine(";");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("},")
+                    ._writeIndents()
+                    ._writeLine("null, ")
+                    ._writeIndents()
+                    ._write(this._builderName)
+                    ._writeLine(".Delay(function() {");
+                this._indentLevel++;
+
+                var body = ast[2];
+                this._visit(body);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("}),")
+                    ._writeIndents()
+                    ._writeLine("false");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write(")");
             }
         }
-        
-        sb.appendLine("{");
-        
-        this._indentLevel++;
-        if (node.elsePart) {
-            this.visitStatements(node.elsePart);
-        } else {
-            this._appendIndents();
-            sb.append("return ").append(builderName).appendLine(".Normal();");
-        }
-        
-        this._indentLevel--;
-        this._appendIndents();
-        sb.appendLine("}");
-        
-        this._indentLevel--;
-        this._appendIndents();
-        sb.append("})");
-    }
-
-    this.visitWhile = function(node) {
-        var sb = this._sb;
-        
-        sb.append(builderName).appendLine(".Loop(");
-        this._indentLevel++;
-
-        this._appendIndents();
-        sb.appendLine("function () {");
-
-        this._indentLevel++;
-        this._appendIndents();
-        sb.append("return ").append(node.condition.getSource()).appendLine(";")
-        
-        this._indentLevel--;
-        this._appendIndents();
-        sb.appendLine("},");
-
-        this._appendIndents();
-        sb.appendLine("null, ");
-
-        this._appendIndents();
-        sb.append(builderName).appendLine(".Delay(function() {");
-
-        this._indentLevel++;
-        this.visitStatements(node.body);
-        this._indentLevel--;
-
-        this._appendIndents();
-        sb.appendLine("}),");
-        
-        this._appendIndents();
-        sb.appendLine("false")
-        
-        this._indentLevel--;
-
-        this._appendIndents();
-        sb.append(")");
-    }
-    
-    this.visitDoWhile = function (node) {
-        var sb = this._sb;
-        
-        sb.append(builderName).appendLine(".Loop(");
-        this._indentLevel++;
-
-        this._appendIndents();
-        sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
-
-        this._appendIndents();
-        sb.appendLine("null, ");
-
-        this._appendIndents();
-        sb.append(builderName).appendLine(".Delay(function() {");
-
-        this._indentLevel++;
-        this.visitStatements(node.body);
-        this._indentLevel--;
-
-        this._appendIndents();
-        sb.appendLine("}),");
-        
-        this._appendIndents();
-        sb.appendLine("true")
-        
-        this._indentLevel--;
-
-        this._appendIndents();
-        sb.append(")");
     };
-    
-    this.visitFor = function(node) {
-        var sb = this._sb;
-        
-        sb.append(builderName).appendLine(".Delay(function() {");
-        this._indentLevel++;
-        
-        var token = this._getToken(node.setup);
-        if (token == "var") {
-            this.visitVar(node.setup);
-        } else {
-            this._appendIndents();
-            this.visit(node.setup);
-            sb.appendLine(";");
+
+    function _log(funcCode, newCode) {
+        if (typeof(console) != "undefined" && console.log) {
+            console.log(funcCode + "\n\n>>>\n\n" + newCode);
         }
-        
-        this._appendIndents();
-        sb.append("return ").append(builderName).appendLine(".Loop(");
-        this._indentLevel++;
-        
-        this._appendIndents();
-        if (node.condition) {
-            // sb.append("function() { return ").append(node.condition.getSource()).appendLine("; },");
-            sb.appendLine("function () {");
-            
-            this._indentLevel++;
-            this._appendIndents();
-            sb.append("return ").append(node.condition.getSource()).appendLine(";");
-
-            this._indentLevel--;
-            this._appendIndents();
-            sb.appendLine("},");
-        } else {
-            sb.appendLine("null,");
-        }
-        
-        this._appendIndents();
-        sb.appendLine("function () { ");
-        
-        this._indentLevel++;
-        this._appendIndents();
-        sb.append(node.update.getSource()).appendLine(";");
-
-        this._indentLevel--;
-        this._appendIndents();
-        sb.appendLine("},");
-        
-        this._appendIndents();
-        sb.append(builderName).appendLine(".Delay(function() {");
-
-        this._indentLevel++;
-        this.visitStatements(node.body);
-        this._indentLevel--;
-        
-        this._appendIndents();
-        sb.appendLine("}),");
-        
-        this._appendIndents();
-        sb.appendLine("false");
-        
-        this._indentLevel--;
-        
-        this._appendIndents();
-        sb.appendLine(");");
-        
-        this._indentLevel--;
-        this._appendIndents();
-        sb.append("})");
     }
 
-    this._getToken = function(node) {
-        return Narcissus.tokens[node.type];
-    }
-}
+    function compile(builder, func) {
+        var funcCode = func.toString();
+
+        var code = "var f = " + funcCode + ";";
+        var ast = UglifyJS.parse(code);
+
+        // [ "toplevel", [ [ "var", [ [ "f", [...] ] ] ] ] ]
+        var funcAst = ast[1][0][1][0][1];
+
+        var generator = new CodeGenerator(builder);
+        var newCode = generator.generate(funcAst);
+
+        _log(funcCode, newCode);
+        
+        return "(function () {\n\nreturn " + newCode + "\n\n})();";
+    };
+
+    return { compile: compile };
+
+})();
