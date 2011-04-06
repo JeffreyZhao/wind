@@ -6,6 +6,7 @@ var Jscex = (function () {
     function CodeGenerator(builder) {
         this._builderName = builder["name"];
         this._binder = builder["binder"];
+        this._normalMode = false;
         this._indentLevel = 0;
     }
     CodeGenerator.prototype = {
@@ -203,6 +204,38 @@ var Jscex = (function () {
             return this;
         },
 
+        _visitStatementsNormally: function (statements) {
+            for (var i = 0, len = statements.length; i < len; i++) {
+                this._writeIndents()
+                    ._visit(statements[i])
+                    ._writeLine();
+            }
+        },
+
+        _visitFunction: function (ast) {
+            var normalMode = this._normalMode;
+            this._normalMode = true;
+
+            var funcName = ast[1];
+            var args = ast[2];
+            var statements = ast[3];
+            
+            this._write("function ")
+                ._write(funcName)
+                ._write("(")
+                ._write(args.join(", "))
+                ._writeLine(") {");
+            this._indentLevel++;
+
+            this._visitStatementsNormally(statements);
+            this._indentLevel--;
+
+            this._writeIndents()
+                ._write("}");
+
+            this._normalMode = normalMode;
+        },
+
         _visit: function (ast) {
 
             var type = ast[0];
@@ -211,7 +244,16 @@ var Jscex = (function () {
                 throw new Error('"' + type + '" is not currently supported.');
             }
 
-            var visitor = this._visitors[type];
+            var visitor = null;
+            if (this._normalMode) {
+                visitor = this._visitors[type + "_n"];
+                if (!visitor) {
+                    visitor = this._visitors[type];
+                }
+            } else {
+                visitor = this._visitors[type];
+            }
+
             if (visitor) {
                 visitor.call(this, ast);
             } else {
@@ -359,6 +401,38 @@ var Jscex = (function () {
                     ._write("})");
             },
 
+            "for_n": function (ast) {
+                this._write("for (");
+
+                var setup = ast[1];
+                if (setup) {
+                    this._visit(setup);
+                    if (setup[0] != "var") {
+                        this._write("; ");
+                    } else {
+                        this._write(" ");
+                    }
+                } else {
+                    this._write("; ");
+                }
+
+                var condition = ast[2];
+                if (condition) this._visit(condition);
+                this._write("; ");
+
+                var update = ast[3];
+                if (update) this._visit(update);
+                this._writeLine(") {");
+                this._indentLevel++;
+
+                var body = ast[4];
+                this._visit(body);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("}");
+            },
+
             "var": function (ast) {
                 this._write("var ");
 
@@ -473,6 +547,10 @@ var Jscex = (function () {
                 this._visitStatements(ast[1]);
             },
 
+            "block_n": function (ast) {
+                this._visitStatementsNormally(ast[1]);
+            },
+
             "new": function (ast) {
                 var ctor = ast[1];
 
@@ -529,6 +607,10 @@ var Jscex = (function () {
                     ._write(")");
             },
 
+            "while_n": function (ast) {
+                debugger;
+            },
+
             "do": function (ast) {
                 this._write(this._builderName)
                     ._writeLine(".Loop(");
@@ -558,6 +640,10 @@ var Jscex = (function () {
 
                 this._writeIndents()
                     ._write(")");
+            },
+
+            "do_n": function (ast) {
+                debugger;
             },
 
             "if": function (ast) {
@@ -611,6 +697,10 @@ var Jscex = (function () {
                     ._write("})");
             },
 
+            "if_n": function (ast) {
+                debugger;
+            },
+
             "return": function (ast) {
                 this._write("return ")
                     ._write(this._builderName)
@@ -622,10 +712,21 @@ var Jscex = (function () {
                 this._write(");");
             },
 
+            "return_n": function (ast) {
+                this._write("return");
+                var value = ast[1];
+                if (value) this._write(" ")._visit(value);
+                this._write(";");
+            },
+
             "break": function (ast) {
                 this._write("return ")
                     ._write(this._builderName)
                     ._write(".Break();");
+            },
+
+            "break_n": function (ast) {
+                this._write("break;");
             },
 
             "continue": function (ast) {
@@ -634,12 +735,22 @@ var Jscex = (function () {
                     ._write(".Continue();");
             },
 
+            "continue_n": function (ast) {
+                this._write("continue;");
+            },
+
             "throw": function (ast) {
                 this._write("return ")
                     ._write(this._builderName)
                     ._write(".Throw(")
                     ._visit(ast[1])
                     ._write(");");
+            },
+
+            "throw_n": function (ast) {
+                this._write("throw ")
+                    ._visit(ast[1])
+                    ._write(";");
             },
 
             "conditional": function (ast) {
@@ -683,6 +794,18 @@ var Jscex = (function () {
 
                 this._writeIndents()
                     ._write(")");
+            },
+
+            "try_n": function (ast) {
+                debugger;
+            },
+
+            "defun": function (ast) {
+                this._visitFunction(ast);
+            },
+
+            "function": function (ast) {
+                this._visitFunction(ast);
             }
         }
     };
