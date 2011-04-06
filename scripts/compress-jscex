@@ -1,6 +1,6 @@
 # pre-processing for Closure Compiler
 sed \
-    -e 's/var Jscex =/window["Jscex"] =/' \
+    -e 's/var Jscex =/my_temp_root["Jscex"] =/' \
     -e 's/\._writeLine(/._write(/g' \
     -e 's/this\._write();//g' \
     -e 's/\._write()//g' \
@@ -20,7 +20,7 @@ sed \
 java -jar ../tools/compiler.jar --js ../bin/jscex.tmp.js --js_output_file ../bin/jscex.tmp.min.js --compilation_level ADVANCED_OPTIMIZATIONS
 
 # post-processing
-sed 's/window\.Jscex=/var Jscex=/' ../bin/jscex.tmp.min.js > ../bin/jscex.min.js
+sed 's/my_temp_root\.Jscex=/var Jscex=/' ../bin/jscex.tmp.min.js > ../bin/jscex.min.js
 
 # remove temp files
 rm ../bin/jscex.tmp*.js
