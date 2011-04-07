@@ -608,7 +608,19 @@ var Jscex = (function () {
             },
 
             "while_n": function (ast) {
-                debugger;
+                var condition = ast[1];
+                var body = ast[2];
+
+                this._write("while (")
+                    ._visit(condition)
+                    ._writeLine(") {");
+                this._indentLevel++;
+
+                this._visit(body);
+                this._indentLevel--;
+
+                this._writeIndents();
+                this._write("}");
             },
 
             "do": function (ast) {
@@ -643,7 +655,19 @@ var Jscex = (function () {
             },
 
             "do_n": function (ast) {
-                debugger;
+                var condition = ast[1];
+                var body = ast[2];
+
+                this._writeLine("do {");
+                this._indentLevel++;
+
+                this._visit(body);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("} while (")
+                    ._visit(condition)
+                    ._write(")");
             },
 
             "if": function (ast) {
@@ -698,7 +722,37 @@ var Jscex = (function () {
             },
 
             "if_n": function (ast) {
-                debugger;
+
+                var condition = ast[1];
+                var thenPart = ast[2];
+
+                this._write("if (")
+                    ._visit(condition)
+                    ._writeLine(") {");
+                this._indentLevel++;
+
+                this._visit(thenPart);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("}");
+
+                var elsePart = ast[3];
+                if (elsePart) {
+                    if (elsePart[0] == "if") {
+                        this._write(" else ")
+                            ._visit(elsePart);
+                    } else {
+                        this._writeLine(" else {")
+                        this._indentLevel++;
+
+                        this._visit(elsePart)
+                        this._indentLevel--;
+
+                        this._writeIndents()
+                            ._write("}");
+                    }
+                }
             },
 
             "return": function (ast) {
@@ -797,7 +851,25 @@ var Jscex = (function () {
             },
 
             "try_n": function (ast) {
-                debugger;
+
+                this._writeLine("try {");
+                this._indentLevel++;
+
+                this._visitStatementsNormally(ast[1]);
+                this._indentLevel--;
+
+                var catchClause = ast[2];
+                this._writeIndents()
+                    ._write("} catch (")
+                    ._write(catchClause[0])
+                    ._writeLine(") {");
+                this._indentLevel++;
+
+                this._visitStatementsNormally(catchClause[1]);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("}");
             },
 
             "defun": function (ast) {
