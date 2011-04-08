@@ -811,7 +811,7 @@ Jscex = (function () {
         return generator.generate(funcAst);
     }
 
-    function compile(builder, func) {
+    function compile(builderName, func) {
         var funcCode = func.toString();
 
         var code = "var f = " + funcCode + ";";
@@ -819,13 +819,14 @@ Jscex = (function () {
 
         // [ "toplevel", [ [ "var", [ [ "f", [...] ] ] ] ] ]
         var funcAst = ast[1][0][1][0][1];
-        var newCode = generate(builder, funcAst);
+        var generator = new CodeGenerator(builderName);
+        var newCode = generator.generate(funcAst);
 
         if (JSCEX_DEBUG) {
             _log(funcCode, newCode);
         }
         
-        return "(" + newCode + ");"
+        return "(" + newCode + ")";
     };
 
     return {
