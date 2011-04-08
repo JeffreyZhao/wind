@@ -17,6 +17,18 @@ JscexExtractor.prototype = {
 
             if (isEval && isJscexCompile) {
 
+                /**
+                 * Now "node.start" points to the first charactor of the "eval" method call,
+                 * but "node.end" points to the next charactor of the function to compile
+                 * rather than the end of "eval" calls, like this:
+                 *
+                 * var abc = eval(Jscex.compile("xyz", function (args) { ... } )  );
+                 *           ^                                                ^
+                 *       node.start                                       node.end
+                 *
+                 * That should be a bug of Narcissus, but currently we can only find out the
+                 * two following right bracket after "node.end".
+                 */
                 var end = node.end - 1;
                 while (this._code[++end] != ')');
                 while (this._code[++end] != ')');
@@ -71,7 +83,6 @@ JscexExtractor.prototype = {
                 this._visitChildren(node);
                 break;
             case "IDENTIFIER":
-                // this._visitChildren(node)
                 this._visit(node.initializer);
                 break;
             case "NUMBER":
