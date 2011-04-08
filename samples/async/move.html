@@ -8,7 +8,7 @@
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
     
     <script type="text/javascript">
-        var moveAsync = eval(Jscex.compile($async, function(e, startPos, endPos, duration) {
+        var moveAsync = eval(Jscex.compile("async", function(e, startPos, endPos, duration) {
             for (var t = 0; t < duration; t += 50) {
                 e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
                 e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
@@ -19,7 +19,7 @@
             e.style.top = endPos.y;
         }));
         
-        var moveSquareAsync = eval(Jscex.compile($async, function(e) {
+        var moveSquareAsync = eval(Jscex.compile("async", function(e) {
             $await(moveAsync(e, {x:100, y:100}, {x:400, y:100}, 1000));
             $await(moveAsync(e, {x:400, y:100}, {x:400, y:400}, 1000));
             $await(moveAsync(e, {x:400, y:400}, {x:100, y:400}, 1000));

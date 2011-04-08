@@ -238,7 +238,7 @@
             }
         }
 
-        BulletGame.prototype._bulletFlyAsync = eval(Jscex.compile($async, function (f) {
+        BulletGame.prototype._bulletFlyAsync = eval(Jscex.compile("async", function (f) {
             var options = this._options;
             var bullet = {pos: {x: 0, y: 0}};
 

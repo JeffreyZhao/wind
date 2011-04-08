@@ -38,12 +38,12 @@
             ctx.stroke();
         }
 
-        var compareAsync = eval(Jscex.compile($async, function (x, y) {
+        var compareAsync = eval(Jscex.compile("async", function (x, y) {
             $await(Jscex.Async.sleep(10));
             return x - y;
         }));
 
-        var swapAsync = eval(Jscex.compile($async, function (array, x, y) {
+        var swapAsync = eval(Jscex.compile("async", function (array, x, y) {
             var t = array[x];
             array[x] = array[y];
             array[y] = t;
@@ -53,7 +53,7 @@
             $await(Jscex.Async.sleep(20));
         }));
 
-        var bubbleSortAsync = eval(Jscex.compile($async, function (array) {
+        var bubbleSortAsync = eval(Jscex.compile("async", function (array) {
             for (var x = 0; x < array.length; x++) {
                 for (var y = 0; y < array.length - x; y++) {
                     var r = $await(compareAsync(array[y], array[y + 1]));
@@ -64,7 +64,7 @@
             }
         }));
 
-        var selectionSortAsync = eval(Jscex.compile($async, function (array) {
+        var selectionSortAsync = eval(Jscex.compile("async", function (array) {
             for(var j = 0; j < array.length - 1; j++) {
                 var mi = j;
                 for (var i = j + 1; i < array.length; i++) {
@@ -75,7 +75,7 @@
             }            
         }));
 
-        var _partitionAsync = eval(Jscex.compile($async, function (array, begin, end) {
+        var _partitionAsync = eval(Jscex.compile("async", function (array, begin, end) {
             var i = begin;
             var j = end;
             var pivot = array[Math.floor((begin + end) / 2)];
@@ -101,7 +101,7 @@
 	        return i;
         }));
         
-        var _quickSortAsync = eval(Jscex.compile($async, function (array, begin, end) {
+        var _quickSortAsync = eval(Jscex.compile("async", function (array, begin, end) {
             var index = $await(_partitionAsync(array, begin, end));
 
             if (begin < index - 1) {
@@ -113,7 +113,7 @@
             }
         }));
 
-        var quickSortAsync = eval(Jscex.compile($async, function (array) {
+        var quickSortAsync = eval(Jscex.compile("async", function (array) {
             $await(_quickSortAsync(array, 0, array.length - 1));
         }));
 

@@ -6,12 +6,14 @@ var JSCEX_DEBUG = true;
  */
 Jscex = (function () {
 
+    var builderVar = "$_builder_$";
+
     /**
      * @constructor
      */
-    function CodeGenerator(builder) {
-        this._builderName = builder["name"];
-        this._binder = builder["binder"];
+    function CodeGenerator(builderName) {
+        this._builderName = builderName;
+        this._binder = Jscex.builders[builderName]["binder"];
         this._normalMode = false;
         this._indentLevel = 0;
     }
@@ -45,8 +47,15 @@ Jscex = (function () {
             this._indentLevel++;
 
             this._writeIndents()
+                ._write("var ")
+                ._write(builderVar)
+                ._write(" = Jscex.builders[")
+                ._write(JSON.stringify(this._builderName))
+                ._writeLine("];");
+
+            this._writeIndents()
                 ._write("return ")
-                ._write(this._builderName)
+                ._write(builderVar)
                 ._writeLine(".Start(this, function () {");
             this._indentLevel++;
 
@@ -132,7 +141,7 @@ Jscex = (function () {
             if (index >= statements.length) {
                 this._writeIndents()
                     ._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._writeLine(".Normal();");
                 return this;
             }
@@ -143,7 +152,7 @@ Jscex = (function () {
             if (bindInfo) {
                 this._writeIndents()
                     ._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._write(".Bind(")
                     ._visit(bindInfo.expression)
                     ._write(", function (")
@@ -154,7 +163,7 @@ Jscex = (function () {
                 if (bindInfo.isReturn) {
                     this._writeIndents()
                         ._write("return ")
-                        ._write(this._builderName)
+                        ._write(builderVar)
                         ._write(".Return(")
                         ._write(bindInfo.argName)
                         ._writeLine(");");
@@ -183,7 +192,7 @@ Jscex = (function () {
                     } else {
                         this._writeIndents()
                             ._write("return ")
-                            ._write(this._builderName)
+                            ._write(builderVar)
                             ._writeLine(".Combine(");
                         this._indentLevel++;
                         
@@ -191,7 +200,7 @@ Jscex = (function () {
                             ._visit(stmt)
                             ._writeLine(",")
                             ._writeIndents()
-                            ._write(this._builderName)
+                            ._write(builderVar)
                             ._writeLine(".Delay(function() {");
                         this._indentLevel++;
 
@@ -336,7 +345,7 @@ Jscex = (function () {
 
             "for": function (ast) {
         
-                this._write(this._builderName)
+                this._write(builderVar)
                     ._writeLine(".Delay(function() {");
                 this._indentLevel++;
                 
@@ -354,7 +363,7 @@ Jscex = (function () {
                 
                 this._writeIndents()
                     ._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._writeLine(".Loop(");
                 this._indentLevel++;
                 
@@ -391,7 +400,7 @@ Jscex = (function () {
                 this._writeIndents()
                     ._writeLine("},")
                     ._writeIndents()
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._writeLine(".Delay(function() {");
                 this._indentLevel++;
 
@@ -581,7 +590,7 @@ Jscex = (function () {
 
             "while": function (ast) {
                 
-                this._write(this._builderName)
+                this._write(builderVar)
                     ._writeLine(".Loop(");
                 this._indentLevel++;
 
@@ -601,7 +610,7 @@ Jscex = (function () {
                     ._writeIndents()
                     ._writeLine("null, ")
                     ._writeIndents()
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._writeLine(".Delay(function() {");
                 this._indentLevel++;
 
@@ -636,7 +645,7 @@ Jscex = (function () {
             },
 
             "do": function (ast) {
-                this._write(this._builderName)
+                this._write(builderVar)
                     ._writeLine(".Loop(");
                 this._indentLevel++;
 
@@ -648,7 +657,7 @@ Jscex = (function () {
                     ._writeIndents()
                     ._writeLine("null, ")
                     ._writeIndents()
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._writeLine(".Delay(function () {");
                 this._indentLevel++;
 
@@ -684,7 +693,7 @@ Jscex = (function () {
 
             "if": function (ast) {
 
-                this._write(this._builderName)
+                this._write(builderVar)
                     ._writeLine(".Delay(function() {");
                 this._indentLevel++;
 
@@ -720,7 +729,7 @@ Jscex = (function () {
                 } else {
                     this._writeIndents()
                         ._write("return ")
-                        ._write(this._builderName)
+                        ._write(builderVar)
                         ._writeLine(".Normal();");
                 }
                 this._indentLevel--;
@@ -769,7 +778,7 @@ Jscex = (function () {
 
             "return": function (ast) {
                 this._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._write(".Return(");
 
                 var value = ast[1];
@@ -787,7 +796,7 @@ Jscex = (function () {
 
             "break": function (ast) {
                 this._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._write(".Break();");
             },
 
@@ -797,7 +806,7 @@ Jscex = (function () {
 
             "continue": function (ast) {
                 this._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._write(".Continue();");
             },
 
@@ -807,7 +816,7 @@ Jscex = (function () {
 
             "throw": function (ast) {
                 this._write("return ")
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._write(".Throw(")
                     ._visit(ast[1])
                     ._write(");");
@@ -830,12 +839,12 @@ Jscex = (function () {
             },
 
             "try": function (ast) {
-                this._write(this._builderName)
+                this._write(builderVar)
                     ._writeLine(".Try(");
                 this._indentLevel++;
 
                 this._writeIndents()
-                    ._write(this._builderName)
+                    ._write(builderVar)
                     ._writeLine(".Delay(function () {");
                 this._indentLevel++;
 
@@ -924,7 +933,8 @@ Jscex = (function () {
 
     return {
         "generate": generate,
-        "compile": compile
+        "compile": compile,
+        "builders": {}
     };
 
 })();

@@ -186,9 +186,7 @@ Jscex.AsyncBuilder.prototype.Try = function (tryBlock, catchGenerator) {
 }
 
 Jscex.AsyncBuilder.prototype.binder = "$await";
-Jscex.AsyncBuilder.prototype.name = "$async";
-
-var $async = new Jscex.AsyncBuilder();
+Jscex.builders["async"] = new Jscex.AsyncBuilder();
 
 Jscex.Async = {
     sleep: function (delay) {
@@ -271,11 +269,3 @@ Jscex.Async = {
         };
     }
 };
-
-if ((typeof exports) != "undefined") {
-    for (var m in Jscex.Async) {
-        exports[m] = Jscex.Async[m];
-    }
-
-    exports.builders = { "$async": $async };
-}
