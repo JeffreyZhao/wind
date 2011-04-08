@@ -801,7 +801,7 @@ Jscex = (function () {
     };
 
     function _log(funcCode, newCode) {
-        if (typeof(console) != "undefined" && console.log) {
+        if (typeof(window) != "undefined" && typeof(console) != "undefined" && console.log) {
             console.log(funcCode + "\n\n>>>\n\n" + newCode);
         }
     }
