@@ -57,7 +57,7 @@ Jscex = (function () {
                 ._writeLine("});");
             this._indentLevel--;
 
-            this._writeLine("}");
+            this._write("}");
 
             return this._buffer.join("");
         },
