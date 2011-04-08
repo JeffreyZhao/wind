@@ -1,6 +1,5 @@
 # pre-processing for Closure Compiler
 sed \
-    -e 's/var Jscex =/my_temp_root["Jscex"] =/' \
     -e 's/\._writeLine(/._write(/g' \
     -e 's/this\._write();//g' \
     -e 's/\._write()//g' \
@@ -9,10 +8,6 @@ sed \
     -e 's/this\._indentLevel = 0;//g' \
     -e 's/this\._indentLevel++;//g' \
     -e 's/this\._indentLevel--;//g' \
-    -e 's/checkBindArgs([^;]*;//g' \
-    -e 's/needBracket([^;]*;/true;/g' \
-    -e 's/throwUnsupportedError();//g' \
-    -e 's/_log([^;]*;//g' \
     ../src/jscex.js > ../bin/jscex.tmp.js
 
 
@@ -20,11 +15,9 @@ sed \
 java \
     -jar ../tools/compiler.jar \
     --js ../bin/jscex.tmp.js \
-    --js_output_file ../bin/jscex.tmp.min.js \
+    --js_output_file ../bin/jscex.min.js \
+    --define 'JSCEX_DEBUG=false' \
     --compilation_level ADVANCED_OPTIMIZATIONS
-
-# post-processing
-sed 's/my_temp_root\.Jscex=/var Jscex=/' ../bin/jscex.tmp.min.js > ../bin/jscex.min.js
 
 # remove temp files
 rm ../bin/jscex.tmp*.js

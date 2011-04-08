@@ -1,4 +1,10 @@
-var Jscex = (function () {
+/** @define {boolean} */
+var JSCEX_DEBUG = true;
+
+/**
+ * Defined in global, no "var".
+ */
+Jscex = (function () {
 
     /**
      * @constructor
@@ -51,7 +57,7 @@ var Jscex = (function () {
                 ._writeLine("});");
             this._indentLevel--;
 
-            this._writeLine("};");
+            this._writeLine("}");
 
             return this._buffer.join("");
         },
@@ -70,7 +76,9 @@ var Jscex = (function () {
                 if (expr[0] == "call") {
                     var callee = expr[1];
                     if (callee[0] == "name" && callee[1] == this._binder) {
-                        checkBindArgs(expr[2]);
+                        if (JSCEX_DEBUG) {
+                            checkBindArgs(expr[2]);
+                        }
                         return {
                             expression: expr[2][0],
                             argName: "",
@@ -87,7 +95,9 @@ var Jscex = (function () {
                     if (expr && expr[0] == "call") {
                         var callee = expr[1];
                         if (callee[0] == "name" && callee[1] == this._binder) {
-                            checkBindArgs(expr[2]);
+                            if (JSCEX_DEBUG) {
+                                checkBindArgs(expr[2]);
+                            }
                             return {
                                 expression: expr[2][0],
                                 argName: name,
@@ -101,7 +111,9 @@ var Jscex = (function () {
                 if (expr && expr[0] == "call") {
                     var callee = expr[1];
                     if (callee[0] == "name" && callee[1] == this._binder) {
-                        checkBindArgs(expr[2]);
+                        if (JSCEX_DEBUG) {
+                            checkBindArgs(expr[2]);
+                        }
                         return {
                             expression: expr[2][0],
                             argName: "$$__$$__",
@@ -256,7 +268,7 @@ var Jscex = (function () {
 
             if (visitor) {
                 visitor.call(this, ast);
-            } else {
+            } else if (JSCEX_DEBUG) {
                 throwUnsupportedError();
             }
 
@@ -455,7 +467,7 @@ var Jscex = (function () {
                     return !(type == "num" || type == "name" || type == "dot");
                 }
 
-                var lnb = needBracket(left);
+                var lnb = (!JSCEX_DEBUG) || needBracket(left);
                 if (lnb) {
                     this._write("(")._visit(left)._write(") ");
                 } else {
@@ -464,7 +476,7 @@ var Jscex = (function () {
 
                 this._write(op);
 
-                var rnb = needBracket(right);
+                var rnb = (!JSCEX_DEBUG) || needBracket(right);
                 if (rnb) {
                     this._write(" (")._visit(right)._write(")");
                 } else {
@@ -479,7 +491,7 @@ var Jscex = (function () {
                     return !(prop[0] == "name")
                 }
 
-                var nb = needBracket();
+                var nb = (!JSCEX_DEBUG) || needBracket();
                 if (nb) {
                     this._write("(")
                         ._visit(prop)
@@ -530,7 +542,7 @@ var Jscex = (function () {
                     return !(leftOp == "dot" || leftOp == "name");
                 }
 
-                var nb = needBracket();
+                var nb = (!JSCEX_DEBUG) || needBracket();
                 if (nb) {
                     this._write("(")
                         ._visit(ast[1])
@@ -888,6 +900,11 @@ var Jscex = (function () {
         }
     }
 
+    function generate(builder, funcAst) {
+        var generator = new CodeGenerator(builder);
+        return generator.generate(funcAst);
+    }
+
     function compile(builder, func) {
         var funcCode = func.toString();
 
@@ -896,15 +913,18 @@ var Jscex = (function () {
 
         // [ "toplevel", [ [ "var", [ [ "f", [...] ] ] ] ] ]
         var funcAst = ast[1][0][1][0][1];
+        var newCode = generate(builder, funcAst);
 
-        var generator = new CodeGenerator(builder);
-        var newCode = generator.generate(funcAst);
-
-        _log(funcCode, newCode);
+        if (JSCEX_DEBUG) {
+            _log(funcCode, newCode);
+        }
         
-        return "(function () {\n\nreturn " + newCode + "\n\n})();";
+        return "(" + newCode + ");"
     };
 
-    return { compile: compile };
+    return {
+        "generate": generate,
+        "compile": compile
+    };
 
 })();

@@ -272,3 +272,10 @@ Jscex.Async = {
     }
 };
 
+if ((typeof exports) != "undefined") {
+    for (var m in Jscex.Async) {
+        exports[m] = Jscex.Async[m];
+    }
+
+    exports.builders = { "$async": $async };
+}
