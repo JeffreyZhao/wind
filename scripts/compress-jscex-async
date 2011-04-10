@@ -1,0 +1,20 @@
+# generate externs files
+cat << EOF > ../bin/jscex.async.tmp.externs.js
+var Jscex = { 
+    builders: {
+        "a": { binder: true }
+    },
+    Async: {
+        startImmediately: function () { }
+    }
+};
+EOF
+
+java \
+    -jar ../tools/compiler.jar \
+    --externs ../bin/jscex.async.tmp.externs.js \
+    --js ../src/jscex.async.js \
+    --js_output_file ../bin/jscex.async.min.js \
+    --compilation_level ADVANCED_OPTIMIZATIONS
+
+rm ../bin/jscex.async.tmp*.js

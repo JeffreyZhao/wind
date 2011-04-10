@@ -13,7 +13,7 @@ Jscex = (function () {
      */
     function CodeGenerator(builderName) {
         this._builderName = builderName;
-        this._binder = Jscex.builders[builderName]["binder"];
+        this._binder = Jscex.builders[builderName].binder;
         this._normalMode = false;
         this._indentLevel = 0;
     }

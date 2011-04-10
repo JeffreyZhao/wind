@@ -10,10 +10,19 @@ sed \
     -e 's/this\._indentLevel--;//g' \
     ../src/jscex.js > ../bin/jscex.tmp.js
 
+# generate externs files
+cat << EOF > ../bin/jscex.tmp.externs.js
+var Jscex = { 
+    builders: {
+        "a": { binder: true }
+    }
+};
+EOF
 
 # use Closure Compiler to compress
 java \
     -jar ../tools/compiler.jar \
+    --externs ../bin/jscex.tmp.externs.js \
     --js ../bin/jscex.tmp.js \
     --js_output_file ../bin/jscex.min.js \
     --define 'JSCEX_DEBUG=false' \
