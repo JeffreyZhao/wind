@@ -122,7 +122,7 @@ JscexExtractor.prototype = {
                 break;
             default:
                debugger;
-               throw new Error("Do not support token: " + token);
+               throw new Error('"' + token + '" is not currently supported.');
         }
     },
 
