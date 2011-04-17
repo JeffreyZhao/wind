@@ -207,7 +207,7 @@ Jscex = (function () {
             var normalMode = this._normalMode;
             this._normalMode = true;
 
-            var funcName = ast[1];
+            var funcName = ast[1] || "";
             var args = ast[2];
             var statements = ast[3];
             
