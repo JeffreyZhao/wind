@@ -93,27 +93,27 @@ It seems the implementation with Jscex is a bit longer in this simple case - ple
 
 Animations are important for rich user interfaces. Let's build an animation like "move the element from here to there in a period of time" (samples/async/move.html). The traditional version of the <code>move</code> could be:
 
-var moveTraditionally = function (e, startPos, endPos, duration, callback) {
+    var moveTraditionally = function (e, startPos, endPos, duration, callback) {
 
-    var t = 0;
+        var t = 0;
 
-    // move a bit
-    function move() {
-        e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
-        e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
+        // move a bit
+        function move() {
+            e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
+            e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
 
-        t += 50;
-        if (t < duration) {
-            setTimeout(50, move);
-        } else { // finished
-            e.style.left = endPos.x;
-            e.style.top = endPos.y;
-            callback();
+            t += 50;
+            if (t < duration) {
+                setTimeout(50, move);
+            } else { // finished
+                e.style.left = endPos.x;
+                e.style.top = endPos.y;
+                callback();
+            }
         }
-    }
 
-    setTimeout(50, move);
-}
+        setTimeout(50, move);
+    }
 
 Can someone tell me the algorithm used to move the element? After checking the code again and again, may be we would understand the implementation, but it's really difficult and uncomfortable for the programmer to read and write codes like that. But everything would be changed with Jscex:
 
@@ -386,7 +386,7 @@ The AOT compiler would keep the code others than Jscex functions. We can compres
 
 Jscex is released under the BSD license:
 
-<pre>Copyright 2011 (c) Jeffrey Zhao <jeffz@live.com>
+<pre>Copyright 2011 (c) Jeffrey Zhao &lt;jeffz@live.com&gt;
 Based on UglifyJS (https://github.com/mishoo/UglifyJS).
 
 Redistribution and use in source and binary forms, with or without
