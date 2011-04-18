@@ -1,14 +1,123 @@
-"Jscex" is short for "JavaScript Computation EXpressions". It provide a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios.
+"Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm) - including mainstreaming browsers or server side JavaScript environments (e.g., [node.js](http://nodejs.org/)).
 
-The core feature of Jscex is a compiler which turns a normal JavaScript function into a monadic one:
+Currently features:
 
-    var monadicFunction = eval(builderName, function (arg0, arg1, ...) {
-        ... 
+* A JIT (just-in-time) compiler which generates codes **at runtime** - mainly used in development environment.
+* An AOT (ahead-of-time) compiler which generates code **before retime** - mainly used in production environment.
+* An async library which simplied async programming significantly.
+
+# Jscex asynchronous library
+
+Asynchronous programming is essential, especially in JavaScript. JavaScript doesn't provide any primitives for writing codes can block the execution. Any operations which take a period of time have to be written in async ways. Async operations usually send back the results by callback functions when finished, and we could do the rest of work in the callback.
+
+Here comes the problem. We usually express our work linearly, but async tasks with callbacks require logical division of algorithms. We cannot implement conditions with <code>if</code> or loops with <code>while</code>/<code>for</code>/<code>do</code> statements. It's very difficult to combine multiple asynchronous operations or handle exceptions and cancellation.
+
+So Jscex comes to the rescue with its asynchronous library.
+
+## How to use
+
+The core feature of Jscex is a compiler which convert standard JavaScript functions into a monadic ones. The compiler consists of three parts:
+
+* lib/json2.js: The [JSON](http://json.org/) stringifier provided by Douglas Crockfod.
+* lib/uglifyjs-parser.js: The JavaScript parser of [UglifyJS](https://github.com/mishoo/UglifyJS) project. It's the JavaScript port of the LISP project [parse-js](http://marijn.haverbeke.nl/parse-js/).
+* src/jscex.js: The implementation of Jscex JIT compiler, which produces code at runtime.
+
+All the three files list above are uncompressed version mainly used for developement. The minified version of them are in "bin" folder, which is suitable for production use (if you're not using AOT compile mode, see the "AOT compiler" section for more details). Furthermore, the dev version of Jscex compiler would produce programmer-friendly code, which is easily for debugging and the minified version would run a bit faster.
+
+To use the async builder of Jscex, we should load the "src/jscex.async.js" file too. Now everything is prepared, here's how we compile a normal JavaScript function with async builder:
+
+    var somethingAsync = eval("async", function (a, b) {
+        // implementation
     });
 
-As the most common usage, we use the $async builder for asynchronous programming (this sample can be found in samples/async/move.html):
+For more details, please check the following sections.
 
-    var moveAsync = eval(Jscex.compile("$async", function (e, startPos, endPos, duration) {
+## Samples:
+
+All the following samples can be found in samples/async folder.
+
+### Clock:
+
+We are going to draw a clock with HTML5 canvas on the page (samples/async/clock.html). It's rather easy for most front-end programmers:
+
+    function drawClock(time) {
+        // clear and canvas and draw a clock on it.
+    }
+
+    setInterval(1000, function () {
+        drawClock(new Date());
+    });
+
+That's the callback version of implementation, but in Jscex we could write code like this:
+
+    var drawClockAsync = eval(Jscex.compile("async", function (interval) {
+        while (true) {
+            drawClock(new Date());
+            // wait for an async operation to complete
+            $await(Jscex.Async.sleep(interval));
+        }
+    }));
+
+    Jscex.Async.start(drawClockAsync(1000));
+
+We build an async operation <code>drawClockAsync</code>, we wrote an infinite loop in the mothod. In each iteration we draw a clock with current time and call <code>Jscex.Async.sleep</code> method, the sleep operation **blocks** the code for 1 seconds.
+
+How can we block the code without the support of runtime? The magic here is: we are not execute the code we wrote actually, the <code>Jscex.compile</code> method accept the function we provide and convert it into another:
+
+    function (interval) {
+        var $_builder_$ = Jscex.builders["async"];
+        return $_builder_$.Start(this, function () {
+            return $_builder_$.Loop(
+                function () {
+                    return true;
+                },
+                null, 
+                $_builder_$.Delay(function() {
+                    drawClock(new Date());
+                    return $_builder_$.Bind(Jscex.Async.sleep(interval), function () {
+                        return $_builder_$.Normal();
+                    });
+                }),
+                false
+            );
+        });
+    }
+
+It's not necessary for us to understand the code currently. The string form of the new function generated by Jscex compiler will be dynamicly executed by <code>eval</code> method, preserving the current scope and context (variables, closures, etc.).
+
+The <code>$await</code> method is the "bind" operation of <code>async</code> builder, it tells the compiler to put the code after that in the callback for the builder's "Bind" method. The <code>$await</code> method accepts an async operation, provide a semantic of "waiting the operation to complete".
+
+It seems the implementation with Jscex is a bit longer in this simple case - please look at the following samples. They will tell you the real power of Jscex.
+
+### Animations
+
+Animations are important for rich user interfaces. Let's build an animation like "move the element from here to there in a period of time" (samples/async/move.html). The traditional version of the <code>move</code> could be:
+
+var moveTraditionally = function (e, startPos, endPos, duration, callback) {
+
+    var t = 0;
+
+    // move a bit
+    function move() {
+        e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
+        e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
+
+        t += 50;
+        if (t < duration) {
+            setTimeout(50, move);
+        } else { // finished
+            e.style.left = endPos.x;
+            e.style.top = endPos.y;
+            callback();
+        }
+    }
+
+    setTimeout(50, move);
+}
+
+Can someone tell me the algorithm used to move the element? After checking the code again and again, may be we would understand the implementation, but it's really difficult and uncomfortable for the programmer to read and write codes like that. But everything would be changed with Jscex:
+
+    var moveAsync = eval(Jscex.compile("async", function (e, startPos, endPos, duration) {
         for (var t = 0; t < duration; t += 50) {
             e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
             e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
@@ -18,57 +127,292 @@ As the most common usage, we use the $async builder for asynchronous programming
         e.style.left = endPos.x;
         e.style.top = endPos.y;
     }));
-    
-    var moveSquareAsync = eval(Jscex.compile("$async", function (e) {
+
+We could express our algorithm in normal way (linearly): loop with a <code>for</code> statment, sleep for 50 milliseconds in each iteration and move the element again. It's just simple and elegant.
+
+Now we got an async method <code>moveAsync</code>, we can use it when building another async method, just like the <code>Jscex.Async.sleep</code> method in the core library. They are implementing the same "async method" protocal for outside. So check the method below:
+
+    var moveSquareAsync = eval(Jscex.compile("async", function(e) {
         $await(moveAsync(e, {x:100, y:100}, {x:400, y:100}, 1000));
         $await(moveAsync(e, {x:400, y:100}, {x:400, y:400}, 1000));
         $await(moveAsync(e, {x:400, y:400}, {x:100, y:400}, 1000));
         $await(moveAsync(e, {x:100, y:400}, {x:100, y:100}, 1000));
     }));
 
-We can express our algorithms linearly, the compiler would generate the code as below:
+We can easily find out how the async method above work: it moves an element with a square routine. It's really easy for us to combine multiple async operations into another.
 
-    var moveAsync = function (e, startPos, endPos, duration) {
-        return $async.Delay(function () {
-            return $async.Combine(
-                $async.Delay(function () {
-                    var t = 0;
-                    return $async.For(
-                        function () { return t < duration; }, 
-                        function () { t += 50; },
-                        $async.Delay(function () {
-                            e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
-                            e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
-                            return $async.Bind(Jscex.Async.sleep(50), function () {
-                            return $async.Normal();
-                        });
-                    })
-                );
-            }),
-            $async.Delay(function () {
-                e.style.left = endPos.x;
-                e.style.top = endPos.y;
-                return $async.Normal();
+### Sorting animations:
+
+Every programmer learns sorting algorithms, like bubble sort:
+
+    var compare = function (x, y) {
+        return x - y; 
+    }
+
+    var swap = function (array, i, j) {
+        var t = array[x];
+        array[x] = array[y];
+        array[y] = t;
+    }
+
+    var bubbleSort = function (array) {
+        for (var x = 0; x < array.length; x++) {
+            for (var y = 0; y < array.length - x; y++) {
+                if (compare(array[y], array[y + 1]) > 0) {
+                    swap(array, y, y + 1);
+                }
+            }
+        }
+    }
+
+Can we build a program to show how bubble sort works? The basic idea of represent an sorting algoriths with animations is simple: repaint the graph after each swaping and wait for a second. But the implementation is not as easy as the idea looks like, we cannot use <code>for</code> loops anymore if we "stop" the code execution for some time using <code>setTimeout</code>. But here's the Jscex version:
+
+    var compareAsync = eval(Jscex.compile("async", function (x, y) {
+        $await(Jscex.Async.sleep(10)); // each "compare" takes 10 ms.
+        return x - y;
+    }));
+
+    var swapAsync = eval(Jscex.compile("async", function (array, x, y) {
+        var t = array[x];
+        array[x] = array[y];
+        array[y] = t;
+
+        repaint(array);
+
+        $await(Jscex.Async.sleep(20)); // each "swap" takes 20 ms.
+    }));
+
+    var bubbleSortAsync = eval(Jscex.compile("async", function (array) {
+        for (var x = 0; x < array.length; x++) {
+            for (var y = 0; y < array.length - x; y++) {
+                var r = $await(compareAsync(array[y], array[y + 1]));
+                if(r > 0) {
+                    $await(swapAsync(array, y, y + 1));
+                }
+            }
+        }
+    }));
+
+There's no need to explain more - it's just the standard "bubble sort" algorithm. And of course we can do create animation for "quick sort":
+
+    var _partitionAsync = eval(Jscex.compile("async", function (array, begin, end) {
+        var i = begin;
+        var j = end;
+        var pivot = array[Math.floor((begin + end) / 2)];
+
+        while (i <= j) {
+            while (true) {
+                var r = $await(compareAsync(array[i], pivot));
+                if (r < 0) { i++; } else { break; }
+            }
+
+            while (true) {
+                var r = $await(compareAsync(array[j], pivot));
+                if (r > 0) { j--; } else { break; }
+            }
+
+            if (i <= j) {
+                $await(swapAsync(array, i, j));
+                i++;
+                j--;
+            }
+        }
+
+        return i;
+    }));
+    
+    var _quickSortAsync = eval(Jscex.compile("async", function (array, begin, end) {
+        var index = $await(_partitionAsync(array, begin, end));
+
+        if (begin < index - 1) {
+            $await(_quickSortAsync(array, begin, index - 1));
+        }
+
+        if (index < end) {
+            $await(_quickSortAsync(array, index, end));
+        }
+    }));
+
+    var quickSortAsync = eval(Jscex.compile("async", function (array) {
+        $await(_quickSortAsync(array, 0, array.length - 1));
+    }));
+
+Please check the complete sample in "samples/async/sorting-animations.html". After opening the page with browser support HTML5 canvas, please click the links to view the animation of bubble sort, selection sort and quick sort.
+
+### Hanoi tower
+
+samples/async/hanoi.html
+
+### Simple web-server with node.js
+
+samples/async/node-server.js
+
+## Limitations:
+
+There're 3 limitations of the current version of Jscex - none of them becomes a real problem in my experiences.
+
+### Need separate $await statement
+
+Jscex compiler can only handle <code>$await</code> explicitly:
+
+* Simple: <code>$await(...);</code>
+* Assign the result to a variable: <code>var r = $await(...);</code>
+* Directly return: <code>return $await(...);</code>
+
+Codes below could not be compiled:
+
+    f(g(1), $await(...))
+
+    if (x > y && $await(...)) { ... }
+
+We should put <code>$await</code> in separate statement:
+
+    var a1 = g(1);
+    var a2 = $await(...);
+    f(a1, a2);
+
+    if (x > y) {
+        var flag = $await(...);
+        if (flag) { ... }
+    }
+
+### Nesting Jscex functions
+
+If you write nested Jscex functions, the inner function would not be compiled. For example:
+
+    var outsideAsync = eval(Jscex.compile("async", function () {
+
+        var innerAsync = eval(Jscex.compile("async", function () {
+            // inner implementations
+        }));
+
+    }));
+
+At runtime, the <code>outsideAsync</code> method would be compiled to:
+
+    function () {
+        var $_builder_$ = Jscex.builders["async"];
+        return $_builder_$.Start(this, function () {
+
+            var innerAsync = eval(Jscex.compile("async", function () {
+                // inner implementations
             }));
+            
+            return $_builder_$.Normal();
         });
-    };
+    }
 
-    var moveSquareAsync = function (e) {
-        return $async.Delay(function() {
-            return $async.Bind(moveAsync(e, {x: 100, y: 100}, {x: 400, y: 100}, 1000), function() {
-                return $async.Bind(moveAsync(e, {x: 400, y: 100}, {x: 400, y: 400}, 1000), function() {
-                    return $async.Bind(moveAsync(e, {x: 400, y: 400}, {x: 100, y: 400}, 1000), function() {
-                        return $async.Bind(moveAsync(e, {x: 100, y: 400}, {x: 100, y: 100}, 1000), function() {
-                            return $async.Normal();
+which means the <code>innerAsync</code> method would be compiled each time <code>outsideAsync</code> method called. That would be a performance code. So please DONOT put an Jscex function into another - until the problem being fixed.
+
+### Language support:
+
+Jscex compiler could generate code for almost all the features of ECMAScript 3 except:
+
+* Break to label
+* <code>switch</code> statment, please use if/else instead.
+
+# AOT compiler
+
+The AOT (ahead-of-time) compiler is a piece of JavaScript code (scripts/jscexc.js) which generates code before runtime.
+
+## Why we need an AOT compiler.
+
+Actually the JIT compiler works just fine. The function would be compiled only once for each page load or node.js execution, so the performance cost of compiler is really small. And the size of compiler is only around 10K when minified and gzipped - acceptable for me.
+
+But the problem comes from "script compressing". The script code would be compressed by tools like UglifyJS, Closure Compiler or YUI compressor. Jscex compiler works fine when the compress process is just removing the whitespaces and shorten the name of veriables, but modern compressors would rewrite the code for minimal size:
+
+    var bubbleSortAsync=eval(Jscex.compile("async",function(a){for(var b=0;b<a.length;b++)for(var c=0;c<a.length-b;c++){var d=$await(compareAsync(a[c],a[c+1]));d>0&&$await(swapAsync(a,c,c+1))}}))
+
+The code above is the code of bubble sort animation compressed by UglifyJS. Please notice that Jscex cannot handle code like <code>d>0&&$await(...)</code>, so we have to compile the code before compressing. That the main reason I build an AOT compiler.
+
+## Usage
+
+The AOT compiler runs with node.js:
+
+    node scripts/jscexc.js --input input_file --output output_file
+
+For the <code>moveSquaureAsync</code> method in previous samples:
+
+    var moveSquareAsync = eval(Jscex.compile("async", function(e) {
+        $await(moveAsync(e, {x:100, y:100}, {x:400, y:100}, 1000));
+        $await(moveAsync(e, {x:400, y:100}, {x:400, y:400}, 1000));
+        $await(moveAsync(e, {x:400, y:400}, {x:100, y:400}, 1000));
+        $await(moveAsync(e, {x:100, y:400}, {x:100, y:100}, 1000));
+    }));
+
+It would be compiled into:
+
+    function (e) {
+        var $_builder_$ = Jscex.builders["async"];
+        return $_builder_$.Start(this, function () {
+            return $_builder_$.Bind(moveAsync(e, {"x": 100, "y": 100}, {"x": 400, "y": 100}, 1000), function () {
+                return $_builder_$.Bind(moveAsync(e, {"x": 400, "y": 100}, {"x": 400, "y": 400}, 1000), function () {
+                    return $_builder_$.Bind(moveAsync(e, {"x": 400, "y": 400}, {"x": 100, "y": 400}, 1000), function () {
+                        return $_builder_$.Bind(moveAsync(e, {"x": 100, "y": 400}, {"x": 100, "y": 100}, 1000), function () {
+                            return $_builder_$.Normal();
                         });
                     });
                 });
             });
         });
-    };
-    
-Currently Jscex and Jscex.Async are just prototypes for simplifing asynchronous programming. In theory, we can do more in Jscex with different types of builders.
+    }
 
-For more information, please search for "F#", "Computation Expressions" and "Asynchronous Workflow" in your favourite search engines.
+The AOT compiler would keep the code others than Jscex functions. We can compress the code generated by AOT compiler safely. Futhermore, the compiled code could execute without "json2.js", "uglifyjs-parser.js" and "jscex.js". The async motheds could be executed properly with only "jscex.async.js", which is only 1KB when gzipped.
+
+## Limitations
+
+...
+
+# Beyond async
+
+    var rangeSeq = eval(Jscex.compile("seq", function (minInclusive, maxExclusive) {
+        for (var i = minInclusive; i < maxExclusive; i++) {
+            $yield(i);
+        }
+    }));
+
+# Jscex internals
+
+...
+
+# Related projects
+
+* F#:
+* C# vNext:
+* UglifyJS:
+* Narcissus:
+
+# License
+
+Jscex is released under the BSD license:
+
+<pre>Copyright 2011 (c) Jeffrey Zhao <jeffz@live.com>
+Based on UglifyJS (https://github.com/mishoo/UglifyJS).
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+    * Redistributions of source code must retain the above
+      copyright notice, this list of conditions and the following
+      disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials
+      provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.</pre>
 
 \- jeffz (jeffz[at]live[dot]com)
