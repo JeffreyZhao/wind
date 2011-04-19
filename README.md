@@ -26,9 +26,9 @@ All the three files list above are uncompressed version mainly used for develope
 
 To use the async library of Jscex, we should also load the "src/jscex.async.js" file. Now everything is prepared, here's how we compile a normal JavaScript function with async builder:
 
-    var somethingAsync = eval("async", function (a, b) {
+    var somethingAsync = eval(Jscex.compile("async", function (a, b) {
         // implementation
-    });
+    }));
 
 Please visit the following sections for more details.
 
