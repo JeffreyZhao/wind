@@ -579,8 +579,8 @@ Jscex is not only for async programming. The Jscex compiler turns the input func
 
 Jscex builders register themselves in <code>Jscex.builders</code> dictionary. The builder would be retrieved by name at runtime, you can get the following code by watching the <code>window.console.log</code> output or use the AOT compiler:
 
-    var rangeSeq = function (minInclusive, maxExclusive) {
-        var $_builder_$ = Jscex.builders["seq"];
+    function (minInclusive, maxExclusive) {
+        var $_builder_$ = Jscex.builders["async"];
         return $_builder_$.Start(this, function () {
             return $_builder_$.Delay(function() {
                 var i = minInclusive;
@@ -592,14 +592,16 @@ Jscex builders register themselves in <code>Jscex.builders</code> dictionary. Th
                         i++;
                     },
                     $_builder_$.Delay(function () {
-                        $yield(i);
-                        return $_builder_$.Normal();
+                        return $_builder_$.Bind(i, function () {
+                            return $_builder_$.Normal();
+                        });
                     }),
                     false
                 );
             });
         });
     }
+
 
 Unfortunately, the "seq builder" is not part of Jscex at this moment. It's one of the future plans of Jscex project.
 
