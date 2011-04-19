@@ -14,11 +14,10 @@ if ((typeof Jscex) == "undefined") {
 
         "binder": "$await",
 
-        "Start": function (_this, generator) {
+        "Start": function (_this, task) {
             return {
                 "start": function (callback) {
                     try {
-                        var task = generator.call(_this);
                         task.start(_this, function (type, value, target) {
                             if (type == "break" || type == "continue") {
                                 throw new Error('Invalid type for "Start": ' + type);

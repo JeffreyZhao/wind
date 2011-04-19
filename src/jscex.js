@@ -49,14 +49,14 @@ Jscex = (function () {
             this._writeIndents()
                 ._writeLine("var " + builderVar + " = Jscex.builders[" + JSON.stringify(this._builderName) + "];");
             this._writeIndents()
-                ._writeLine("return " + builderVar + ".Start(this, function () {");
+                ._writeLine("return " + builderVar + ".Start(this, " + builderVar + ".Delay(function () {");
             this._indentLevel++;
 
             this._visitStatements(statements);
             this._indentLevel--;
 
             this._writeIndents()
-                ._writeLine("});");
+                ._writeLine("}));");
             this._indentLevel--;
 
             this._write("}");
@@ -882,14 +882,14 @@ Jscex = (function () {
                 var finallyStatements = ast[3];
                 this._writeIndents();
                 if (finallyStatements) {
-                    this._writeLine("function () {");
+                    this._writeLine(builderVar + ".Delay(function () {");
                     this._indentLevel++;
 
                     this._visitStatements(finallyStatements);
                     this._indentLevel--;
 
                     this._writeIndents()
-                        ._writeLine("}");
+                        ._writeLine("})");
                 } else {
                     this._writeLine("null");
                 }
