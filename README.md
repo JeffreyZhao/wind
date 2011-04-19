@@ -603,7 +603,7 @@ Jscex builders register themselves in <code>Jscex.builders</code> dictionary. Th
 
 Unfortunately, the "seq builder" is not part of Jscex at this moment. It's one of the future plans of Jscex project.
 
-# Comparison to other project
+# Comparison to other projects
 
 There're several other projects has the same purpose. We can put these project into two categories.
 
