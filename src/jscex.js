@@ -308,7 +308,7 @@ Jscex = (function () {
 
             "for": function (ast) {
         
-                this._write(builderVar)._writeLine(".Delay(function() {");
+                this._write(builderVar)._writeLine(".Delay(function () {");
                 this._indentLevel++;
                 
                 var setup = ast[1];
@@ -411,7 +411,7 @@ Jscex = (function () {
 
             "for-in": function (ast) {
 
-                this._write(builderVar)._writeLine(".Delay(function() {");
+                this._write(builderVar)._writeLine(".Delay(function () {");
                 this._indentLevel++;
 
                 var membersVar = "$$_members_$$_" + tempVarSeed;
@@ -654,7 +654,7 @@ Jscex = (function () {
                     ._writeIndents()
                     ._writeLine("null, ")
                     ._writeIndents()
-                    ._writeLine(builderVar + ".Delay(function() {");
+                    ._writeLine(builderVar + ".Delay(function () {");
                 this._indentLevel++;
 
                 var body = ast[2];
@@ -730,7 +730,7 @@ Jscex = (function () {
             "if": function (ast) {
 
                 this._write(builderVar)
-                    ._writeLine(".Delay(function() {");
+                    ._writeLine(".Delay(function () {");
                 this._indentLevel++;
 
                 this._writeIndents();
@@ -875,7 +875,6 @@ Jscex = (function () {
 
                     this._writeIndents()
                         ._writeLine("}, ");
-                    this._indentLevel--;
                 } else {
                     this._writeLine("null,")
                 }
@@ -891,10 +890,11 @@ Jscex = (function () {
 
                     this._writeIndents()
                         ._writeLine("}");
-                    this._indentLevel--;
                 } else {
                     this._writeLine("null");
                 }
+
+                this._indentLevel--;
 
                 this._writeIndents()
                     ._write(")");
