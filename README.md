@@ -679,7 +679,7 @@ People use these solutions need to follow the programming patterns defined by th
   * Support nested Jscex functions
 * Support "timeout" and "cancellation" for async tasks
 * Support "seq builder"
-* Bindings to popular JavaScript libraries (e.g., jQuery)
+* Extensions for popular JavaScript libraries/frameworks (jQuery, Node.js, etc.)
 
 # Related projects
 
