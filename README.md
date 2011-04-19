@@ -668,7 +668,7 @@ People use these solutions need to follow the programming patterns defined by th
 
 # Jscex internals
 
-(more details in the futures)
+(more details in the future)
 
 # Futures
 
