@@ -412,7 +412,10 @@ Jscex = (function () {
 
                 var items = ast[1];
                 for (var i = 0, len = items.length; i < len; i++) {
-                    this._write(items[i][0] + " = ")._visit(items[i][1]);
+                    this._write(items[i][0]);
+                    if (items[i].length > 1) {
+                        this._write(" = ")._visit(items[i][1]);
+                    }
                     if (i < len - 1) this._write(", ");
                 }
 
