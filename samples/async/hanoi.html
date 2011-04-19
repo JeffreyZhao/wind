@@ -99,6 +99,10 @@
                 $await(hanoiAsync(n - 1, from, mid, to));
             }
             
+            // wait for the button's being clicked
+            // var btnNext = document.getElementById("btnNext");
+            // $await(Jscex.Async.onEventAsync(btnNext, "click"));
+
             $await(moveDishAsync(n, from, to));
 
             if (n > 0) {

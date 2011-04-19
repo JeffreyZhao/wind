@@ -1,5 +1,4 @@
 Jscex.Async.Node = {};
-Jscex.Async.Node.Http = {};
 Jscex.Async.Node.Path = {};
 Jscex.Async.Node.FileSystem = {};
 

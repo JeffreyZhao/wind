@@ -1,16 +1,16 @@
-"Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm) - including mainstreaming browsers or server side JavaScript environments (e.g., [node.js](http://nodejs.org/)).
+"Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm), including mainstreaming browsers or server side JavaScript environments (e.g., [Node.js](http://nodejs.org/)).
 
 Currently features:
 
 * A JIT (just-in-time) compiler which generates codes **at runtime** - mainly used in development environment.
-* An AOT (ahead-of-time) compiler which generates code **before retime** - mainly used in production environment.
+* An AOT (ahead-of-time) compiler which generates code **before runtime** - mainly used in production environment.
 * An async library which simplied async programming significantly.
 
 # Jscex asynchronous library
 
 Asynchronous programming is essential, especially in JavaScript. JavaScript doesn't provide any primitives for writing codes can block the execution. Any operations which take a period of time have to be written in async ways. Async operations usually send back the results by callback functions when finished, and we could do the rest of work in the callback.
 
-Here comes the problem. We usually express our work linearly, but async tasks with callbacks require logical division of algorithms. We cannot implement conditions with <code>if</code> or loops with <code>while</code>/<code>for</code>/<code>do</code> statements. It's very difficult to combine multiple asynchronous operations or handle exceptions and cancellation.
+Here comes the problem. We usually express our work linearly, but async tasks with callbacks require logical division of algorithms. We cannot write conditions with <code>if</code> or loops with <code>while</code>/<code>for</code>/<code>do</code> statements. It's also very difficult to combine multiple asynchronous operations or handle exceptions and cancellation.
 
 So Jscex comes to the rescue with its asynchronous library.
 
@@ -22,15 +22,15 @@ The core feature of Jscex is a compiler which convert standard JavaScript functi
 * lib/uglifyjs-parser.js: The JavaScript parser of [UglifyJS](https://github.com/mishoo/UglifyJS) project. It's the JavaScript port of the LISP project [parse-js](http://marijn.haverbeke.nl/parse-js/).
 * src/jscex.js: The implementation of Jscex JIT compiler, which produces code at runtime.
 
-All the three files list above are uncompressed version mainly used for developement. The minified version of them are in "bin" folder, which is suitable for production use (if you're not using AOT compile mode, see the "AOT compiler" section for more details). Furthermore, the dev version of Jscex compiler would produce programmer-friendly code, which is easily for debugging and the minified version would run a bit faster.
+All the three files list above are uncompressed version mainly used for developement. The minified version of them are in "bin" folder, which is suitable for production use (if you're not using AOT compile mode, see the "AOT compiler" section for more detail). Furthermore, the dev version of Jscex compiler would produce programmer-friendly code, which is easily for debugging and the minified version would run a little faster.
 
-To use the async builder of Jscex, we should load the "src/jscex.async.js" file too. Now everything is prepared, here's how we compile a normal JavaScript function with async builder:
+To use the async library of Jscex, we should also load the "src/jscex.async.js" file. Now everything is prepared, here's how we compile a normal JavaScript function with async builder:
 
     var somethingAsync = eval("async", function (a, b) {
         // implementation
     });
 
-For more details, please check the following sections.
+Please visit the following sections for more details.
 
 ## Samples:
 
@@ -48,7 +48,7 @@ We are going to draw a clock with HTML5 canvas on the page (samples/async/clock.
         drawClock(new Date());
     });
 
-That's the callback version of implementation, but in Jscex we could write code like this:
+That's the implementation with callback, but in Jscex we could write code like this:
 
     var drawClockAsync = eval(Jscex.compile("async", function (interval) {
         while (true) {
@@ -60,9 +60,9 @@ That's the callback version of implementation, but in Jscex we could write code 
 
     Jscex.Async.start(drawClockAsync(1000));
 
-We build an async operation <code>drawClockAsync</code>, we wrote an infinite loop in the mothod. In each iteration we draw a clock with current time and call <code>Jscex.Async.sleep</code> method, the sleep operation **blocks** the code for 1 seconds.
+We wrote an infinite loop in the async method <code>drawClockAsync</code>, in each iteration we draw a clock with current time and call <code>Jscex.Async.sleep</code> method, the sleep operation **blocks** the code for 1 seconds.
 
-How can we block the code without the support of runtime? The magic here is: we are not execute the code we wrote actually, the <code>Jscex.compile</code> method accept the function we provide and convert it into another:
+How can we block the code without the support of runtime? The magic here is: we are not actually executing the code we wrote, the <code>Jscex.compile</code> method accept the function we provide and convert it into another (it's not necessory for us to understand the code currently):
 
     function (interval) {
         var $_builder_$ = Jscex.builders["async"];
@@ -83,9 +83,9 @@ How can we block the code without the support of runtime? The magic here is: we 
         });
     }
 
-It's not necessary for us to understand the code currently. The string form of the new function generated by Jscex compiler will be dynamicly executed by <code>eval</code> method, preserving the current scope and context (variables, closures, etc.).
+The string form of the new function generated by Jscex compiler will be dynamicly executed by <code>eval</code> method, preserving the current scope and context (variables, closures, etc.).
 
-The <code>$await</code> method is the "bind" operation of <code>async</code> builder, it tells the compiler to put the code after that in the callback for the builder's "Bind" method. The <code>$await</code> method accepts an async task generate by <code>Jscex.Async.sleep</code>, provides a semantic of "waiting the operation to complete".
+The <code>$await</code> method is the "bind" operation of <code>async</code> builder, it tells the compiler to put the code after that in the callback for the builder's "Bind" method. The <code>$await</code> method accepts an async task generated by <code>Jscex.Async.sleep</code>, provides a semantic of "waiting the operation to complete".
 
 It seems the implementation with Jscex is a bit longer in this simple case - please look at the following samples. They will tell you the real power of Jscex.
 
@@ -115,7 +115,7 @@ Animations are important for rich user interfaces. Let's build an animation like
         setTimeout(50, move);
     }
 
-Can someone tell me the algorithm used to move the element? After checking the code again and again, may be we would understand the implementation, but it's really difficult and uncomfortable for the programmer to read and write codes like that. But everything would be changed with Jscex:
+Can someone tell me the algorithm used to move the element? Maybe we would understand the implementation after reading the code again and again, but it's really difficult and uncomfortable for the programmer to read and write codes like that. But everything would be changed with Jscex:
 
     var moveAsync = eval(Jscex.compile("async", function (e, startPos, endPos, duration) {
         for (var t = 0; t < duration; t += 50) {
@@ -128,9 +128,9 @@ Can someone tell me the algorithm used to move the element? After checking the c
         e.style.top = endPos.y;
     }));
 
-We could express our algorithm in normal way (linearly): loop with a <code>for</code> statment, sleep for 50 milliseconds in each iteration and move the element again. It's just simple and elegant.
+We could express our algorithm in normal way (linearly): loop with a <code>for</code> statement, sleep for 50 milliseconds in each iteration and move the element again. It's just simple and elegant.
 
-Now we got an async method <code>moveAsync</code>, we can use it when building another async method, just like the <code>Jscex.Async.sleep</code> method in the core library. They are implementing the same "async method" protocal for outside. So check the method below:
+Now we got an async method <code>moveAsync</code>, we can use it when building another async method, just like the <code>Jscex.Async.sleep</code> method in the core library. They both return the async tasks implementing the same "async" protocal for outside. So check out the method below:
 
     var moveSquareAsync = eval(Jscex.compile("async", function(e) {
         $await(moveAsync(e, {x:100, y:100}, {x:400, y:100}, 1000));
@@ -139,7 +139,7 @@ Now we got an async method <code>moveAsync</code>, we can use it when building a
         $await(moveAsync(e, {x:100, y:400}, {x:100, y:100}, 1000));
     }));
 
-We can easily find out how the async method above work: it moves an element with a square routine. It's really easy for us to combine multiple async operations into another.
+We can easily find out how <code>moveSquareAsync</code> method works: it moves an element with a square routine. It's really easy to combine multiple async operations into another in Jscex.
 
 ### Sorting animations:
 
@@ -165,7 +165,7 @@ Every programmer learns sorting algorithms, like bubble sort:
         }
     }
 
-Can we build a program to show how bubble sort works? The basic idea of represent an sorting algoriths with animations is simple: repaint the graph after each swaping and wait for a second. But the implementation is not as easy as the idea looks like, we cannot use <code>for</code> loops anymore if we "stop" the code execution for some time using <code>setTimeout</code>. But here's the Jscex version:
+The basic idea of represent an sorting algorithm with animations is simple: repaint the graph after each swap and wait for a little time. But the implementation is not as easy as the idea looks like, we cannot use <code>for</code> loops anymore if we "stop" the code execution for some time using <code>setTimeout</code>. But let's check out the Jscex version:
 
     var compareAsync = eval(Jscex.compile("async", function (x, y) {
         $await(Jscex.Async.sleep(10)); // each "compare" takes 10 ms.
@@ -177,7 +177,7 @@ Can we build a program to show how bubble sort works? The basic idea of represen
         array[x] = array[y];
         array[y] = t;
 
-        repaint(array);
+        repaint(array); // repaint after each swap
 
         $await(Jscex.Async.sleep(20)); // each "swap" takes 20 ms.
     }));
@@ -193,7 +193,7 @@ Can we build a program to show how bubble sort works? The basic idea of represen
         }
     }));
 
-There's no need to explain more - it's just the standard "bubble sort" algorithm. And of course we can do create animation for "quick sort":
+I belive there's no need to explain more - it's just the standard "bubble sort" algorithm. And of course we can create animation for "quick sort":
 
     var _partitionAsync = eval(Jscex.compile("async", function (array, begin, end) {
         var i = begin;
@@ -237,29 +237,204 @@ There's no need to explain more - it's just the standard "bubble sort" algorithm
         $await(_quickSortAsync(array, 0, array.length - 1));
     }));
 
-Please check the complete sample in "samples/async/sorting-animations.html". After opening the page with browser support HTML5 canvas, please click the links to view the animation of bubble sort, selection sort and quick sort.
+The complete sample is in "samples/async/sorting-animations.html". After opening the page with browser support HTML5 canvas, you can click the links to view the animation of three sorting algorithms: bubble sort, selection sort and quick sort.
 
-### Hanoi tower
+### Tower of Hanoi
 
-samples/async/hanoi.html
+[Tower of Hanoi](http://en.wikipedia.org/wiki/Tower_of_Hanoi) is a puzzle of moving discs. It has a simple, recursive solution:
 
-### Simple web-server with node.js
+1. move n−1 discs from A to B. This leaves disc n alone on peg A
+2. move disc n from A to C
+3. move n−1 discs from B to C so they sit on disc n
 
-samples/async/node-server.js
+which in code:
+
+    var hanoi = function (n, from, to, mid) {
+        if (n > 0) hanoi(n - 1, from, mid, to);
+        moveDisc(n, from, to);
+        if (n > 0) hanoi(n - 1, mid, to from);
+    }
+
+    hanoi(5, "A", "C", "B");
+
+If we need to show the algorithm in animation (samples/async/hanoi.html), we could re-write the code just like the sample above:
+
+    var hanoiAsync = eval(Jscex.compile("async", function(n, from, to, mid) {
+        if (n > 0) {
+            $await(hanoiAsync(n - 1, from, mid, to));
+        }
+        
+        $await(moveDiscAsync(n, from, to));
+
+        if (n > 0) {
+            $await(hanoiAsync(n - 1, mid, to, from));
+        }
+    }));
+
+    Jscex.Async.start(hanoiAsync(5, "A", "C", "B"));
+
+If you open the sample page in the browser, you'll find the discs is moving one by one, resolving the puzzle automatically. Maybe it's not quite easy for someone to follow each step, so let's just make a little change:
+
+    var hanoiAsync = eval(Jscex.compile("async", function(n, from, to, mid) {
+        if (n > 0) {
+            $await(hanoiAsync(n - 1, from, mid, to));
+        }
+
+        // wait for the button's being clicked
+        var btnNext = document.getElementById("btnNext");
+        $await(Jscex.Async.onEventAsync(btnNext, "click"));
+
+        $await(moveDiscAsync(n, from, to));
+
+        if (n > 0) {
+            $await(hanoiAsync(n - 1, mid, to, from));
+        }
+    }));
+
+Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. With Jscex async builder, **everything is async tasks**. In the example above, the button's "click" event is also an async task - the task would be finished when the button is clicked, then the program keeps going, move a disc and wait for another click.
+
+People can write async programs without callbacks, that's how Jscex improve productivity and maintainability.
+
+### Simple web-server with Node.js
+
+Jscex works for any execution engines support ECMAScript 3, not only browsers but also server-side environment like node.js. Node.js is a server-side JavaScript environment that uses an asynchronous event-driven model. This allows Node.js to get excellent performance based on the architectures of many internet applications.
+
+Here's a simple file server build with Node.js:
+
+    var http = require("http");
+    var fs = require("fs");
+    var url = require("url");
+    var path = require("path");
+
+    var transferFile = function(request, response) {
+        var uri = url.parse(request.url).pathname;
+        var filepath = path.join(process.cwd(), uri);
+
+        // check whether the file is exist and get the result from callback
+        path.exists(filepath, function(exists) {
+            if (!exists) {
+                response.writeHead(404, {"Content-Type": "text/plain"});
+                response.write("404 Not Found\n");
+                response.end();
+            } else {
+                // read the file content and get the result from callback
+                fs.readFile(filepath, "binary", function(error, data) {
+                    if (error) {
+                        response.writeHead(500, {"Content-Type": "text/plain"});
+                        response.write(error + "\n");
+                    } else {
+                        response.writeHead(200);
+                        response.write(data, "binary");
+                    }
+
+                    response.end();
+                });
+            }
+        });
+    }
+
+    http.createServer(function(request, response) {
+        transferFile(request, response);
+    }).listen(8124, "127.0.0.1");
+
+There're two async method used above: <code>path.exists</code> and <code>fs.readFile</code>. Most I/O api in Node.js are asynchronous, which brings great scalability but low programmability. But with the help of Jscex, we can write async programs as easy as normal code (samples/async/node-server.js):
+
+    require("../../lib/uglifyjs-parser.js");
+    require("../../src/jscex.js");
+    require("../../src/jscex.async.js");
+    require("../../src/jscex.async.node.js");
+
+    Jscex.Async.Node.Path.extend(path);
+    Jscex.Async.Node.FileSystem.extend(fs);
+
+    var transferFileAsync = eval(Jscex.compile("async", function(request, response) {
+        var uri = url.parse(request.url).pathname;
+        var filepath = path.join(process.cwd(), uri);
+
+        var exists = $await(path.existsAsync(filepath));
+        if (!exists) {
+            response.writeHead(404, {"Content-Type": "text/plain"});
+            response.write("404 Not Found\n");
+        } else {
+            var file = $await(fs.readFileAsync(filepath));
+            if (file.error) {
+                response.writeHead(500, {"Content-Type": "text/plain"});
+                response.write(file.error + "\n");
+            } else {
+                response.writeHead(200);
+                response.write(file.data, "binary");
+            }
+        }
+
+        response.end();
+    }));
+
+    http.createServer(function(request, response) {
+        Jscex.Async.start(transferFileAsync(request, response));
+    }).listen(8125, "127.0.0.1");
+
+All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module specification, which can be loaded by <code>require</code> method in Node.js. Jscex async library has a simple model of "async tasks", everyone can easily write extensions/adaptors for existing async operations. The sample above uses the Node.js extensions defined in "src/jscex.async.node.js":
+
+    Jscex.Async.Node = {};
+    Jscex.Async.Node.Path = {};
+    Jscex.Async.Node.FileSystem = {};
+
+    Jscex.Async.Node.Path.extend = function (path) {
+
+        path.existsAsync = function (filepath) {
+            return {
+                start: function (callback) {
+                    path.exists(filepath, function (exists) {
+                        callback("return", exists);
+                    });
+                }
+            };
+        };
+    }
+
+    Jscex.Async.Node.FileSystem.extend = function (fs) {
+        fs.readFileAsync = function (filepath) {
+            return {
+                start: function (callback) {
+                    fs.readFile(filepath, function (error, data) {
+                        var result = { error: error, data: data };
+                        callback("return", result);
+                    });
+                }
+            };
+        }
+    }
+
+Obviously, we can extend the XMLHttpRequest object to simplify the usage (src/jscex.async.xhr.js):
+
+    XMLHttpRequest.prototype.receiveAsync = function () {
+        var _this = this;
+        return {
+            start: function (callback) {
+                _this.onreadystatechange = function () {
+                    if (_this.readyState == 4) {
+                        callback("return", _this.responseText);
+                    }
+                }
+
+                _this.send();
+            }
+        };
+    }
 
 ## Limitations:
 
-There're 3 limitations of the current version of Jscex - none of them becomes a real problem in my experiences.
+There're three limitations of the current version of Jscex - none of them becomes a real problem in my experiences.
 
 ### Need separate $await statement
 
-Jscex compiler can only handle <code>$await</code> explicitly:
+Jscex compiler can only handle explicit <code>$await</code> operation:
 
 * Simple: <code>$await(...);</code>
 * Assign the result to a variable: <code>var r = $await(...);</code>
 * Directly return: <code>return $await(...);</code>
 
-Codes below could not be compiled:
+Other kinds of usages could not be compiled:
 
     f(g(1), $await(...))
 
@@ -278,7 +453,7 @@ We should put <code>$await</code> in separate statement:
 
 ### Nesting Jscex functions
 
-If you write nested Jscex functions, the inner function would not be compiled. For example:
+If you write nested Jscex functions, the inner function would not be compiled with outside one. For example:
 
     var outsideAsync = eval(Jscex.compile("async", function () {
 
@@ -288,7 +463,7 @@ If you write nested Jscex functions, the inner function would not be compiled. F
 
     }));
 
-At runtime, the <code>outsideAsync</code> method would be compiled to:
+At runtime, <code>outsideAsync</code> would be compiled to:
 
     function () {
         var $_builder_$ = Jscex.builders["async"];
@@ -302,7 +477,7 @@ At runtime, the <code>outsideAsync</code> method would be compiled to:
         });
     }
 
-which means the <code>innerAsync</code> method would be compiled each time <code>outsideAsync</code> method called. That would be a performance code. So please DONOT put an Jscex function into another - until the problem being fixed.
+which means the <code>innerAsync</code> method would be compiled each time <code>outsideAsync</code> calls. That would be a performance cost. So please DONOT put an Jscex function into another - until the problem being fixed.
 
 ### Language support:
 
@@ -317,9 +492,9 @@ The AOT (ahead-of-time) compiler is a piece of JavaScript code (scripts/jscexc.j
 
 ## Why we need an AOT compiler.
 
-Actually the JIT compiler works just fine. The function would be compiled only once for each page load or node.js execution, so the performance cost of compiler is really small. And the size of compiler is only around 10K when minified and gzipped - acceptable for me.
+The JIT compiler works just fine. The function would be compiled only once for each page load or node.js execution, so the performance cost of compiler is really small. And the size of compiler is only around 10K when minified and gzipped - acceptable for me.
 
-But the problem comes from "script compressing". The script code would be compressed by tools like UglifyJS, Closure Compiler or YUI compressor. Jscex compiler works fine when the compress process is just removing the whitespaces and shorten the name of veriables, but modern compressors would rewrite the code for minimal size:
+But the problem comes with "script compressing". Normally, the script used for websites would be compressed by tools like UglifyJS, Closure Compiler or YUI compressor. Jscex compiler works fine when the compress strategy is just removing the whitespaces and shortening the name of variables, but modern compressors would rewrite the statement structures for getting minimal size:
 
     var bubbleSortAsync=eval(Jscex.compile("async",function(a){for(var b=0;b<a.length;b++)for(var c=0;c<a.length-b;c++){var d=$await(compareAsync(a[c],a[c+1]));d>0&&$await(swapAsync(a,c,c+1))}}))
 
@@ -331,33 +506,54 @@ The AOT compiler runs with node.js:
 
     node scripts/jscexc.js --input input_file --output output_file
 
-For the <code>moveSquaureAsync</code> method in previous samples:
+For the <code>bubbleSortAsync</code> method above, it would be compiled into:
 
-    var moveSquareAsync = eval(Jscex.compile("async", function(e) {
-        $await(moveAsync(e, {x:100, y:100}, {x:400, y:100}, 1000));
-        $await(moveAsync(e, {x:400, y:100}, {x:400, y:400}, 1000));
-        $await(moveAsync(e, {x:400, y:400}, {x:100, y:400}, 1000));
-        $await(moveAsync(e, {x:100, y:400}, {x:100, y:100}, 1000));
-    }));
-
-It would be compiled into:
-
-    function (e) {
+    var bubbleSortAsync = (function (array) {
         var $_builder_$ = Jscex.builders["async"];
         return $_builder_$.Start(this, function () {
-            return $_builder_$.Bind(moveAsync(e, {"x": 100, "y": 100}, {"x": 400, "y": 100}, 1000), function () {
-                return $_builder_$.Bind(moveAsync(e, {"x": 400, "y": 100}, {"x": 400, "y": 400}, 1000), function () {
-                    return $_builder_$.Bind(moveAsync(e, {"x": 400, "y": 400}, {"x": 100, "y": 400}, 1000), function () {
-                        return $_builder_$.Bind(moveAsync(e, {"x": 100, "y": 400}, {"x": 100, "y": 100}, 1000), function () {
-                            return $_builder_$.Normal();
+            return $_builder_$.Delay(function () {
+                var x = 0;
+                return $_builder_$.Loop(
+                    function () {
+                        return x < array.length;
+                    },
+                    function () {
+                        x++;
+                    },
+                    $_builder_$.Delay(function () {
+                        return $_builder_$.Delay(function () {
+                            var y = 0;
+                            return $_builder_$.Loop(
+                                function () {
+                                    return y < (array.length - x);
+                                },
+                                function () {
+                                    y++;
+                                },
+                                $_builder_$.Delay(function () {
+                                    return $_builder_$.Bind(compareAsync(...), function (r) {
+                                        return $_builder_$.Delay(function () {
+                                            if (r > 0) {
+                                                return $_builder_$.Bind(swapAsync(...), function () {
+                                                    return $_builder_$.Normal();
+                                                });
+                                            } else {
+                                                return $_builder_$.Normal();
+                                            }
+                                        });
+                                    });
+                                }),
+                                false
+                            );
                         });
-                    });
-                });
+                    }),
+                    false
+                );
             });
         });
-    }
+    })
 
-The AOT compiler would keep the code others than Jscex functions. We can compress the code generated by AOT compiler safely. Futhermore, the compiled code could execute without "json2.js", "uglifyjs-parser.js" and "jscex.js". The async motheds could be executed properly with only "jscex.async.js", which is only 1KB when gzipped.
+The AOT compiler would keep the code others than Jscex functions. The code generated by AOT compiler could be compiled safely. Futhermore, the compiled code could execute without "json2.js", "uglifyjs-parser.js" and "jscex.js". The async methods could be executed properly with only "jscex.async.js", which is only 1KB when gzipped.
 
 ## Limitations
 

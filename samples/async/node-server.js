@@ -3,21 +3,18 @@ var fs = require("fs");
 var url = require("url");
 var path = require("path");
 
-process.compile(fs.readFileSync("../src/narcissus.js"), "narcissus.js");
-process.compile(fs.readFileSync("../src/jscex.js"), "jscex.js");
-process.compile(fs.readFileSync("../src/jscex.async.js"), "jscex.async.js");
-process.compile(fs.readFileSync("../src/jscex.async.node.js"), "jscex.async.node.js");
-
 var transferFile = function(request, response) {
     var uri = url.parse(request.url).pathname;
     var filepath = path.join(process.cwd(), uri);
 
+    // check whether the file is exist and get the result from callback
     path.exists(filepath, function(exists) {
         if (!exists) {
             response.writeHead(404, {"Content-Type": "text/plain"});
             response.write("404 Not Found\n");
             response.end();
         } else {
+            // read the file content and get the result from callback
             fs.readFile(filepath, "binary", function(error, data) {
                 if (error) {
                     response.writeHead(500, {"Content-Type": "text/plain"});
@@ -40,10 +37,15 @@ http.createServer(function(request, response) {
 
 //////////////////////////////////////////////////////////
 
+require("../../lib/uglifyjs-parser.js");
+require("../../src/jscex.js");
+require("../../src/jscex.async.js");
+require("../../src/jscex.async.node.js");
+
 Jscex.Async.Node.Path.extend(path);
 Jscex.Async.Node.FileSystem.extend(fs);
 
-var transferFileAsync = eval(Jscex.compile("$async", function(request, response) {
+var transferFileAsync = eval(Jscex.compile("async", function(request, response) {
     var uri = url.parse(request.url).pathname;
     var filepath = path.join(process.cwd(), uri);
 
