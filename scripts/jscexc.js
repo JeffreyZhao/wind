@@ -35,6 +35,8 @@ for (var i = 2; i < process.argv.length; i++) {
     }
 }
 
+Jscex.config.logger = null;
+
 var code = fs.readFileSync(inputFile, "utf-8");
 var codeAst = Narcissus.parser.parse(code);
 var results = je.extract(codeAst);

@@ -7,7 +7,7 @@ var JSCEX_DEBUG = true;
 Jscex = (function () {
 
     var builderVar = "$_builder_$";
-
+    
     /**
      * @constructor
      */
@@ -804,14 +804,10 @@ Jscex = (function () {
     };
 
     function _log(funcCode, newCode) {
-        if (typeof(window) != "undefined" && typeof(console) != "undefined" && console.log) {
-            console.log(funcCode + "\n\n>>>\n\n" + newCode);
+        var config = Jscex.config || {};
+        if (config.logger) {
+            config.logger(funcCode + "\n\n>>>\n\n" + newCode);
         }
-    }
-
-    function generate(builder, funcAst) {
-        var generator = new CodeGenerator(builder);
-        return generator.generate(funcAst);
     }
 
     function compile(builderName, func) {
@@ -833,9 +829,12 @@ Jscex = (function () {
     };
 
     return {
-        "generate": generate,
         "compile": compile,
         "builders": {}
     };
 
 })();
+
+if (JSCEX_DEBUG && typeof(console) != "undefined" && console.log) {
+    Jscex.config = { logger: function (s) { console.log(s); } };
+}
