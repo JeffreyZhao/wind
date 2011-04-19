@@ -7,6 +7,8 @@ var JSCEX_DEBUG = true;
 Jscex = (function () {
 
     var builderVar = "$_builder_$";
+
+    var tempVarSeed = 0;
     
     /**
      * @constructor
@@ -160,7 +162,7 @@ Jscex = (function () {
                 if (type == "return" || type == "break" || type == "continue" || type == "throw") {
                     this._writeIndents()
                         ._visit(stmt)._writeLine();
-                } else if (type == "while" || type == "try" || type == "if" || type == "for" || type == "do") {
+                } else if (type == "while" || type == "try" || type == "if" || type == "for" || type == "do" || type == "for-in") {
                     var isLast = (index == statements.length - 1);
                     if (isLast) {
                         this._writeIndents()
@@ -405,6 +407,110 @@ Jscex = (function () {
 
                 this._writeIndents()
                     ._write("}");
+            },
+
+            "for-in": function (ast) {
+
+                this._write(builderVar)._writeLine(".Delay(function() {");
+                this._indentLevel++;
+
+                var membersVar = "$$_members_$$_" + tempVarSeed;
+                var indexVar = "$$_index_$$_" + tempVarSeed;
+                tempVarSeed++;
+
+                var obj = ast[3];
+
+                this._writeIndents()
+                    ._writeLine("var " + membersVar + " = [];");
+
+                this._writeIndents()
+                    ._write("for (var m in ")._visit(obj)._writeLine(") " + membersVar + ".push(m);");
+                this._writeIndents()
+                    ._writeLine("var " + indexVar + " = 0;");
+
+                var varName = ast[2][1]; // ast[2] == ["name", m]
+
+                if (ast[1][0] == "var") {
+                    this._writeIndents()
+                        ._writeLine("var " + varName + ";");
+                }
+
+                this._writeIndents()
+                    ._writeLine("return " + builderVar + ".Loop(")
+                this._indentLevel++;
+                
+                this._writeIndents()
+                    ._writeLine("function () {");
+                this._indentLevel++;
+
+                this._writeIndents()
+                    ._writeLine("return " + indexVar + " < " + membersVar + ".length;");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("},");
+
+                this._writeIndents()
+                    ._writeLine("function () { ");
+                this._indentLevel++;
+
+                this._writeIndents()
+                    ._writeLine(indexVar + "++;");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._writeLine("},")
+                    ._writeIndents()
+                    ._writeLine(builderVar + ".Delay(function () {");
+                this._indentLevel++;
+
+                this._writeIndents()
+                    ._writeLine(varName + " = " + membersVar + "[" + indexVar + "];");
+
+                var body = ast[4];
+                this._visit(body);
+                this._indentLevel--;
+                
+                this._writeIndents()
+                    ._writeLine("}),")
+                    ._writeIndents()
+                    ._writeLine("false");
+                this._indentLevel--;
+                
+                this._writeIndents()
+                    ._writeLine(");");
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("})");                
+            },
+
+            "for-in_n": function (ast) {
+                this._write("for (");
+
+                var declare = ast[1];
+                if (declare[0] == "var") { // declare == ["var", [["m"]]]
+                    this._write("var " + declare[1][0][0]);
+                } else {
+                    this._visit(declare);
+                }
+                
+                this._write(" in ")._visit(ast[3])._writeLine(") {");
+                this._indentLevel++;
+                
+                var body = ast[4];
+                this._visit(body);
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("}");
+            },
+
+            "seq": function (ast) {
+                for (var i = 1; i < ast.length; i++) {
+                    this._visit(ast[i]);
+                    if (i < ast.length - 1) this._write(", "); 
+                }
             },
 
             "var": function (ast) {
@@ -756,18 +862,39 @@ Jscex = (function () {
                 this._indentLevel--;
 
                 this._writeIndents()
-                    ._write("}), ");
+                    ._writeLine("}),");
 
                 var catchClause = ast[2];
-                this._writeLine("function (" + catchClause[0] + ") {");
-                this._indentLevel++;
+                this._writeIndents();
+                if (catchClause) {
+                    this._writeLine("function (" + catchClause[0] + ") {");
+                    this._indentLevel++;
 
-                this._visitStatements(catchClause[1]);
-                this._indentLevel--;
+                    this._visitStatements(catchClause[1]);
+                    this._indentLevel--;
 
-                this._writeIndents()
-                    ._writeLine("}");
-                this._indentLevel--;
+                    this._writeIndents()
+                        ._writeLine("}, ");
+                    this._indentLevel--;
+                } else {
+                    this._writeLine("null,")
+                }
+
+                var finallyStatements = ast[3];
+                this._writeIndents();
+                if (finallyStatements) {
+                    this._writeLine("function () {");
+                    this._indentLevel++;
+
+                    this._visitStatements(finallyStatements);
+                    this._indentLevel--;
+
+                    this._writeIndents()
+                        ._writeLine("}");
+                    this._indentLevel--;
+                } else {
+                    this._writeLine("null");
+                }
 
                 this._writeIndents()
                     ._write(")");
@@ -782,12 +909,25 @@ Jscex = (function () {
                 this._indentLevel--;
 
                 var catchClause = ast[2];
-                this._writeIndents()
-                    ._writeLine("} catch (" + catchClause[0] + ") {")
-                this._indentLevel++;
+                var finallyStatements = ast[3];
 
-                this._visitStatementsNormally(catchClause[1]);
-                this._indentLevel--;
+                if (catchClause) {
+                    this._writeIndents()
+                        ._writeLine("} catch (" + catchClause[0] + ") {")
+                    this._indentLevel++;
+
+                    this._visitStatementsNormally(catchClause[1]);
+                    this._indentLevel--;
+                }
+
+                if (finallyStatements) {
+                    this._writeIndents()
+                        ._writeLine("} finally {");
+                    this._indentLevel++;
+
+                    this._visitStatementsNormally(finallyStatements);
+                    this._indentLevel--;
+                }                
 
                 this._writeIndents()
                     ._writeLine("}");
@@ -799,6 +939,10 @@ Jscex = (function () {
 
             "function": function (ast) {
                 this._visitFunction(ast);
+            },
+
+            "switch": function (ast) {
+                // output normally?
             }
         }
     };
