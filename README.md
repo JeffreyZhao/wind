@@ -675,12 +675,13 @@ People use these solutions need to follow the programming patterns defined by th
 # Futures
 
 * Smarter compiler
-  * Simplify the monadic patterns
+  * Simplify the monadic patterns (e.g., remove unnecessary "Delay" constructions)
   * Keep code like <code>while (i < j) { i++; }</code> unchanged
   * Support nested Jscex functions
 * Better async builder
   * Better performance
   * Support "timeout" and "cancellation" for async tasks
+  * More primitives in <code>Jscex.Async</code>
 * Support "seq builder"
 * Extensions for popular JavaScript libraries/frameworks (jQuery, Node.js, etc.)
 
