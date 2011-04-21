@@ -470,6 +470,7 @@ At runtime, <code>outsideAsync</code> would be compiled to:
         return $$_builder_$$.Start(this,
             $$_builder_$$.Delay(function () {
                 var innerAsync = eval(Jscex.compile("async", function () {
+                    // compiled inner implementations
                 }));
                 return $$_builder_$$.Normal();
             })
@@ -669,7 +670,6 @@ People use these solutions need to follow the programming patterns defined by th
 # Futures
 
 * Smarter compiler
-  * Simplify the monadic patterns (e.g., remove unnecessary "Delay" constructions)
   * Keep code like <code>while (i < j) { i++; }</code> unchanged
   * Support nested Jscex functions
 * Better async builder
