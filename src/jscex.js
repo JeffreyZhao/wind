@@ -1176,7 +1176,7 @@ Jscex = (function () {
     function _log(funcCode, newCode) {
         var config = Jscex.config || {};
         if (config.logger) {
-            config.logger(funcCode + "\n\n>>>\n\n" + newCode);
+            config.logger(funcCode, newCode);
         }
     }
 
@@ -1199,10 +1199,12 @@ Jscex = (function () {
             _log(funcCode, newCode);
         }
         
-        return newCode;
+        var cg = Jscex.config.codeGenerator;
+        return cg ? cg(newCode) : newCode;
     };
 
     return {
+        "config": {},
         "compile": compile,
         "builders": {}
     };
@@ -1210,5 +1212,7 @@ Jscex = (function () {
 })();
 
 if (JSCEX_DEBUG && typeof(console) != "undefined" && console.log) {
-    Jscex.config = { logger: function (s) { console.log(s); } };
+    Jscex.config.logger = function (funcCode, newCode) {
+        console.log(funcCode + "\n\n>>>\n\n" + newCode);
+    }
 }
