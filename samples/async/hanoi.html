@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>Hanoi Samples</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
     
+    <!--[if IE]>
+    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
+    <![endif]-->
     <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
@@ -40,10 +44,10 @@
                 var stick = document.createElement("div");
                 stick.style.position = "absolute";
                 stick.style.backgroundColor = "black";
-                stick.style.width = stickWidth;
-                stick.style.height = stickHeight;
-                stick.style.top = stickBottom - stickHeight;
-                stick.style.left = stickX + bottomLength * i - stickWidth / 2;
+                stick.style.width = stickWidth + "px";
+                stick.style.height = stickHeight + "px";
+                stick.style.top = (stickBottom - stickHeight) + "px";
+                stick.style.left = Math.round(stickX + bottomLength * i - stickWidth / 2) + "px";
                 document.body.appendChild(stick);
             }
         
@@ -52,10 +56,10 @@
                 dish.style.position = "absolute";
                 dish.style.backgroundColor = "red";
                 
-                dish.style.width = getDishWidth(i);
-                dish.style.height = dishHeight;
-                dish.style.top = getDishTop(dishCount - i);
-                dish.style.left = getDishLeft(i, 0);
+                dish.style.width = getDishWidth(i) + "px";
+                dish.style.height = dishHeight + "px";
+                dish.style.top = getDishTop(dishCount - i) + "px";
+                dish.style.left = getDishLeft(i, 0) + "px";
                 dish.style.textAlign = "center";
                 dish.style.color = "white";
                 dish.innerHTML = i.toString();
@@ -68,8 +72,8 @@
         
         var moveAsync = eval(Jscex.compile("async", function(e, startPos, endPos, duration) {
             for (var t = 0; t < duration; t += 50) {
-                e.style.left = startPos.x + (endPos.x - startPos.x) * t / duration;
-                e.style.top = startPos.y + (endPos.y - startPos.y) * t / duration;
+                e.style.left = (startPos.x + (endPos.x - startPos.x) * t / duration) + "px";
+                e.style.top = (startPos.y + (endPos.y - startPos.y) * t / duration) + "px";
                 $await(Jscex.Async.sleep(50));
             }
 
