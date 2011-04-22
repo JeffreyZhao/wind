@@ -1,14 +1,17 @@
 XMLHttpRequest.prototype.receiveAsync = function () {
     var _this = this;
-    return {
-        start: function (callback) {
+
+    var delegate = {
+        "start": function (callback) {
             _this.onreadystatechange = function () {
                 if (_this.readyState == 4) {
-                    callback("return", _this.responseText);
+                    callback("success", _this.responseText);
                 }
             }
 
             _this.send();
         }
     };
+
+    return new Jscex.Async.Task(delegate);
 }

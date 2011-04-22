@@ -68,5 +68,5 @@ var transferFileAsync = eval(Jscex.compile("async", function(request, response) 
 }));
 
 http.createServer(function(request, response) {
-    Jscex.Async.start(transferFileAsync(request, response));
+    transferFileAsync(request, response).start();
 }).listen(8125, "127.0.0.1");

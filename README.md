@@ -58,7 +58,7 @@ That's the implementation with callback, but in Jscex we could write code like t
         }
     }));
 
-    Jscex.Async.start(drawClockAsync(1000));
+    drawClockAsync(1000).start();
 
 We wrote an infinite loop in the async method <code>drawClockAsync</code>, in each iteration we draw a clock with current time and call <code>Jscex.Async.sleep</code> method, the sleep operation **blocks** the code for 1 seconds.
 
@@ -271,7 +271,7 @@ If we need to show the algorithm in animation (samples/async/hanoi.html), we cou
         }
     }));
 
-    Jscex.Async.start(hanoiAsync(5, "A", "C", "B"));
+    hanoiAsync(5, "A", "C", "B").start();
 
 If you open the sample page in the browser, you'll find the discs is moving one by one, resolving the puzzle automatically. Maybe it's not quite easy for someone to follow each step, so let's just make a little change:
 
@@ -282,7 +282,7 @@ If you open the sample page in the browser, you'll find the discs is moving one 
 
         // wait for the button's being clicked
         var btnNext = document.getElementById("btnNext");
-        $await(Jscex.Async.onEventAsync(btnNext, "click"));
+        $await(Jscex.Async.onEvent(btnNext, "click"));
 
         $await(moveDiscAsync(n, from, to));
 
@@ -370,7 +370,7 @@ There're two async method used above: <code>path.exists</code> and <code>fs.read
     }));
 
     http.createServer(function(request, response) {
-        Jscex.Async.start(transferFileAsync(request, response));
+        transferFileAsync(request, response).start();
     }).listen(8125, "127.0.0.1");
 
 All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module specification, which can be loaded by <code>require</code> method in Node.js. Jscex async library has a simple model of "async tasks", everyone can easily write extensions/adaptors for existing async operations. The sample above uses the Node.js extensions defined in "src/jscex.async.node.js":
@@ -382,26 +382,31 @@ All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module 
     Jscex.Async.Node.Path.extend = function (path) {
 
         path.existsAsync = function (filepath) {
-            return {
-                start: function (callback) {
+            var delegate = {
+                "start": function (callback) {
                     path.exists(filepath, function (exists) {
-                        callback("return", exists);
+                        callback("success", exists);
                     });
                 }
             };
+
+            return new Jscex.Async.Task(delegate);
         };
     }
 
     Jscex.Async.Node.FileSystem.extend = function (fs) {
+
         fs.readFileAsync = function (filepath) {
-            return {
-                start: function (callback) {
+            var delegate = {
+                "start": function (callback) {
                     fs.readFile(filepath, function (error, data) {
                         var result = { error: error, data: data };
-                        callback("return", result);
+                        callback("success", result);
                     });
                 }
             };
+
+            return new Jscex.Async.Task(delegate);
         }
     }
 
@@ -409,17 +414,20 @@ Obviously, we can extend the XMLHttpRequest object to simplify the usage (src/js
 
     XMLHttpRequest.prototype.receiveAsync = function () {
         var _this = this;
-        return {
-            start: function (callback) {
+
+        var delegate = {
+            "start": function (callback) {
                 _this.onreadystatechange = function () {
                     if (_this.readyState == 4) {
-                        callback("return", _this.responseText);
+                        callback("success", _this.responseText);
                     }
                 }
 
                 _this.send();
             }
         };
+
+        return new Jscex.Async.Task(delegate);
     }
 
 ## Limitations:
