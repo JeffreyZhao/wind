@@ -14,7 +14,7 @@ sed \
 cat << EOF > ../bin/jscex.tmp.externs.js
 var Jscex = { 
     builders: {
-        "async": { binder: true }
+        "async": { binder: "$await" } 
     },
     config: {
         codeGenerator: function () { },
