@@ -71,7 +71,7 @@
     <script>
         var canvas = document.getElementById("clockCanvas");
         var ctx = canvas.getContext ? canvas.getContext("2d") : null;
-        Jscex.Async.start(drawClockAsync(1000));
+        drawClockAsync(1000).start();
     </script>
 </body>
 </html>

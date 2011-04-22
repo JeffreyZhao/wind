@@ -105,7 +105,7 @@
             
             // wait for the button's being clicked
             // var btnNext = document.getElementById("btnNext");
-            // $await(Jscex.Async.onEventAsync(btnNext, "click"));
+            // $await(Jscex.Async.onEvent(btnNext, "click"));
 
             $await(moveDishAsync(n, from, to));
 
@@ -117,6 +117,8 @@
     </script>
 </head>
 <body>
+    <input type="button" value="Next" id="btnNext" />
+
     <script>
         var n = 0;
         
@@ -130,10 +132,8 @@
         }
         
         init(n);
-        Jscex.Async.start(hanoiAsync(n - 1, 0, 2, 1));
+        hanoiAsync(n - 1, 0, 2, 1).start();
     </script>
-
-    <input type="button" value="Next" id="btnNext" />
     
 </body>
 </html>

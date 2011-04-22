@@ -1,12 +1,37 @@
-/****************************
- * type AsyncTask = {
- *     start: function(function (type, value, target) { ... }) { ... }
- * }
- ****************************/
-
 if ((typeof Jscex) == "undefined") {
     Jscex = { "builders": { } };
 }
+
+Jscex.Async = { };
+Jscex.Async.Task = function (delegate) {
+    this._delegate = delegate;
+}
+Jscex.Async.Task.prototype = {
+    "start": function (options) {
+        var _this = this;
+        this._delegate.start(function (type, value) {
+            if (type == "success") {
+                _this._result = value;
+                if (options && options.onSuccess)
+                    options.onSuccess(_this);
+            } else if (type == "error") {
+                _this._error = value;
+                if (options && options.onError)
+                    options.onError(_this);
+            } else {
+                throw "Unsupported type: " + type;
+            }
+        });
+    },
+
+    "getResult": function () {
+        return this._result;
+    },
+
+    "getError": function () {
+        return this._error;
+    }
+};
 
 (function () {
 
@@ -15,34 +40,41 @@ if ((typeof Jscex) == "undefined") {
         "binder": "$await",
 
         "Start": function (_this, task) {
-            return {
+
+            var delegate = {
                 "start": function (callback) {
                     task.start(_this, function (type, value, target) {
-                        if (type == "break" || type == "continue") {
-                            throw new Error('Invalid type for "Start": ' + type);
+                        if (type == "normal" || type == "return") {
+                            callback("success", value);
+                        } else if (type == "throw") {
+                            callback("error", value);
                         } else {
-                            callback(type, value, target);
+                            throw "Unsupport type: " + type;
                         }
                     });
                 }
             };
+
+            return new Jscex.Async.Task(delegate);
         },
 
         "Bind": function (task, generator) {
             return {
                 "start": function (_this, callback) {
-                    task.start(function (type, value, target) {
-                        if (type == "normal" || type == "return") {
+                    task.start({
+                        "onError": function () {
+                            callback("throw", task.getError());
+                        },
+                        "onSuccess": function () {
+                            var nextTask;
                             try {
-                                var nextTask = generator.call(_this, value);
-                                nextTask.start(_this, callback);
+                                nextTask = generator.call(_this, task.getResult());
                             } catch (ex) {
                                 callback("throw", ex);
+                                return;
                             }
-                        } else if (type == "throw") {
-                            callback("throw", value, target);
-                        } else {
-                            throw 'Invalid type for "Bind": ' + type;
+
+                            nextTask.start(_this, callback);
                         }
                     });
                 }
@@ -246,86 +278,73 @@ if ((typeof Jscex) == "undefined") {
         }
     };
 
-    Jscex.Async = {
-        "sleep": function (delay) {
-            return {
-                "start": function (callback) {
-                    setTimeout(
-                        function () { callback("normal"); },
-                        delay);
-                }
-            };
-        },
-        
-        "startImmediately": function (task, onSuccess, onError) {
-            task.start(function (type, value, target) {
-                if (onSuccess && (type == "normal" || type == "return")) {
-                    onSuccess(value);
-                } else if (onError && type == "throw") {
-                    onError(value);
-                }
-            });
-        },
-        
-        "start": function(task, onSuccess, onError) {
-            setTimeout(function() {
-                Jscex.Async.startImmediately(task, onSuccess, onError);
-            }, 0);
-        },
-        
-        // only support "normal"
-        "parallel": function(tasks) {
-            var tasksClone = [];
-            for (var i = 0; i < tasks.length; i++) {
-                tasksClone.push(tasks[i]);
+    var async = Jscex.Async;
+
+    async.sleep = function (delay) {
+        var delegate = {
+            "start": function (callback) {
+                setTimeout(function () { callback("success"); }, delay);
             }
-            
-            return {
-                "start": function (callback) {
-                    var done = 1;
-                    var results = [];
-                    
-                    var checkFinished = function (index, r) {
-                        if (index >= 0) {
-                            results[index] = r;
-                        }
+        };
 
-                        done--;
-                        if (done <= 0) {
-                            callback("return", results);
-                        }
-                    }
-                    
-                    var callbackFactory = function (index) {
-                        return function (type, value, target) {
-                            checkFinished(index, value);
-                        };
-                    }
-                    
-                    for (var i = 0; i < tasksClone.length; i++) {
-                        done++;
-                        tasksClone[i].start(callbackFactory(i));
-                    }
-                    
-                    checkFinished(-1, null);
+        return new Jscex.Async.Task(delegate);
+    }
+
+    async.onEvent = function (ele, ev) {
+        var delegate = {
+            "start": function (callback) {
+                var eventName = "on" + ev;
+
+                var handler = function (ev) {
+                    ele[eventName] = null;
+                    callback("success", ev);
                 }
-            };
-        },
 
-        "onEventAsync": function (ele, ev) {
-            return {
-                "start": function (callback) {
-                    var eventName = "on" + ev;
+                ele[eventName] = handler;
+            }
+        };
 
-                    var handler = function(ev) {
-                        ele[eventName] = null;
-                        callback("return", ev);
-                    }
+        return new Jscex.Async.Task(delegate);
+    }
 
-                    ele[eventName] = handler;
-                }
-            };
+    /*
+    async.parallel = function (tasks) {
+        var tasksClone = [];
+        for (var i = 0; i < tasks.length; i++) {
+            tasksClone.push(tasks[i]);
         }
-    };
+        
+        return {
+            "start": function (callback) {
+                var done = 1;
+                var results = [];
+                
+                var checkFinished = function (index, r) {
+                    if (index >= 0) {
+                        results[index] = r;
+                    }
 
+                    done--;
+                    if (done <= 0) {
+                        callback("return", results);
+                    }
+                }
+                
+                var callbackFactory = function (index) {
+                    return function (type, value, target) {
+                        checkFinished(index, value);
+                    };
+                }
+                
+                for (var i = 0; i < tasksClone.length; i++) {
+                    done++;
+                    tasksClone[i].start(callbackFactory(i));
+                }
+                
+                checkFinished(-1, null);
+            }
+        };
+    }
+    */
+    
 })();

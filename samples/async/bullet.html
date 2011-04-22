@@ -166,7 +166,7 @@
             paintLoop();
 
             var spawnBulletLoop = function () {
-                Jscex.Async.start(_this._bulletFlyAsync(randomF(options)));
+                _this._bulletFlyAsync(randomF(options)).start();
                 setTimeout(spawnBulletLoop, 50)
             }
             spawnBulletLoop();

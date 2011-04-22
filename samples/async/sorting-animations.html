@@ -132,7 +132,7 @@
             repaint(array);
 
             var sort = eval(window.location.search.substring(1) + "SortAsync");
-            Jscex.Async.start(sort(array));
+            sort(array).start();
         }
 
     </script>

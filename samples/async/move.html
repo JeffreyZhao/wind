@@ -36,10 +36,10 @@
     <div id="moveSquareBox" style="background-color:red; position:absolute; width:50px; height:50px;"></div>
     <script type="text/javascript">
         var moveBox = document.getElementById("moveBox");
-        Jscex.Async.start(moveAsync(moveBox, {x:0, y:0}, {x:300, y:0}, 1000));
+        moveAsync(moveBox, {x:0, y:0}, {x:300, y:0}, 1000).start();
 
         var moveSquareBox = document.getElementById("moveSquareBox");
-        Jscex.Async.start(moveSquareAsync(moveSquareBox));
+        moveSquareAsync(moveSquareBox).start();
     </script>
 </body>
 </html>
