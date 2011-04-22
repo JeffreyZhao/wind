@@ -11,25 +11,17 @@ Jscex.Async.Task.prototype = {
         var _this = this;
         this._delegate.start(function (type, value) {
             if (type == "success") {
-                _this._result = value;
+                _this.result = value;
                 if (options && options.onSuccess)
                     options.onSuccess(_this);
             } else if (type == "error") {
-                _this._error = value;
+                _this.error = value;
                 if (options && options.onError)
                     options.onError(_this);
             } else {
                 throw "Unsupported type: " + type;
             }
         });
-    },
-
-    "getResult": function () {
-        return this._result;
-    },
-
-    "getError": function () {
-        return this._error;
     }
 };
 
@@ -63,12 +55,12 @@ Jscex.Async.Task.prototype = {
                 "start": function (_this, callback) {
                     task.start({
                         "onError": function () {
-                            callback("throw", task.getError());
+                            callback("throw", task.error);
                         },
                         "onSuccess": function () {
                             var nextTask;
                             try {
-                                nextTask = generator.call(_this, task.getResult());
+                                nextTask = generator.call(_this, task.result);
                             } catch (ex) {
                                 callback("throw", ex);
                                 return;
