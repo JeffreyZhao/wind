@@ -17,17 +17,13 @@ if ((typeof Jscex) == "undefined") {
         "Start": function (_this, task) {
             return {
                 "start": function (callback) {
-                    try {
-                        task.start(_this, function (type, value, target) {
-                            if (type == "break" || type == "continue") {
-                                throw new Error('Invalid type for "Start": ' + type);
-                            } else {
-                                callback(type, value, target);
-                            }
-                        });
-                    } catch (ex) {
-                        callback("throw", ex);
-                    }
+                    task.start(_this, function (type, value, target) {
+                        if (type == "break" || type == "continue") {
+                            throw new Error('Invalid type for "Start": ' + type);
+                        } else {
+                            callback(type, value, target);
+                        }
+                    });
                 }
             };
         },
@@ -168,27 +164,85 @@ if ((typeof Jscex) == "undefined") {
             };
         },
 
-        "Try": function (tryBlock, catchGenerator) {
+        "Try": function (tryTask, catchGenerator, finallyTask) {
             return {
                 "start": function (_this, callback) {
-                    try {
-                        tryBlock.start(_this, function (type, value, target) {
-                            if (type == "throw") {
+                    tryTask.start(_this, function (type, value, target) {
+                        if (type != "throw" || !catchGenerator) {
+                            if (!finallyTask) {
+                                callback(type, value, target);
+                            } else {
+                                finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                    if (finallyType == "normal") {
+                                        callback(type, value, target);
+                                    } else {
+                                        callback(finallyType, finallyValue, finallyTarget);
+                                    }
+                                });
+                            }
+                        } else {
+
+                            if (catchGenerator) {
+
+                                var catchTask;
                                 try {
-                                    var task = catchGenerator.call(_this, value);
-                                    task.start(_this, callback);
+                                    catchTask = catchGenerator.call(_this, value);
                                 } catch (ex) {
-                                    callback(type, ex);
+                                    if (finallyTask) {
+                                        finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                            if (finallyType == "normal") {
+                                                callback("throw", ex);
+                                            } else {
+                                                callback(finallyType, finallyValue, finallyTarget);
+                                            }
+                                        });
+                                    } else {
+                                        callback("throw", ex);
+                                    }
+                                }
+                                
+                                if (catchTask) {
+                                    catchTask.start(_this, function (catchType, catchValue, catchTarget) {
+                                        if (catchType == "throw") {
+                                            if (finallyTask) {
+                                                finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                                    if (finallyType == "normal") {
+                                                        callback(catchType, catchValue, catchTarget);
+                                                    } else {
+                                                        callback(finallyType, finallyValue, finallyTarget);
+                                                    }
+                                                });
+                                            } else {
+                                                callback(catchType, catchValue, catchTarget);
+                                            }
+                                        } else {
+                                            if (finallyTask) {
+                                                finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                                    if (finallyType == "normal") {
+                                                        callback(catchType, catchValue, catchTarget);
+                                                    } else {
+                                                        callback(finallyType, finallyValue, finallyTarget);
+                                                    }
+                                                });
+                                            } else {
+                                                callback(catchType, catchValue, catchTarget);
+                                            }
+                                        }  
+                                    });
                                 }
                             } else {
-                                callback(type, value, target);
+                                finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                    if (finallyType == "normal") {
+                                        callback(type, value, target);
+                                    } else {
+                                        callback(finallyType, finallyValue, finallyTarget);
+                                    }
+                                });
                             }
-                        });
-                    } catch (ex) {
-                        callback("throw", ex);
-                    }
+                        }
+                    });
                 }
-            }
+            };
         }
     };
 

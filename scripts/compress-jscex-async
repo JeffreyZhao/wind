@@ -2,7 +2,7 @@
 cat << EOF > ../bin/jscex.async.tmp.externs.js
 var Jscex = { 
     builders: {
-        "a": { binder: true }
+        "seq": { binder: "$yield" }
     },
     Async: {
         startImmediately: function () { }
