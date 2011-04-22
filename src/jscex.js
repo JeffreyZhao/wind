@@ -811,7 +811,7 @@ Jscex = (function () {
             },
 
             "throw": function (ast) {
-                this._write(builderVar + ".Throw()");
+                this._write(builderVar + ".Throw(")._visitRaw(ast.stmt[1])._write(")");
             },
 
             "break": function (ast) {
