@@ -5,23 +5,90 @@ if ((typeof Jscex) == "undefined") {
 Jscex.Async = { };
 Jscex.Async.Task = function (delegate) {
     this._delegate = delegate;
+    this.status = "ready";
 }
 Jscex.Async.Task.prototype = {
     "start": function (options) {
+        if (this.status != "ready") {
+            throw new "Cannot start in current status";
+        }
+
         var _this = this;
+
+        if (options && options.onSuccess)
+            this.attachEvent("success", options.onSuccess);
+
+        if (options && options.onFailure)
+            this.attachEvent("failure", options.onSuccess);
+
+        if (options && options.onComplete) {
+            this.attachEvent("complete", options.onComplete);
+        }
+
+        this.status = "running";
         this._delegate.start(function (type, value) {
+
             if (type == "success") {
+
                 _this.result = value;
-                if (options && options.onSuccess)
-                    options.onSuccess(_this);
-            } else if (type == "error") {
+                _this.status = "succeeded";
+                _this._raiseEvent("success");
+
+            } else if (type == "failure") {
+
                 _this.error = value;
-                if (options && options.onError)
-                    options.onError(_this);
+                _this.status = "failed";
+                _this._raiseEvent("failure");
+
             } else {
                 throw "Unsupported type: " + type;
             }
+            
+            this._eventHandlers = null;
         });
+    },
+
+    _raiseEvent: function (name) {
+        var handlers = this._eventHandlers && this._eventHandlers[name];
+        if (handlers) {
+            for (var i = 0; i < handlers.length; i++) {
+                try { handlers[i](this); } catch (ex) { }
+            }
+        }
+
+        var completeHandlers = this._eventHandlers && this._eventHandlers["complete"];
+        if (completeHandlers) {
+            for (var i = 0; i < completeHandlers.length; i++) {
+                try { completeHandlers[i](this); } catch (ex) { }
+            }
+        }
+    },
+
+    "attachEvent": function (name, handler) {
+        if (this.status != "ready" && this.status != "running") {
+            throw "Cannot attach handler in current status.";
+        }
+
+        if (!this._eventHandlers) {
+            this._eventHandlers = { };
+        }
+
+        if (!this._eventHandlers[name]) {
+            this._eventHandlers[name] = [];
+        }
+
+        this._eventHandlers[name].push(handler);
+    },
+
+    "detachEvent": function (name, handler) {
+        if (this.status != "ready" && this.status != "running") {
+            throw "Cannot detach handler in current status.";
+        }
+
+        if (!this._eventHandlers) return false;
+        if (!this._eventHandlers[name]) return false;
+
+        throw "Not implemented yet";
     }
 };
 
@@ -41,7 +108,7 @@ Jscex.Async.Task.prototype = {
                         } else if (type == "throw") {
                             callback("error", value);
                         } else {
-                            throw "Unsupport type: " + type;
+                            throw "Unsupported type: " + type;
                         }
                     });
                 }
@@ -53,11 +120,9 @@ Jscex.Async.Task.prototype = {
         "Bind": function (task, generator) {
             return {
                 "start": function (_this, callback) {
-                    task.start({
-                        "onError": function () {
-                            callback("throw", task.error);
-                        },
-                        "onSuccess": function () {
+                    
+                    var onComplete = function (t) {
+                        if (t.status == "succeeded") {
                             var nextTask;
                             try {
                                 nextTask = generator.call(_this, task.result);
@@ -67,8 +132,18 @@ Jscex.Async.Task.prototype = {
                             }
 
                             nextTask.start(_this, callback);
+                        } else {
+                            callback("throw", task.error);
                         }
-                    });
+                    }
+
+                    if (task.status == "ready") {
+                        task.start({ "onComplete": onComplete });
+                    } else if (task.status == "running") {
+                        task.attachEvent("complete", onComplete);
+                    } else {
+                        onComplete(task);
+                    }
                 }
             };
         },
