@@ -43,6 +43,8 @@ Jscex.Async.Task.prototype = {
             } else {
                 throw "Unsupported type: " + type;
             }
+
+            _this._raiseEvent("complete");
             
             this._eventHandlers = null;
         });
@@ -50,17 +52,10 @@ Jscex.Async.Task.prototype = {
 
     _raiseEvent: function (name) {
         var handlers = this._eventHandlers && this._eventHandlers[name];
-        if (handlers) {
-            for (var i = 0; i < handlers.length; i++) {
-                try { handlers[i](this); } catch (ex) { }
-            }
-        }
+        if (!handlers) return;
 
-        var completeHandlers = this._eventHandlers && this._eventHandlers["complete"];
-        if (completeHandlers) {
-            for (var i = 0; i < completeHandlers.length; i++) {
-                try { completeHandlers[i](this); } catch (ex) { }
-            }
+        for (var i = 0; i < handlers.length; i++) {
+            try { handlers[i](this); } catch (ex) { }
         }
     },
 
