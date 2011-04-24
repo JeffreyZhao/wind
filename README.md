@@ -685,7 +685,7 @@ People cannot use the async methods defined in previous. It's not the behavior p
 
 But Jscex is nothing more than JavaScript:
 
-* There's no clear separation between compile-time and runtime, code are compiled by JIT compiler at runtime when develop.
+* There's no clear separation between compile-time and runtime, code are compiled by the JIT compiler at runtime when develop.
 * Jscex code and standard JavaScript, people can use normal JavaScript editors to write Jscex functions.
 * Jscex source files and JavaScript source files. They can be hosted in different domains and used in webpage as normal extenal scripts files.
 * Jscex functions defined in browser's <code>script</code> browser can be used by the code next to it immediately.
