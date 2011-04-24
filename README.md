@@ -664,7 +664,7 @@ A few projects are "Language extensions" - for these projects like [StratifiedJS
       result = performYahooQuery(query);
     }    
 
-Although these languages could quite similar to JavaScript, but it's really not, especially the syntax and semantic related to async programming. Programmers have to learn "new languages" when using them. And these new languages may also break the JavaScript editors. Jscex is nothing more than JavaScript and even the <code>$await</code> operations are simple method calls - the only semantic related to that is "wait until finished", everyone knows how to programming in Jscex in minutes.
+Although these languages could be quite similar to JavaScript, but it's really not, especially the syntax and semantic related to async programming. Programmers have to learn "new languages" when using them. And these new languages may also break the JavaScript editors. Jscex is nothing more than JavaScript and even the <code>$await</code> operations are simple method calls - the only semantic related to that is "wait until finished", everyone knows how to programming in Jscex in minutes.
 
 And in traditional JavaScript programming, people modify the code and refresh the page to see whether things got right. But these "new languages" cannot being executed in browsers (or other ECMASCript 3 engines) directly, it should be compiled into JavaScript before runtime. Project like Narrative and StratifiedJS also provide JIT compiler which load and produce code as runtime. But the way they use have obvious limitations:
 
@@ -686,8 +686,8 @@ People cannot use the async methods defined in previous. It's not the behavior p
 But Jscex is nothing more than JavaScript:
 
 * There's no clear separation between compile-time and runtime, code are compiled by the JIT compiler at runtime when develop.
-* Jscex code and standard JavaScript, people can use normal JavaScript editors to write Jscex functions.
-* Jscex source files and JavaScript source files. They can be hosted in different domains and used in webpage as normal extenal scripts files.
+* Jscex codes are standard JavaScript, people can use normal JavaScript editors to write and format Jscex functions.
+* Jscex source files are JavaScript source files. They can be hosted in different domains and used in webpage as normal extenal scripts files.
 * Jscex functions defined in browser's <code>script</code> browser can be used by the code next to it immediately.
 
 Jscex just keeps nearly everything as usual for JavaScript programmers.
