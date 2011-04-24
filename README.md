@@ -1,10 +1,10 @@
-"Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm), including mainstreaming browsers or server side JavaScript environments (e.g., [Node.js](http://nodejs.org/)).
+"Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm), including mainstream browsers or server side JavaScript environments (e.g., [Node.js](http://nodejs.org/)).
 
 Currently features:
 
 * A JIT (just-in-time) compiler which generates codes **at runtime** - mainly used in development environment.
 * An AOT (ahead-of-time) compiler which generates code **before runtime** - mainly used in production environment.
-* An async library which simplied async programming significantly.
+* An async library which simplified async programming significantly.
 
 # Jscex asynchronous library
 
@@ -485,7 +485,7 @@ At runtime, <code>outsideAsync</code> would be compiled to:
         );
     })
 
-which means the <code>innerAsync</code> method would be compiled each time <code>outsideAsync</code> calls. That would be a performance cost. So please DONOT put an Jscex function into another - until the problem being fixed.
+which means the <code>innerAsync</code> method would be compiled each time <code>outsideAsync</code> calls. That would be a performance cost. So please DO NOT put an Jscex function into another - until the problem being fixed.
 
 ### Language support:
 
@@ -612,36 +612,9 @@ Unfortunately, the "seq builder" is not part of Jscex at this moment. It's one o
 
 There're several other projects has the same purpose. We can put these project into two categories.
 
-## Language extensions:
-
-The first catgory is "Language extensions" - for these projects like [StratifiedJS](http://www.infoq.com/articles/stratifiedjs) and [Narrative JavaScript](http://www.neilmix.com/narrativejs/doc/), people write "JavaScript-like" codes and compile them to "real JavaScripts":
-
-    // Narrative JavaScript code
-    function sleep(millis) {
-        var notifier = new EventNotifier();
-        setTimeout(notifier, millis);
-        notifier.wait->();
-    }
-
-    // StratifiedJS code
-    var result;
-    waitfor {
-      result = performGoogleQuery(query);
-    }
-    or {
-      result = performYahooQuery(query);
-    }    
-
-Codes above should be compiled before running in browsers. People have to learn "a new language" with these solutions and we cannot just "modify and refresh" when writing scripts. Jscex is no more than JavaScript and the JIT compiler produces code at runtime, so there's nothing else we need.
-
-Although Narrative JavaScript has a compiler written in JavaScript, which could load scripts via XMLHttpRequest and compile them on the fly, it also has 2 limitations compare to Jscex:
-
-1. Scripts can only be host in the same domain of website.
-2. JavaScript scopes and context are broken.
-
 ## Library extensions:
 
-More projects build libraries to [simplify async programming in JavaScript](http://www.infoq.com/articles/surviving-asynchronous-programming-in-javascript):
+Most projects build libraries to [simplify async programming in JavaScript](http://www.infoq.com/articles/surviving-asynchronous-programming-in-javascript):
 
     // async.js (https://github.com/fjakobs/async.js)
     async.list([
@@ -671,6 +644,54 @@ More projects build libraries to [simplify async programming in JavaScript](http
 
 People use these solutions need to follow the programming patterns defined by the library, but Jscex just follows JavaScript idioms, programming with Jscex is just programming in JavaScript. So Jscex has a really gentle learning curve.
 
+## Language extensions:
+
+A few projects are "Language extensions" - for these projects like [StratifiedJS](http://www.infoq.com/articles/stratifiedjs) and [Narrative JavaScript](http://www.neilmix.com/narrativejs/doc/), people write "JavaScript-like" codes and compile them to "real JavaScripts":
+
+    // Narrative JavaScript code
+    function sleep(millis) {
+        var notifier = new EventNotifier();
+        setTimeout(notifier, millis);
+        notifier.wait->();
+    }
+
+    // StratifiedJS code
+    var result;
+    waitfor {
+      result = performGoogleQuery(query);
+    }
+    or {
+      result = performYahooQuery(query);
+    }    
+
+Although these languages could quite similar to JavaScript, but it's really not, especially the syntax and semantic related to async programming. Programmers have to learn "new languages" when using them. And these new languages may also break the JavaScript editors. Jscex is nothing more than JavaScript and even the <code>$await</code> operations are simple method calls - the only semantic related to that is "wait until finished", everyone knows how to programming in Jscex in minutes.
+
+And in traditional JavaScript programming, people modify the code and refresh the page to see whether things got right. But these "new languages" cannot being executed in browsers (or other ECMASCript 3 engines) directly, it should be compiled into JavaScript before runtime. Project like Narrative and StratifiedJS also provide JIT compiler which load and produce code as runtime. But the way they use have obvious limitations:
+
+If the sources are loaded by XMLHttpRequest, these source files have to be host in the same domain with website. JSONP can be used to load sources from other domains, but it's not loading remote sources directly, it loads the content in "method call" style - the source files have to be processed before sending to the client.
+
+These project may also load <code>script</code> blocks written inside the page. The compiler would load these code snippets from the DOM and compile them when page loaded. But in the case like:
+
+    <!-- codes to compile -->
+    <script type="some-special-type">
+        // define an async method
+    </script>
+
+    <script type="text/javascript">
+        // cannot use the async method here
+    </script>
+
+People cannot use the async methods defined in previous. It's not the behavior people are currently using in JavaScript programming.
+
+But Jscex is nothing more than JavaScript:
+
+* There's no clear separation between compile-time and runtime, code are compiled by JIT compiler at runtime when develop.
+* Jscex code and standard JavaScript, people can use normal JavaScript editors to write Jscex functions.
+* Jscex source files and JavaScript source files. They can be hosted in different domains and used in webpage as normal extenal scripts files.
+* Jscex functions defined in browser's <code>script</code> browser can be used by the code next to it immediately.
+
+Jscex just keeps nearly everything as usual for JavaScript programmers.
+
 # Jscex internals
 
 (more details in the future)
@@ -682,7 +703,7 @@ People use these solutions need to follow the programming patterns defined by th
   * Support nested Jscex functions
 * Better async builder
   * Better performance
-  * Support "timeout" and "cancellation" for async tasks
+  * Support "cancellation" for async tasks
   * More primitives in <code>Jscex.Async</code>
 * Support "seq builder"
 * Extensions for popular JavaScript libraries/frameworks (jQuery, Node.js, etc.)
