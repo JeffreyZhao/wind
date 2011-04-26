@@ -3,12 +3,13 @@ if ((typeof Jscex) == "undefined") {
 }
 
 Jscex.Async = { };
+/** @constructor */
 Jscex.Async.Task = function (delegate) {
     this._delegate = delegate;
     this.status = "ready";
 }
 Jscex.Async.Task.prototype = {
-    "start": function (options) {
+    start: function (options) {
         if (this.status != "ready") {
             throw new "Cannot start in current status";
         }
@@ -19,7 +20,7 @@ Jscex.Async.Task.prototype = {
             this.attachEvent("success", options.onSuccess);
 
         if (options && options.onFailure)
-            this.attachEvent("failure", options.onSuccess);
+            this.attachEvent("failure", options.onFailure);
 
         if (options && options.onComplete) {
             this.attachEvent("complete", options.onComplete);
@@ -59,7 +60,7 @@ Jscex.Async.Task.prototype = {
         }
     },
 
-    "attachEvent": function (name, handler) {
+    attachEvent: function (name, handler) {
         if (this.status != "ready" && this.status != "running") {
             throw "Cannot attach handler in current status.";
         }
@@ -75,7 +76,7 @@ Jscex.Async.Task.prototype = {
         this._eventHandlers[name].push(handler);
     },
 
-    "detachEvent": function (name, handler) {
+    detachEvent: function (name, handler) {
         if (this.status != "ready" && this.status != "running") {
             throw "Cannot detach handler in current status.";
         }

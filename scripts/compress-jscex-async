@@ -5,9 +5,20 @@ var Jscex = {
         "seq": { binder: "$yield" }
     },
     Async: {
-        startImmediately: function () { }
+        Task: function () { },
+        sleep: function () { },
+        onEvent: function () { }
     }
 };
+Jscex.Async.Task.prototype = {
+    start: function (options) {
+        options.onComplete();
+        options.onFailure();
+        options.onSuccess();
+    },
+    attachEvent: function (name, handler) { },
+    detachEvent: function (name, handler) { }
+}
 EOF
 
 java \
