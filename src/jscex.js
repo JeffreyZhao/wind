@@ -1168,7 +1168,28 @@ Jscex = (function () {
             },
 
             "switch": function (ast) {
-                // TODO: print raw
+                this._write("switch (")._visitRaw(ast[1])._writeLine(") {");
+                this._indentLevel++;
+
+                var cases = ast[2];
+                for (var i = 0; i < cases.length; i++) {
+                    var c = cases[i];
+                    this._writeIndents();
+
+                    if (c[0]) {
+                        this._write("case ")._visitRaw(c[0])._writeLine(":");
+                    } else {
+                        this._writeLine("default:");
+                    }
+                    this._indentLevel++;
+
+                    this._visitRawStatements(c[1]);
+                    this._indentLevel--;
+                }
+                this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("}");
             }
         }
     }
