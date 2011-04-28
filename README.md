@@ -65,17 +65,17 @@ We wrote an infinite loop in the async method <code>drawClockAsync</code>, in ea
 How can we block the code without the support of runtime? The magic here is: we are not actually executing the code we wrote, the <code>Jscex.compile</code> method accept the function we provide and convert it into another (it's not necessory for us to understand the code currently):
 
     (function (interval) {
-        var $$_builder_$$ = Jscex.builders["async"];
-        return $$_builder_$$.Start(this,
-            $$_builder_$$.Loop(
+        var $$_builder_$$_0 = Jscex.builders["async"];
+        return $$_builder_$$_0.Start(this,
+            $$_builder_$$_0.Loop(
                 function () {
                     return true;
                 },
                 null,
-                $$_builder_$$.Delay(function () {
+                $$_builder_$$_0.Delay(function () {
                     drawClock(new Date());
-                    return $$_builder_$$.Bind(Jscex.Async.sleep(interval), function () {
-                        return $$_builder_$$.Normal();
+                    return $$_builder_$$_0.Bind(Jscex.Async.sleep(interval), function () {
+                        return $$_builder_$$_0.Normal();
                     });
                 }),
                 false
@@ -459,11 +459,11 @@ We should put <code>$await</code> in separate statement:
         if (flag) { ... }
     }
 
-### Nesting Jscex functions
+### Nested Jscex functions
 
-If you write nested Jscex functions, the inner function would not be compiled with outside one. For example:
+If you write nested Jscex functions, the inner function can also be compiled with outside one. For example:
 
-    var outsideAsync = eval(Jscex.compile("async", function () {
+    var outerAsync = eval(Jscex.compile("async", function () {
 
         var innerAsync = eval(Jscex.compile("async", function () {
             // inner implementations
@@ -471,21 +471,27 @@ If you write nested Jscex functions, the inner function would not be compiled wi
 
     }));
 
-At runtime, <code>outsideAsync</code> would be compiled to:
+At runtime, <code>outerAsync</code> would be compiled to:
 
     (function () {
-        var $$_builder_$$ = Jscex.builders["async"];
-        return $$_builder_$$.Start(this,
-            $$_builder_$$.Delay(function () {
-                var innerAsync = eval(Jscex.compile("async", function () {
-                    // compiled inner implementations
-                }));
-                return $$_builder_$$.Normal();
+        var $$_builder_$$_0 = Jscex.builders["async"];
+        return $$_builder_$$_0.Start(this,
+            $$_builder_$$_0.Delay(function () {
+
+                var innerAsync = (function () {
+                    var $$_builder_$$_1 = Jscex.builders["async"];
+                    return $$_builder_$$_1.Start(this,
+                        // compiled inner implementations
+                        $$_builder_$$_1.Normal()
+                    );
+                });
+
+                return $$_builder_$$_0.Normal();
             })
         );
     })
 
-which means the <code>innerAsync</code> method would be compiled each time <code>outsideAsync</code> calls. That would be a performance cost. So please DO NOT put an Jscex function into another - until the problem being fixed.
+But the compilation (of inner function) is based on static code parsing and generation, so the compiler can only recognize the "standard pattern": <code>eval(Jscex.compile("builderName", function () { ... }))</code>. Please see the section "AOT Compiler - Limitation" for more details.
 
 ### Language support:
 
@@ -516,35 +522,35 @@ The AOT compiler runs with node.js:
 
 For the <code>bubbleSortAsync</code> method above, it would be compiled into:
 
-    var bubbleSortAsync = (function (array) {
-        var $$_builder_$$ = Jscex.builders["async"];
-        return $$_builder_$$.Start(this,
-            $$_builder_$$.Delay(function () {
+    (function (array) {
+        var $$_builder_$$_0 = Jscex.builders["async"];
+        return $$_builder_$$_0.Start(this,
+            $$_builder_$$_0.Delay(function () {
                 var x = 0;
-                return $$_builder_$$.Loop(
+                return $$_builder_$$_0.Loop(
                     function () {
                         return x < array.length;
                     },
                     function () {
                         x++;
                     },
-                    $$_builder_$$.Delay(function () {
+                    $$_builder_$$_0.Delay(function () {
                         var y = 0;
-                        return $$_builder_$$.Loop(
+                        return $$_builder_$$_0.Loop(
                             function () {
                                 return y < (array.length - x);
                             },
                             function () {
                                 y++;
                             },
-                            $$_builder_$$.Delay(function () {
-                                return $$_builder_$$.Bind(compareAsync(array[y], array[y + 1]), function (r) {
+                            $$_builder_$$_0.Delay(function () {
+                                return $$_builder_$$_0.Bind(compareAsync(array[y], array[y + 1]), function (r) {
                                     if (r > 0) {
-                                        return $$_builder_$$.Bind(swapAsync(array, y, y + 1), function () {
-                                            return $$_builder_$$.Normal();
+                                        return $$_builder_$$_0.Bind(swapAsync(array, y, y + 1), function () {
+                                            return $$_builder_$$_0.Normal();
                                         });
                                     } else {
-                                        return $$_builder_$$.Normal();
+                                        return $$_builder_$$_0.Normal();
                                     }
                                 });
                             }),
@@ -559,7 +565,7 @@ For the <code>bubbleSortAsync</code> method above, it would be compiled into:
 
 The AOT compiler would keep the code others than Jscex functions. The code generated by AOT compiler could be compressed safely. Futhermore, the compiled code could execute without "json2.js", "uglifyjs-parser.js" and "jscex.js". The async methods could be executed properly with only "jscex.async.js", which is only 3KB when gzipped. Besides, the AOT compiled code can now be executed in the future "strict mode" of ECMAScript 5 (which doesn't support <code>eval</code> method).
 
-## Limitations
+## Limitation
 
 The AOT compiler would parse the input scripts **statically** and generate new code, so it can only recognize the standard pattern: <code>eval(Jscex.compile("builderName", function () { ... }))</code>. The follow codes work fine with JIT compiler but cannot be compiled by AOT compiler.
 
@@ -584,20 +590,20 @@ Jscex is not only for async programming. The Jscex compiler turns the input func
 Jscex builders register themselves in <code>Jscex.builders</code> dictionary. The builder would be retrieved by name at runtime, you can get the following code by watching the <code>console.log</code> output or use the AOT compiler:
 
     (function (minInclusive, maxExclusive) {
-        var $$_builder_$$ = Jscex.builders["async"];
-        return $$_builder_$$.Start(this,
-            $$_builder_$$.Delay(function () {
+        var $$_builder_$$_0 = Jscex.builders["seq"];
+        return $$_builder_$$_0.Start(this,
+            $$_builder_$$_0.Delay(function () {
                 var i = minInclusive;
-                return $$_builder_$$.Loop(
+                return $$_builder_$$_0.Loop(
                     function () {
                         return i < maxExclusive;
                     },
                     function () {
                         i++;
                     },
-                    $$_builder_$$.Delay(function () {
-                        return $$_builder_$$.Bind(i, function () {
-                            return $$_builder_$$.Normal();
+                    $$_builder_$$_0.Delay(function () {
+                        return $$_builder_$$_0.Bind(i, function () {
+                            return $$_builder_$$_0.Normal();
                         });
                     }),
                     false
@@ -700,7 +706,6 @@ Jscex just keeps nearly everything as usual for JavaScript programmers.
 
 * Smarter compiler
   * Keep code like <code>while (i < j) { i++; }</code> unchanged
-  * Support nested Jscex functions
 * Better async builder
   * Better performance
   * Support "cancellation" for async tasks
