@@ -169,15 +169,37 @@ Jscex = (function () {
 
         _visitBody: function (ast, stmts) {
             if (ast[0] == "block") {
-                this._visit(ast, stmts);
+                this._visitStatements(ast[1], stmts);
             } else {
                 this._visitStatements([ast], stmts);
             }
         },
 
+        _noBinding: function (stmts) {
+            switch (stmts[stmts.length - 1].type) {
+                case "normal":
+                case "return":
+                case "break":
+                case "throw":
+                case "continue":
+                    return true;
+            }
+
+            return false;
+        },
+
         _visitors: {
 
             "for": function (ast, stmts) {
+
+                var bodyStmts = [];
+                var body = ast[4];
+                this._visitBody(body, bodyStmts);
+
+                if (this._noBinding(bodyStmts)) {
+                    // stmts.push({ type: "raw", stmt: ast, jscex: true });
+                    // return;
+                }
 
                 var delayStmt = { type: "delay", stmts: [] };
                 stmts.push(delayStmt);
@@ -186,8 +208,8 @@ Jscex = (function () {
                 if (setup) {
                     delayStmt.stmts.push({ type: "raw", stmt: setup });
                 }
-                
-                var loopStmt = { type: "loop", bodyFirst: false, bodyStmt: { type: "delay", stmts: [] } };
+
+                var loopStmt = { type: "loop", bodyFirst: false, bodyStmt: { type: "delay", stmts: bodyStmts } };
                 delayStmt.stmts.push(loopStmt);
                 
                 var condition = ast[2];
@@ -199,9 +221,6 @@ Jscex = (function () {
                 if (update) {
                     loopStmt.update = update;
                 }
-
-                var body = ast[4];
-                this._visitBody(body, loopStmt.bodyStmt.stmts);
             },
 
             "for-in": function (ast, stmts) {
@@ -373,7 +392,8 @@ Jscex = (function () {
             },
 
             "block": function (ast, stmts) {
-                this._visitStatements(ast[1], stmts);
+                debugger;
+                // this._visitStatements(ast[1], stmts);
             },
 
             "while": function (ast, stmts) {
@@ -409,7 +429,7 @@ Jscex = (function () {
                     ifStmt.conditionStmts.push(condStmt);
 
                     var thenPart = ast[2];
-                    this._visit(thenPart, condStmt.stmts);
+                    this._visitBody(thenPart, condStmt.stmts);
 
                     var elsePart = ast[3];
                     if (elsePart && elsePart[0] == "if") {
@@ -423,7 +443,7 @@ Jscex = (function () {
                 if (elsePart) {
                     ifStmt.elseStmts = [];
 
-                    this._visit(elsePart, ifStmt.elseStmts);
+                    this._visitBody(elsePart, ifStmt.elseStmts);
                 }
             },
 
