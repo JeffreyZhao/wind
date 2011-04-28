@@ -14,7 +14,6 @@ Jscex = (function () {
     function JscexTreeGenerator(builderName) {
         this._binder = Jscex.builders[builderName].binder;
         this._root = null;
-        this._currStmts = null;
     }
     JscexTreeGenerator.prototype = {
 
@@ -23,9 +22,8 @@ Jscex = (function () {
             var params = ast[2], statements = ast[3];
 
             this._root = { type: "delay", stmts: [] };
-            this._currStmts = this._root.stmts;
 
-            this._visitStatements(statements);
+            this._visitStatements(statements, this._root.stmts);
 
             return this._root;
         },
@@ -94,44 +92,38 @@ Jscex = (function () {
             return null;
         },
 
-        _visitStatements: function (statements, index) {
-            if (arguments.length <= 1) index = 0;
+        _visitStatements: function (statements, stmts, index) {
+            if (arguments.length <= 2) index = 0;
 
             if (index >= statements.length) {
-                this._currStmts.push({ type: "normal" });
+                stmts.push({ type: "normal" });
                 return this;
             }
 
-            var stmt = statements[index];
-            var bindInfo = this._getBindInfo(stmt);
+            var currStmt = statements[index];
+            var bindInfo = this._getBindInfo(currStmt);
 
             if (bindInfo) {
                 var bindStmt = { type: "bind", info: bindInfo };
-                this._currStmts.push(bindStmt);
+                stmts.push(bindStmt);
 
-                if (bindInfo.isReturn) {
-
-                } else {
+                if (!bindInfo.isReturn) {
                     bindStmt.stmts = [];
-
-                    var currStmts = this._currStmts;
-                    this._currStmts = bindStmt.stmts;
-                    this._visitStatements(statements, index + 1);
-                    this._currStmts = currStmts;
+                    this._visitStatements(statements, bindStmt.stmts, index + 1);
                 }
 
             } else {
-                var type = stmt[0];
+                var type = currStmt[0];
                 if (type == "return" || type == "break" || type == "continue" || type == "throw") {
 
-                    this._currStmts.push({ type: type, stmt: stmt });
+                    stmts.push({ type: type, stmt: currStmt });
 
                 } else if (type == "while" || type == "try" || type == "if" ||
                             type == "for" || type == "do" || type == "for-in") {
 
                     var isLast = (index == statements.length - 1);
                     if (isLast) {
-                        this._visit(stmt);
+                        this._visit(currStmt, stmts);
                     } else {
 
                         var combineStmt = {
@@ -139,28 +131,24 @@ Jscex = (function () {
                             first: { type: "delay", stmts: [] },
                             second: { type: "delay", stmts: [] }
                         };
-                        this._currStmts.push(combineStmt);
+                        stmts.push(combineStmt);
 
-                        var currStmts = this._currStmts;
-                        this._currStmts = combineStmt.first.stmts;
-                        this._visit(stmt);
+                        this._visit(currStmt, combineStmt.first.stmts);
 
-                        this._currStmts = combineStmt.second.stmts;
-                        this._visitStatements(statements, index + 1);
-                        this._currStmts = currStmts;
+                        this._visitStatements(statements, combineStmt.second.stmts, index + 1);
                     }
                 } else {
 
-                    this._currStmts.push({ type: "raw", stmt: stmt });
+                    stmts.push({ type: "raw", stmt: currStmt });
 
-                    this._visitStatements(statements, index + 1);
+                    this._visitStatements(statements, stmts, index + 1);
                 }
             }
 
             return this;
         },
 
-        _visit: function (ast) {
+        _visit: function (ast, stmts) {
 
             var type = ast[0];
 
@@ -171,7 +159,7 @@ Jscex = (function () {
             var visitor = this._visitors[type];
 
             if (visitor) {
-                visitor.call(this, ast);
+                visitor.call(this, ast, stmts);
             } else if (JSCEX_DEBUG) {
                 throwUnsupportedError();
             }
@@ -179,20 +167,20 @@ Jscex = (function () {
             return this;
         },
 
-        _visitBody: function (ast) {
+        _visitBody: function (ast, stmts) {
             if (ast[0] == "block") {
-                this._visit(ast);
+                this._visit(ast, stmts);
             } else {
-                this._visitStatements([ast]);
+                this._visitStatements([ast], stmts);
             }
         },
 
         _visitors: {
 
-            "for": function (ast) {
+            "for": function (ast, stmts) {
 
                 var delayStmt = { type: "delay", stmts: [] };
-                this._currStmts.push(delayStmt);
+                stmts.push(delayStmt);
         
                 var setup = ast[1];
                 if (setup) {
@@ -212,14 +200,11 @@ Jscex = (function () {
                     loopStmt.update = update;
                 }
 
-                var currStmts = this._currStmts;
-                this._currStmts = loopStmt.bodyStmt.stmts;
                 var body = ast[4];
-                this._visitBody(body);
-                this._currStmts = currStmts;
+                this._visitBody(body, loopStmt.bodyStmt.stmts);
             },
 
-            "for-in": function (ast) {
+            "for-in": function (ast, stmts) {
 
                 var membersVar = "$$_members_$$_" + tempVarSeed;
                 var indexVar = "$$_index_$$_" + tempVarSeed;
@@ -229,7 +214,7 @@ Jscex = (function () {
                 var obj = ast[3];
     
                 var delayStmt = { type: "delay", stmts: [] };
-                this._currStmts.push(delayStmt);
+                stmts.push(delayStmt);
 
                 // var members = [];
                 delayStmt.stmts.push({ type: "raw", stmt: [
@@ -383,60 +368,48 @@ Jscex = (function () {
                     ] });
                 }
 
-                var currStmts = this._currStmts;
-                this._currStmts = loopStmt.bodyStmt.stmts;
                 var body = ast[4];
-                this._visitBody(body);
-                this._currStmts = currStmts;        
+                this._visitBody(body, loopStmt.bodyStmt.stmts);
             },
 
-            "block": function (ast) {
-                this._visitStatements(ast[1]);
+            "block": function (ast, stmts) {
+                this._visitStatements(ast[1], stmts);
             },
 
-            "while": function (ast) {
+            "while": function (ast, stmts) {
                 var loopStmt = { type: "loop", bodyFirst: false, bodyStmt: { type: "delay", stmts: [] } };
-                this._currStmts.push(loopStmt);
+                stmts.push(loopStmt);
 
                 var condition = ast[1];
                 loopStmt.condition = condition;
 
-                var currStmts = this._currStmts;
-                this._currStmts = loopStmt.bodyStmt.stmts;
                 var body = ast[2];
-                this._visitBody(body);
-                this._currStmts = currStmts;
+                this._visitBody(body, loopStmt.bodyStmt.stmts);
             },
 
-            "do": function (ast) {
+            "do": function (ast, stmts) {
                 var loopStmt = { type: "loop", bodyFirst: true, bodyStmt: { type: "delay", stmts: [] } };
-                this._currStmts.push(loopStmt);
+                stmts.push(loopStmt);
 
                 var condition = ast[1];
                 loopStmt.condition = condition;
 
-                var currStmts = this._currStmts;
-                this._currStmts = loopStmt.bodyStmt.stmts;
                 var body = ast[2];
-                this._visitBody(body);
-                this._currStmts = currStmts;
+                this._visitBody(body, loopStmt.bodyStmt.stmts);
             },
 
-            "if": function (ast) {
+            "if": function (ast, stmts) {
 
                 var ifStmt = { type: "if", conditionStmts: [] };
-                this._currStmts.push(ifStmt);
+                stmts.push(ifStmt);
 
                 while (true) {
                     var condition = ast[1];
                     var condStmt = { cond: condition, stmts: [] };
                     ifStmt.conditionStmts.push(condStmt);
 
-                    var currStmts = this._currStmts;
-                    this._currStmts = condStmt.stmts;
                     var thenPart = ast[2];
-                    this._visit(thenPart);
-                    this._currStmts = currStmts;
+                    this._visit(thenPart, condStmt.stmts);
 
                     var elsePart = ast[3];
                     if (elsePart && elsePart[0] == "if") {
@@ -450,23 +423,17 @@ Jscex = (function () {
                 if (elsePart) {
                     ifStmt.elseStmts = [];
 
-                    var currStmts = this._currStmts
-                    this._currStmts = ifStmt.elseStmts;
-                    this._visit(elsePart);
-                    this._currStmts = currStmts;
+                    this._visit(elsePart, ifStmt.elseStmts);
                 }
             },
 
-            "try": function (ast) {
+            "try": function (ast, stmts) {
 
                 var tryStmt = { type: "try", bodyStmt: { type: "delay", stmts: [] } };
-                this._currStmts.push(tryStmt);
+                stmts.push(tryStmt);
 
-                var currStmts = this._currStmts;
-                this._currStmts = tryStmt.bodyStmt.stmts;
                 var bodyStatements = ast[1];
-                this._visitStatements(bodyStatements);
-                this._currStmts = currStmts;
+                this._visitStatements(bodyStatements, tryStmt.bodyStmt.stmts);
 
                 var catchClause = ast[2];
                 if (catchClause) {
@@ -474,20 +441,14 @@ Jscex = (function () {
                     tryStmt.exVar = exVar;
                     tryStmt.catchStmts = [];
 
-                    currStmts = this._currStmts;
-                    this._currStmts = tryStmt.catchStmts;
-                    this._visitStatements(catchClause[1]);
-                    this._currStmts = currStmts;
+                    this._visitStatements(catchClause[1], tryStmt.catchStmts);
                 }
 
                 var finallyStatements = ast[3];
                 if (finallyStatements) {
                     tryStmt.finallyStmt = { type: "delay", stmts: [] };
 
-                    currStmts = this._currStmts;
-                    this._currStmts = tryStmt.finallyStmt.stmts;
-                    this._visitStatements(finallyStatements);
-                    this._currStmts = currStmts;
+                    this._visitStatements(finallyStatements, tryStmt.finallyStmt.stmts);
                 }
             }
         }
