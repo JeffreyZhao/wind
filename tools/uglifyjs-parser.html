@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>UglifyJS Parser</title>
+    
+    <script language="javascript" type="text/javascript" src="../lib/json2.js"></script>
+    <script language="javascript" type="text/javascript" src="../lib/uglifyjs-parser.js"></script>
+</head>
+<body>
+    <textarea id="code" style="font-family:consolas,monaco; width:500px; height:300px;">function helloworld() { alert("Hello World!"); }</textarea><br />
+    <input type="button" onclick="parse()" value="parse" />
+    <div id="r"></div>
+
+
+    <script type="text/javascript">
+        var appendIndent = function (builder, indent) {
+            for (var i = 0; i < indent; i++) builder.push("    ");
+        }
+
+        var serialize = function (builder, list, indent) {
+
+            if (!list || !list.push) {
+                appendIndent(builder, indent);
+
+                builder.push(JSON.stringify(list));
+
+                return;
+            }
+
+            appendIndent(builder, indent);
+            builder.push("[\n");
+
+            for (var i = 0; i < list.length; i++) {
+
+                serialize(builder, list[i], indent + 1);
+                if (i != list.length - 1) builder.push(",");
+                builder.push("\n");
+            }
+
+            appendIndent(builder, indent);
+            builder.push("]");
+        }
+        
+        function parse() {
+            var code = document.getElementById("code").value;
+            var result;
+            
+            try {
+                var list = UglifyJS.parse(code);
+                
+                var builder = [];
+                serialize(builder, list, 0);
+                
+                result = builder.join("");
+            } catch (ex) {
+                result = "error";
+            }
+            
+            document.getElementById("r").innerHTML = "<pre style='font-family:consolas,monaco;'>" + result + "</pre>";
+        }
+    </script>
+</body>
+</html>
+
