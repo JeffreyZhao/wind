@@ -498,7 +498,7 @@ But the compilation (of inner function) is based on static code parsing and gene
 Jscex compiler could generate code for almost all the features of ECMAScript 3 except:
 
 * Break to label
-* <code>switch</code> statment, please use if/else instead.
+* Bind operation (e.g. <code>$await</code>) in <code>switch</code> statement, please use <code>if</code>/<code>else</code> instead.
 
 # AOT compiler
 
