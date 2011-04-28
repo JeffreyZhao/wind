@@ -5,6 +5,7 @@ sed \
     -e 's/\._write()//g' \
     -e 's/this\._writeIndents();//g' \
     -e 's/\._writeIndents()//g' \
+    -e 's/this\._indent = indent;//g' \
     -e 's/this\._indentLevel = 0;//g' \
     -e 's/this\._indentLevel++;//g' \
     -e 's/this\._indentLevel--;//g' \

@@ -6,14 +6,13 @@ var JSCEX_DEBUG = true;
  */
 Jscex = (function () {
 
-    var builderVar = "$$_builder_$$";
+    var tempVarSeed = 0;
 
     /**
      * @constructor
      */
     function JscexTreeGenerator(builderName) {
         this._binder = Jscex.builders[builderName].binder;
-        this._tempVarSeed = 0;
         this._root = null;
         this._currStmts = null;
     }
@@ -222,10 +221,10 @@ Jscex = (function () {
 
             "for-in": function (ast) {
 
-                var membersVar = "$$_members_$$_" + this._tempVarSeed;
-                var indexVar = "$$_index_$$_" + this._tempVarSeed;
-                var memVar = "$$_mem_$$_" + this._tempVarSeed;
-                this._tempVarSeed++;
+                var membersVar = "$$_members_$$_" + tempVarSeed;
+                var indexVar = "$$_index_$$_" + tempVarSeed;
+                var memVar = "$$_mem_$$_" + tempVarSeed;
+                tempVarSeed++;
 
                 var obj = ast[3];
     
@@ -427,8 +426,6 @@ Jscex = (function () {
 
                 var ifStmt = { type: "if", conditionStmts: [] };
                 this._currStmts.push(ifStmt);
-                // var delayStmt = { type: "delay", stmts: [ifStmt] };
-                // this._currStmts.push(delayStmt);
 
                 while (true) {
                     var condition = ast[1];
@@ -499,12 +496,13 @@ Jscex = (function () {
     /**
      * @constructor
      */
-    function CodeGenerator(builderName) {
+    function CodeGenerator(builderName, indent) {
         this._builderName = builderName;
         this._binder = Jscex.builders[builderName].binder;
         this._normalMode = false;
+        this._indent = indent;
         this._indentLevel = 0;
-        this._tempVarSeed = 0;
+        this._builderVar = "$$_builder_$$_" + (tempVarSeed++);
     }
     CodeGenerator.prototype = {
         _write: function (s) {
@@ -518,6 +516,10 @@ Jscex = (function () {
         },
 
         _writeIndents: function () {
+            for (var i = 0; i < this._indent; i++) {
+                this._write(" ");
+            }
+
             for (var i = 0; i < this._indentLevel; i++) {
                 this._write("    ");
             }
@@ -531,10 +533,10 @@ Jscex = (function () {
             this._indentLevel++;
 
             this._writeIndents()
-                ._writeLine("var " + builderVar + " = Jscex.builders[" + JSON.stringify(this._builderName) + "];");
+                ._writeLine("var " + this._builderVar + " = Jscex.builders[" + JSON.stringify(this._builderName) + "];");
 
             this._writeIndents()
-                ._writeLine("return " + builderVar + ".Start(this,");
+                ._writeLine("return " + this._builderVar + ".Start(this,");
             this._indentLevel++;
 
             this._writeIndents()
@@ -546,7 +548,8 @@ Jscex = (function () {
                 ._writeLine(");");
             this._indentLevel--;
 
-            this._write("})");
+            this._writeIndents()
+                ._write("})");
 
             return this._buffer.join("");
         },
@@ -642,7 +645,6 @@ Jscex = (function () {
                             this._visitJscex(subStmt);
                             return;
                         case "return":
-                            // debugger;
                             if (!subStmt.stmt[1]) {
                                 this._visitJscex(subStmt);
                                 return;
@@ -650,7 +652,7 @@ Jscex = (function () {
                     }
                 }
 
-                this._writeLine(builderVar + ".Delay(function () {");
+                this._writeLine(this._builderVar + ".Delay(function () {");
                 this._indentLevel++;
 
                 this._visitJscexStatements(ast.stmts);
@@ -661,7 +663,7 @@ Jscex = (function () {
             },
 
             "combine": function (ast) {
-                this._writeLine(builderVar + ".Combine(");
+                this._writeLine(this._builderVar + ".Combine(");
                 this._indentLevel++;
 
                 this._writeIndents()
@@ -675,7 +677,7 @@ Jscex = (function () {
             },
 
             "loop": function (ast) {
-                this._writeLine(builderVar + ".Loop(");
+                this._writeLine(this._builderVar + ".Loop(");
                 this._indentLevel++;
 
                 if (ast.condition) {
@@ -725,12 +727,12 @@ Jscex = (function () {
 
             "bind": function (ast) {
                 var info = ast.info;
-                this._write(builderVar + ".Bind(")._visitRaw(info.expression)._writeLine(", function (" + info.argName + ") {");
+                this._write(this._builderVar + ".Bind(")._visitRaw(info.expression)._writeLine(", function (" + info.argName + ") {");
                 this._indentLevel++;
 
                 if (info.isReturn) {
                     this._writeIndents()
-                        ._writeLine("return " + builderVar + ".Return(" + info.argName + ");");
+                        ._writeLine("return " + this._builderVar + ".Return(" + info.argName + ");");
                 } else {
                     this._visitJscexStatements(ast.stmts);
                 }
@@ -762,7 +764,7 @@ Jscex = (function () {
                     this._visitJscexStatements(ast.elseStmts);
                 } else {
                     this._writeIndents()
-                        ._writeLine("return " + builderVar + ".Normal();");
+                        ._writeLine("return " + this._builderVar + ".Normal();");
                 }
 
                 this._indentLevel--;
@@ -772,7 +774,7 @@ Jscex = (function () {
             },
 
             "try": function (ast) {
-                this._writeLine(builderVar + ".Try(");
+                this._writeLine(this._builderVar + ".Try(");
                 this._indentLevel++;
 
                 this._writeIndents()
@@ -807,23 +809,23 @@ Jscex = (function () {
             },
 
             "normal": function (ast) {
-                this._write(builderVar + ".Normal()");
+                this._write(this._builderVar + ".Normal()");
             },
 
             "throw": function (ast) {
-                this._write(builderVar + ".Throw(")._visitRaw(ast.stmt[1])._write(")");
+                this._write(this._builderVar + ".Throw(")._visitRaw(ast.stmt[1])._write(")");
             },
 
             "break": function (ast) {
-                this._write(builderVar + ".Break()");
+                this._write(this._builderVar + ".Break()");
             },
 
             "continue": function (ast) {
-                this._write(builderVar + ".Continue()");
+                this._write(this._builderVar + ".Continue()");
             },
 
             "return": function (ast) {
-                this._write(builderVar + ".Return(");
+                this._write(this._builderVar + ".Return(");
                 if (ast.stmt[1]) this._visitRaw(ast.stmt[1]);
                 this._write(")");
             }
@@ -951,15 +953,27 @@ Jscex = (function () {
             },
 
             "call": function (ast) {
-                this._visitRaw(ast[1])._write("(");
+                
+                if (_isJscexPattern(ast)) {
+                    var indent = 0;
 
-                var args = ast[2];
-                for (var i = 0; i < args.length; i++) {
-                    this._visitRaw(args[i]);
-                    if (i < args.length - 1) this._write(", ");
+                    if (JSCEX_DEBUG) {
+                        indent = this._indent + this._indentLevel * 4;
+                    }
+
+                    var newCode = compileEval(ast, indent);
+                    this._write(newCode);
+                } else {
+                    this._visitRaw(ast[1])._write("(");
+
+                    var args = ast[2];
+                    for (var i = 0; i < args.length; i++) {
+                        this._visitRaw(args[i]);
+                        if (i < args.length - 1) this._write(", ");
+                    }
+
+                    this._write(")");
                 }
-
-                this._write(")");
             },
 
             "name": function (ast) {
@@ -1201,20 +1215,52 @@ Jscex = (function () {
         }
     }
 
-    function compile(builderName, func) {
-        var funcCode = func.toString();
+    function _isJscexPattern(ast) {
+        if (ast[0] != "call") return false;
+        
+        var evalName = ast[1];
+        if (evalName[0] != "name" || evalName[1] != "eval") return false;
 
-        var code = "var f = " + funcCode + ";";
-        var ast = UglifyJS.parse(code);
+        var compileCall = ast[2][0];
+        if (!compileCall || compileCall[0] != "call") return false;
 
-        // [ "toplevel", [ [ "var", [ [ "f", [...] ] ] ] ] ]
-        var funcAst = ast[1][0][1][0][1];
+        var compileMethod = compileCall[1];
+        if (!compileMethod || compileMethod[0] != "dot" || compileMethod[2] != "compile") return false;
+
+        var jscexName = compileMethod[1];
+        if (!jscexName || jscexName[0] != "name" || jscexName[1] != "Jscex") return false;
+
+        var builder = compileCall[2][0];
+        if (!builder || builder[0] != "string") return false;
+
+        var func = compileCall[2][1];
+        if (!func || func[0] != "function") return false;
+
+        return true;
+    }
+
+    function compileEval(ast, indent) {
+
+        var builderName = ast[2][0][2][0][1];
+        var funcAst = ast[2][0][2][1];
 
         var jscexTreeGenerator = new JscexTreeGenerator(builderName);
         var jscexAst = jscexTreeGenerator.generate(funcAst);
 
-        var codeGenerator = new CodeGenerator(builderName);
+        var codeGenerator = new CodeGenerator(builderName, indent);
         var newCode = codeGenerator.generate(funcAst[2], jscexAst);
+
+        return newCode;
+    }
+
+    function compile(builderName, func) {
+        var funcCode = func.toString();
+        var evalCode = "eval(Jscex.compile(" + JSON.stringify(builderName) + ", " + funcCode + "))"
+        var evalCodeAst = UglifyJS.parse(evalCode);
+
+        // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
+        var evalAst = evalCodeAst[1][0][1];
+        var newCode = compileEval(evalAst, 0);
 
         if (JSCEX_DEBUG) {
             _log(funcCode, newCode);
