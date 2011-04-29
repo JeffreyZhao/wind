@@ -1216,7 +1216,7 @@ Jscex = (function () {
             },
 
             "conditional": function (ast) {
-                this._write("(")._visitRaw(ast[1])._write(") ? (" + ast[2] + ") : (")._visitRaw(ast[3])._write(")");
+                this._write("(")._visitRaw(ast[1])._write(") ? (")._visitRaw(ast[2])._write(") : (")._visitRaw(ast[3])._write(")");
             },
 
             "try": function (ast) {
