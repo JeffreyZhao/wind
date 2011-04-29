@@ -61,9 +61,8 @@
             for (var x = 0; x < array.length; x++) {
                 for (var y = 0; y < array.length - x; y++) {
                     var r = $await(compareAsync(array[y], array[y + 1]));
-                    if(r > 0) {
+                    if (r > 0)
                         $await(swapAsync(array, y, y + 1));
-                    }
                 }
             }
         }));
@@ -108,13 +107,11 @@
         var _quickSortAsync = eval(Jscex.compile("async", function (array, begin, end) {
             var index = $await(_partitionAsync(array, begin, end));
 
-            if (begin < index - 1) {
+            if (begin < index - 1) 
                 $await(_quickSortAsync(array, begin, index - 1));
-            }
 
-            if (index < end) {
+            if (index < end) 
                 $await(_quickSortAsync(array, index, end));
-            }
         }));
 
         var quickSortAsync = eval(Jscex.compile("async", function (array) {
