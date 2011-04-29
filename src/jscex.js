@@ -1087,28 +1087,21 @@ Jscex = (function () {
                 var condition = ast[1];
                 var thenPart = ast[2];
 
-                this._write("if (")._visitRaw(condition)._writeLine(") {");
-                this._indentLevel++;
+                this._write("if (")._visitRaw(condition)._write(") ")._visitRawBody(thenPart);
 
-                this._visitRaw(thenPart);
-                this._indentLevel--;
-
-                this._writeIndents()
-                    ._write("}");
+                if (thenPart[0] != "block") {
+                    this._writeLine()
+                        ._writeIndents();
+                } else {
+                    this._write(" ");
+                }
 
                 var elsePart = ast[3];
                 if (elsePart) {
                     if (elsePart[0] == "if") {
-                        this._write(" else ")._visitRaw(elsePart);
+                        this._write("else ")._visitRaw(elsePart);
                     } else {
-                        this._writeLine(" else {")
-                        this._indentLevel++;
-
-                        this._visitRaw(elsePart)
-                        this._indentLevel--;
-
-                        this._writeIndents()
-                            ._write("}");
+                        this._write("else ")._visitRawBody(elsePart);
                     }
                 }
             },
