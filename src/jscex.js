@@ -121,22 +121,28 @@ Jscex = (function () {
                 } else if (type == "while" || type == "try" || type == "if" ||
                             type == "for" || type == "do" || type == "for-in") {
 
-                    var isLast = (index == statements.length - 1);
-                    if (isLast) {
-                        this._visit(currStmt, stmts);
+                    var newStmt = this._visit(currStmt);
+
+                    if (newStmt.type == "raw") {
+                        stmts.push(newStmt);
+                        this._visitStatements(statements, stmts, index + 1);
                     } else {
+                        var isLast = (index == statements.length - 1);
+                        if (isLast) {
+                            stmts.push(newStmt);
+                        } else {
 
-                        var combineStmt = {
-                            type: "combine",
-                            first: { type: "delay", stmts: [] },
-                            second: { type: "delay", stmts: [] }
-                        };
-                        stmts.push(combineStmt);
+                            var combineStmt = {
+                                type: "combine",
+                                first: { type: "delay", stmts: [newStmt] },
+                                second: { type: "delay", stmts: [] }
+                            };
+                            stmts.push(combineStmt);
 
-                        this._visit(currStmt, combineStmt.first.stmts);
-
-                        this._visitStatements(statements, combineStmt.second.stmts, index + 1);
+                            this._visitStatements(statements, combineStmt.second.stmts, index + 1);
+                        }
                     }
+
                 } else {
 
                     stmts.push({ type: "raw", stmt: currStmt });
@@ -148,7 +154,7 @@ Jscex = (function () {
             return this;
         },
 
-        _visit: function (ast, stmts) {
+        _visit: function (ast) {
 
             var type = ast[0];
 
@@ -159,12 +165,10 @@ Jscex = (function () {
             var visitor = this._visitors[type];
 
             if (visitor) {
-                visitor.call(this, ast, stmts);
+                return visitor.call(this, ast);
             } else if (JSCEX_DEBUG) {
                 throwUnsupportedError();
             }
-
-            return this;
         },
 
         _visitBody: function (ast, stmts) {
@@ -190,19 +194,17 @@ Jscex = (function () {
 
         _visitors: {
 
-            "for": function (ast, stmts) {
+            "for": function (ast) {
 
                 var bodyStmts = [];
                 var body = ast[4];
                 this._visitBody(body, bodyStmts);
 
                 if (this._noBinding(bodyStmts)) {
-                    // stmts.push({ type: "raw", stmt: ast, jscex: true });
-                    // return;
+                    return { type: "raw", stmt: ast };
                 }
 
                 var delayStmt = { type: "delay", stmts: [] };
-                stmts.push(delayStmt);
         
                 var setup = ast[1];
                 if (setup) {
@@ -221,9 +223,11 @@ Jscex = (function () {
                 if (update) {
                     loopStmt.update = update;
                 }
+
+                return delayStmt;
             },
 
-            "for-in": function (ast, stmts) {
+            "for-in": function (ast) {
 
                 var membersVar = "$$_members_$$_" + tempVarSeed;
                 var indexVar = "$$_index_$$_" + tempVarSeed;
@@ -233,7 +237,6 @@ Jscex = (function () {
                 var obj = ast[3];
     
                 var delayStmt = { type: "delay", stmts: [] };
-                stmts.push(delayStmt);
 
                 // var members = [];
                 delayStmt.stmts.push({ type: "raw", stmt: [
@@ -389,6 +392,8 @@ Jscex = (function () {
 
                 var body = ast[4];
                 this._visitBody(body, loopStmt.bodyStmt.stmts);
+
+                return delayStmt;
             },
 
             "block": function (ast, stmts) {
@@ -396,32 +401,47 @@ Jscex = (function () {
                 // this._visitStatements(ast[1], stmts);
             },
 
-            "while": function (ast, stmts) {
-                var loopStmt = { type: "loop", bodyFirst: false, bodyStmt: { type: "delay", stmts: [] } };
-                stmts.push(loopStmt);
+            "while": function (ast) {
+
+                var bodyStmts = [];
+                var body = ast[2];
+                this._visitBody(body, bodyStmts);
+
+                if (this._noBinding(bodyStmts)) {
+                    return { type: "raw", stmt: ast }
+                }
+
+                var loopStmt = { type: "loop", bodyFirst: false, bodyStmt: { type: "delay", stmts: bodyStmts } };
 
                 var condition = ast[1];
                 loopStmt.condition = condition;
 
-                var body = ast[2];
-                this._visitBody(body, loopStmt.bodyStmt.stmts);
+                return loopStmt;
             },
 
-            "do": function (ast, stmts) {
-                var loopStmt = { type: "loop", bodyFirst: true, bodyStmt: { type: "delay", stmts: [] } };
-                stmts.push(loopStmt);
+            "do": function (ast) {
+
+                var bodyStmts = [];
+                var body = ast[2];
+                this._visitBody(body, bodyStmts);
+
+                if (this._noBinding(bodyStmts)) {
+                    return { type: "raw", stmt: ast };
+                }
+
+                var loopStmt = { type: "loop", bodyFirst: true, bodyStmt: { type: "delay", stmts: bodyStmts } };
 
                 var condition = ast[1];
                 loopStmt.condition = condition;
 
-                var body = ast[2];
-                this._visitBody(body, loopStmt.bodyStmt.stmts);
+                return loopStmt;
             },
 
             "if": function (ast, stmts) {
 
+                var noBinding = true;
+
                 var ifStmt = { type: "if", conditionStmts: [] };
-                stmts.push(ifStmt);
 
                 while (true) {
                     var condition = ast[1];
@@ -430,6 +450,8 @@ Jscex = (function () {
 
                     var thenPart = ast[2];
                     this._visitBody(thenPart, condStmt.stmts);
+
+                    noBinding = noBinding && this._noBinding(condStmt.stmts);
 
                     var elsePart = ast[3];
                     if (elsePart && elsePart[0] == "if") {
@@ -444,17 +466,27 @@ Jscex = (function () {
                     ifStmt.elseStmts = [];
 
                     this._visitBody(elsePart, ifStmt.elseStmts);
+                    
+                    noBinding = noBinding && this._noBinding(ifStmt.elseStmts);
+                }
+
+                if (noBinding) {
+                    return { type: "raw", stmt: ast };
+                } else {
+                    return ifStmt;
                 }
             },
 
             "try": function (ast, stmts) {
 
-                var tryStmt = { type: "try", bodyStmt: { type: "delay", stmts: [] } };
-                stmts.push(tryStmt);
-
+                var bodyStmts = [];
                 var bodyStatements = ast[1];
-                this._visitStatements(bodyStatements, tryStmt.bodyStmt.stmts);
+                this._visitStatements(bodyStatements, bodyStmts);
 
+                var noBinding = this._noBinding(bodyStmts)
+
+                var tryStmt = { type: "try", bodyStmt: { type: "delay", stmts: bodyStmts } };
+                
                 var catchClause = ast[2];
                 if (catchClause) {
                     var exVar = catchClause[0];
@@ -462,6 +494,8 @@ Jscex = (function () {
                     tryStmt.catchStmts = [];
 
                     this._visitStatements(catchClause[1], tryStmt.catchStmts);
+
+                    noBinding = noBinding && this._noBinding(tryStmt.catchStmts);
                 }
 
                 var finallyStatements = ast[3];
@@ -469,6 +503,14 @@ Jscex = (function () {
                     tryStmt.finallyStmt = { type: "delay", stmts: [] };
 
                     this._visitStatements(finallyStatements, tryStmt.finallyStmt.stmts);
+
+                    noBinding = noBinding && this._noBinding(tryStmt.finallyStmt.stmts);
+                }
+
+                if (noBinding) {
+                    return { type: "raw", stmt: ast };
+                } else {
+                    return tryStmt;
                 }
             }
         }
@@ -519,6 +561,8 @@ Jscex = (function () {
             this._writeIndents()
                 ._writeLine("return " + this._builderVar + ".Start(this,");
             this._indentLevel++;
+
+            this._pos = { };
 
             this._writeIndents()
                 ._visitJscex(jscexAst)
@@ -576,8 +620,18 @@ Jscex = (function () {
 
         _visitRawStatements: function (statements) {
             for (var i = 0; i < statements.length; i++) {
+                var s = statements[i];
+
                 this._writeIndents()
-                    ._visitRaw(statements[i])._writeLine();
+                    ._visitRaw(s)._writeLine();
+
+                switch (s[0]) {
+                    case "break":
+                    case "return":
+                    case "continue":
+                    case "throw":
+                        return;
+                }
             }
         },
 
@@ -604,8 +658,13 @@ Jscex = (function () {
             this._writeLine("function " + funcName + "(" + args.join(", ") + ") {")
             this._indentLevel++;
 
+            var currInFunction = this._pos.inFunction;
+            this._pos.inFunction = true;
+
             this._visitRawStatements(statements);
             this._indentLevel--;
+
+            this._pos.inFunction = currInFunction;
 
             this._writeIndents()
                 ._write("}");
@@ -942,7 +1001,7 @@ Jscex = (function () {
                         indent = this._indent + this._indentLevel * 4;
                     }
 
-                    var newCode = compileEval(ast, indent);
+                    var newCode = _compileJscexPattern(ast, indent);
                     this._write(newCode);
                 } else {
                     this._visitRaw(ast[1])._write("(");
@@ -1006,10 +1065,14 @@ Jscex = (function () {
             },
 
             "return": function (ast) {
-                this._write("return");
-                var value = ast[1];
-                if (value) this._write(" ")._visitRaw(value);
-                this._write(";");
+                if (this._pos.inFunction) {
+                    this._write("return");
+                    var value = ast[1];
+                    if (value) this._write(" ")._visitRaw(value);
+                    this._write(";");
+                } else {
+                    this._write("return ")._visitJscex({ type: "return", stmt: ast })._write(";");
+                }
             },
             
             "for": function (ast) {
@@ -1035,8 +1098,13 @@ Jscex = (function () {
                 if (update) this._visitRaw(update);
                 this._write(") ");
 
+                var currInLoop = this._pos.inLoop;
+                this._pos.inLoop = true;
+
                 var body = ast[4];
                 this._visitRawBody(body);
+
+                this._pos.inLoop = currInLoop;
             },
 
             "for-in": function (ast) {
@@ -1070,16 +1138,32 @@ Jscex = (function () {
                 var condition = ast[1];
                 var body = ast[2];
 
+                var currInLoop = this._pos.inLoop
+                this._pos.inLoop = true;
+
                 this._write("while (")._visitRaw(condition)._write(") ")._visitRawBody(body);
+
+                this._pos.inLoop = currInLoop;
             },
 
             "do": function (ast) {
                 var condition = ast[1];
                 var body = ast[2];
 
-                this._write("do ")._visitRawBody(body)._writeLine()
-                    ._writeIndents()
-                    ._write("while (")._visitRaw(condition)._write(");");
+                var currInLoop = this._pos.inLoop;
+                this._pos.inLoop = true;
+
+                this._write("do ")._visitRawBody(body);
+
+                this._pos.inLoop = currInLoop;
+
+                if (body[0] == "block") {
+                    this._write(" ");
+                } else {
+                    this._writeLine()._writeIndents();
+                }
+
+                this._write("while (")._visitRaw(condition)._write(");");
             },
 
             "if": function (ast) {
@@ -1090,7 +1174,7 @@ Jscex = (function () {
                 this._write("if (")._visitRaw(condition)._write(") ")._visitRawBody(thenPart);
 
                 if (thenPart[0] != "block") {
-                    this._writeLine()
+                    this._writeLine("")
                         ._writeIndents();
                 } else {
                     this._write(" ");
@@ -1107,15 +1191,28 @@ Jscex = (function () {
             },
 
             "break": function (ast) {
-                this._write("break;");
+                if (this._pos.inLoop) {
+                    this._write("break;");
+                } else {
+                    this._write("return ")._visitJscex({ type: "break", stmt: ast })._write(";");
+                }
             },
 
             "continue": function (ast) {
-                this._write("continue;");
+                if (this._pos.inLoop) {
+                    this._write("continue;");
+                } else {
+                    this._write("return ")._visitJscex({ type: "continue", stmt: ast })._write(";");
+                }
             },
 
             "throw": function (ast) {
-                this._write("throw ")._visitRaw(ast[1])._write(";");
+                var pos = this._pos;
+                if (pos.inTry || pos.inFunction) {
+                    this._write("throw ")._visitRaw(ast[1])._write(";");
+                } else {
+                    this._write("return ")._visitJscex({ type: "throw", stmt: ast })._write(";");
+                }
             },
 
             "conditional": function (ast) {
@@ -1127,8 +1224,13 @@ Jscex = (function () {
                 this._writeLine("try {");
                 this._indentLevel++;
 
+                var currInTry = this._pos.inTry;
+                this._pos.inTry = true;
+
                 this._visitRawStatements(ast[1]);
                 this._indentLevel--;
+
+                this._pos.inTry = currInTry;
 
                 var catchClause = ast[2];
                 var finallyStatements = ast[3];
@@ -1152,7 +1254,7 @@ Jscex = (function () {
                 }                
 
                 this._writeIndents()
-                    ._writeLine("}");
+                    ._write("}");
             },
 
             "switch": function (ast) {
@@ -1213,7 +1315,7 @@ Jscex = (function () {
         return true;
     }
 
-    function compileEval(ast, indent) {
+    function _compileJscexPattern(ast, indent) {
 
         var builderName = ast[2][0][2][0][1];
         var funcAst = ast[2][0][2][1];
@@ -1234,7 +1336,7 @@ Jscex = (function () {
 
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
         var evalAst = evalCodeAst[1][0][1];
-        var newCode = compileEval(evalAst, 0);
+        var newCode = _compileJscexPattern(evalAst, 0);
 
         if (JSCEX_DEBUG) {
             _log(funcCode, newCode);
