@@ -11,13 +11,8 @@ var Jscex = {
     }
 };
 Jscex.Async.Task.prototype = {
-    start: function (options) {
-        options.onComplete();
-        options.onFailure();
-        options.onSuccess();
-    },
-    attachEvent: function (name, handler) { },
-    detachEvent: function (name, handler) { }
+    start: function () { },
+    addListener: function (handler) { }
 }
 EOF
 
