@@ -291,7 +291,7 @@ If you open the sample page in the browser, you'll find the discs is moving one 
         }
     }));
 
-Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. In Jscex async library, "async task" only means "operation would be finished in the future". In the example above, the button's "click" event is also an async task - the task would be finished when the button is clicked, then the program keeps going, move a disc and wait for another click.
+Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. In Jscex async library, "async task" only means "operation would be finished in the future". In the example above, the button's "click" event is also an async task - the task would be finished [when the button is clicked](http://files.zhaojie.me/demos/jscex/samples/async/hanoi-2.html), then the program keeps going, move a disc and wait for another click.
 
 People can write async programs without callbacks, that's how Jscex improve productivity and maintainability.
 
