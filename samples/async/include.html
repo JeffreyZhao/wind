@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Hanoi Samples</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    
+    <!--[if IE]>
+    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
+    <![endif]-->
+    <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
+    <script>
+        var x = eval(Jscex.compile("async", function() {
+            debugger;
+            $await(Jscex.Async.include("./my.js"));
+            console.log("b");
+        }));
+        x().start();
+
+    </script>
+</head>
+<body>
+</body>
+</html>
+

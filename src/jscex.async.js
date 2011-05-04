@@ -319,7 +319,28 @@ Jscex.Async.Task.prototype = {
 
         return new Jscex.Async.Task(delegate);
     }
+    async.include = function (path) {
+        var delegate = {
+            "start": function (callback) {
+                var script = document.createElement("script");
+                if(script.onload == null) {
+                    script.onload = function () {
+                        callback("success");
+                    }
+                }
+                else if(script.onreadystatechange == null){
+                    script.onreadystatechange = function () {
+                        if(this.readyState=='load')
+                            callback("success");
+                    }
+                }
+                script.src = path;
+                document.getElementsByTagName("head")[0].appendChild(script);
+            }
+        };
 
+        return new Jscex.Async.Task(delegate);
+    }
     async.onEvent = function (ele, ev) {
         var delegate = {
             "start": function (callback) {
