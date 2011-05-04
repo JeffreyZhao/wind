@@ -13,7 +13,7 @@ Jscex.Async.Task = function (delegate) {
 Jscex.Async.Task.prototype = {
     start: function () {
         if (this.status != "ready") {
-            throw new "Cannot start in current status";
+            throw ("Cannot start in current status: " + this.status);
         }
 
         var _this = this;
@@ -32,7 +32,7 @@ Jscex.Async.Task.prototype = {
                 _this.status = "failed";
 
             } else {
-                throw "Unsupported type: " + type;
+                throw ("Unsupported type: " + type);
             }
             
             var handlers = _this._handlers;
@@ -46,6 +46,10 @@ Jscex.Async.Task.prototype = {
     },
 
     addListener: function (handler) {
+        if (!this._handlers) {
+            throw ("Cannot add listeners in current status: " + this.status);
+        }
+
         this._handlers.push(handler);
     }
 };
