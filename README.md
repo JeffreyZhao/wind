@@ -373,7 +373,71 @@ There're two async method used above: <code>path.exists</code> and <code>fs.read
         transferFileAsync(request, response).start();
     }).listen(8125, "127.0.0.1");
 
-All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module specification, which can be loaded by <code>require</code> method in Node.js. Jscex async library has a simple model of "async tasks", everyone can easily write extensions/adaptors for existing async operations. The sample above uses the Node.js extensions defined in "src/jscex.async.node.js":
+All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module specification, which can be loaded by <code>require</code> method in Node.js. Jscex async library has a simple model of "async tasks", everyone can easily write extensions/adaptors for existing async operations. Please check the following section for more details.
+
+## Async tasks and extensions for async operations
+
+Jscex async library works with async tasks. An async task uses protocal defined in <code>Jscex.Async.Task</code>, which followed by Jscex functions and the build in helpers like <code>Jscex.Async.sleep</code>. An task object has the following members:
+
+* <code>start()</code> method: start an async task. This method can only be invoked in "ready" status.
+* <code>addListener(onComplete)</code> method: register an "onComplete" handler which would be called when the task is completed (either succeeded or failed). We can register handlers in "ready" and "running" status. A handler would be passed the task object as the only argument.
+* <code>status</code> field: indicated the status of the task. There're four kinds of status:
+  * ready: when the task is created but not started.
+  * running: the <code>start</code> method is called and the task is running.
+  * succeeded: the task is succeeded and we can get the result from the <code>result</code> field.
+  * failed: the task is failed and we can get the error from the <code>error</code> field.
+* <code>result</code> field: get the result of the task, see the <code>status</code> "succeeded" above.
+* <code>error</code> field: get the error of the task, see the <code>status</code> "failed" above.
+
+Here's the sample of using async tasks manually:
+
+    var someMethodAsync = eval(Jscex.compile("async", function () {
+        // ...
+    }));
+
+    var task = someMethodAsync();
+    task.addListener(function (t) {
+        if (t.status == "succeeded") {
+            console.log(t.result);
+        } else if (t.status == "failed") {
+            console.log(t.error);
+        } else {
+            throw "Something got wrong in Jscex async library.";
+        }
+    });
+
+    task.start();
+
+The <code>$await</code> operator in Jscex function would also handle an async task with these members.
+
+### Write extensions/adaptors for async operations.
+
+There're plenty of async operations already exists, maybe in the browser (e.g. DOM events) or in the other library/frameworks (jQuery animations, Node.js APIs). Everyone can easily write extensions/adaptors for existing async operations. For example, we can extend the XMLHttpRequest object to simplify the usage (src/jscex.async.xhr.js):
+
+    XMLHttpRequest.prototype.receiveAsync = function () {
+        var _this = this;
+
+        var delegate = {
+            "start": function (callback) {
+                _this.onreadystatechange = function () {
+                    if (_this.readyState == 4) {
+                        callback("success", _this.responseText);
+                    }
+                }
+
+                _this.send();
+            }
+        };
+
+        return new Jscex.Async.Task(delegate);
+    }
+
+The <code>Jscex.Async.Task</code> class accept an delegate of the async operation. The delegate object has a <code>start</code> method which accept a callback function. Invoke the callback when the async operation completes:
+
+* <code>callback("success", result)</code> when the operation finished normally:
+* <code>callback("failure", error)</code> when error occurred.
+
+As another example, The Node.js sample above uses the extensions defined in "src/jscex.async.node.js":
 
     Jscex.Async.Node = {};
     Jscex.Async.Node.Path = {};
@@ -410,25 +474,7 @@ All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module 
         }
     }
 
-Obviously, we can extend the XMLHttpRequest object to simplify the usage (src/jscex.async.xhr.js):
-
-    XMLHttpRequest.prototype.receiveAsync = function () {
-        var _this = this;
-
-        var delegate = {
-            "start": function (callback) {
-                _this.onreadystatechange = function () {
-                    if (_this.readyState == 4) {
-                        callback("success", _this.responseText);
-                    }
-                }
-
-                _this.send();
-            }
-        };
-
-        return new Jscex.Async.Task(delegate);
-    }
+Jscex would provide more build in extensions for popular JavaScript libraries/frameworks in the future.
 
 ## Limitations:
 
@@ -704,8 +750,6 @@ Jscex just keeps nearly everything as usual for JavaScript programmers.
 
 # Futures
 
-* Smarter compiler
-  * Keep code like <code>while (i < j) { i++; }</code> unchanged
 * Better async builder
   * Better performance
   * Support "cancellation" for async tasks
