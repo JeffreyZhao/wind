@@ -3,28 +3,20 @@ if ((typeof Jscex) == "undefined") {
 }
 
 Jscex.Async = { };
+
 /** @constructor */
 Jscex.Async.Task = function (delegate) {
     this._delegate = delegate;
+    this._handlers = [];
     this.status = "ready";
 }
 Jscex.Async.Task.prototype = {
-    start: function (options) {
+    start: function () {
         if (this.status != "ready") {
             throw new "Cannot start in current status";
         }
 
         var _this = this;
-
-        if (options && options.onSuccess)
-            this.attachEvent("success", options.onSuccess);
-
-        if (options && options.onFailure)
-            this.attachEvent("failure", options.onFailure);
-
-        if (options && options.onComplete) {
-            this.attachEvent("complete", options.onComplete);
-        }
 
         this.status = "running";
         this._delegate.start(function (type, value) {
@@ -33,58 +25,28 @@ Jscex.Async.Task.prototype = {
 
                 _this.result = value;
                 _this.status = "succeeded";
-                _this._raiseEvent("success");
 
             } else if (type == "failure") {
 
                 _this.error = value;
                 _this.status = "failed";
-                _this._raiseEvent("failure");
 
             } else {
                 throw "Unsupported type: " + type;
             }
-
-            _this._raiseEvent("complete");
             
-            this._eventHandlers = null;
+            var handlers = _this._handlers;
+            delete _this._handlers;
+            
+            for (var i = 0; i < handlers.length; i++) {
+                try { handlers[i](_this); } catch (ex) { }
+            }
+
         });
     },
 
-    _raiseEvent: function (name) {
-        var handlers = this._eventHandlers && this._eventHandlers[name];
-        if (!handlers) return;
-
-        for (var i = 0; i < handlers.length; i++) {
-            try { handlers[i](this); } catch (ex) { }
-        }
-    },
-
-    attachEvent: function (name, handler) {
-        if (this.status != "ready" && this.status != "running") {
-            throw "Cannot attach handler in current status.";
-        }
-
-        if (!this._eventHandlers) {
-            this._eventHandlers = { };
-        }
-
-        if (!this._eventHandlers[name]) {
-            this._eventHandlers[name] = [];
-        }
-
-        this._eventHandlers[name].push(handler);
-    },
-
-    detachEvent: function (name, handler) {
-        if (this.status != "ready" && this.status != "running") {
-            throw "Cannot detach handler in current status.";
-        }
-
-        if (!this._eventHandlers) return false;
-        if (!this._eventHandlers[name]) return false;
-
-        throw "Not implemented yet";
+    addListener: function (handler) {
+        this._handlers.push(handler);
     }
 };
 
@@ -134,9 +96,10 @@ Jscex.Async.Task.prototype = {
                     }
 
                     if (task.status == "ready") {
-                        task.start({ "onComplete": onComplete });
+                        task.addListener(onComplete);
+                        task.start();
                     } else if (task.status == "running") {
-                        task.attachEvent("complete", onComplete);
+                        task.addListener(onComplete);
                     } else {
                         onComplete(task);
                     }
