@@ -23,8 +23,11 @@ Jscex.Async.Node.FileSystem.extend = function (fs) {
         var delegate = {
             "start": function (callback) {
                 fs.readFile(filepath, function (error, data) {
-                    var result = { error: error, data: data };
-                    callback("success", result);
+                    if (error) {
+                        callback("failure", error);
+                    } else {
+                        callback("success", data);
+                    }
                 });
             }
         };
