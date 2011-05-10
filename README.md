@@ -486,7 +486,8 @@ There're three limitations of the current version of Jscex - none of them become
 Jscex compiler can only handle explicit <code>$await</code> operation:
 
 * Simple: <code>$await(...);</code>
-* Assign the result to a variable: <code>var r = $await(...);</code>
+* Local declaration: <code>var result = $await(...);</code>
+* Assignment: <code>this.result = $await(...);</code>
 * Directly return: <code>return $await(...);</code>
 
 Other kinds of usages could not be compiled:

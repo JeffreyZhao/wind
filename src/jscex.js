@@ -30,26 +30,30 @@ Jscex = (function () {
 
         _getBindInfo: function (stmt) {
 
-            function checkBindArgs(args) {
-                if (args.length != 1) {
-                    throw new Error("Bind expression must has one and only one arguments.");
-                }
-            }
-
             var type = stmt[0];
             if (type == "stat") {
                 var expr = stmt[1];
                 if (expr[0] == "call") {
                     var callee = expr[1];
-                    if (callee[0] == "name" && callee[1] == this._binder) {
-                        if (JSCEX_DEBUG) {
-                            checkBindArgs(expr[2]);
-                        }
+                    if (callee[0] == "name" && callee[1] == this._binder && expr[2].length == 1) {
                         return {
                             expression: expr[2][0],
                             argName: "",
-                            isReturn: false
+                            assignee: null
                         };
+                    }
+                } else if (expr[0] == "assign") {
+                    var assignee = expr[2];
+                    expr = expr[3];
+                    if (expr[0] == "call") {
+                        var callee = expr[1];
+                        if (callee[0] == "name" && callee[1] == this._binder && expr[2].length == 1) {
+                            return {
+                                expression: expr[2][0],
+                                argName: "$$_result_$$",
+                                assignee: assignee
+                            };
+                        }
                     }
                 }
             } else if (type == "var") {
@@ -60,14 +64,11 @@ Jscex = (function () {
                     var expr = item[1];
                     if (expr && expr[0] == "call") {
                         var callee = expr[1];
-                        if (callee[0] == "name" && callee[1] == this._binder) {
-                            if (JSCEX_DEBUG) {
-                                checkBindArgs(expr[2]);
-                            }
+                        if (callee[0] == "name" && callee[1] == this._binder && expr[2].length == 1) {
                             return {
                                 expression: expr[2][0],
                                 argName: name,
-                                isReturn: false
+                                assignee: null
                             };                            
                         }
                     }
@@ -76,15 +77,12 @@ Jscex = (function () {
                 var expr = stmt[1];
                 if (expr && expr[0] == "call") {
                     var callee = expr[1];
-                    if (callee[0] == "name" && callee[1] == this._binder) {
-                        if (JSCEX_DEBUG) {
-                            checkBindArgs(expr[2]);
-                        }
+                    if (callee[0] == "name" && callee[1] == this._binder && expr[2].length == 1) {
                         return {
                             expression: expr[2][0],
                             argName: "$$_result_$$",
-                            isReturn: true 
-                        };                            
+                            assignee: "return"
+                        };
                     }
                 }
             }
@@ -107,7 +105,7 @@ Jscex = (function () {
                 var bindStmt = { type: "bind", info: bindInfo };
                 stmts.push(bindStmt);
 
-                if (!bindInfo.isReturn) {
+                if (bindInfo.assignee != "return") {
                     bindStmt.stmts = [];
                     this._visitStatements(statements, bindStmt.stmts, index + 1);
                 }
@@ -394,11 +392,6 @@ Jscex = (function () {
                 this._visitBody(body, loopStmt.bodyStmt.stmts);
 
                 return delayStmt;
-            },
-
-            "block": function (ast, stmts) {
-                debugger;
-                // this._visitStatements(ast[1], stmts);
             },
 
             "while": function (ast) {
@@ -770,10 +763,15 @@ Jscex = (function () {
                 this._write(this._builderVar + ".Bind(")._visitRaw(info.expression)._writeLine(", function (" + info.argName + ") {");
                 this._indentLevel++;
 
-                if (info.isReturn) {
+                if (info.assignee == "return") {
                     this._writeIndents()
                         ._writeLine("return " + this._builderVar + ".Return(" + info.argName + ");");
                 } else {
+                    if (info.assignee) {
+                        this._writeIndents()
+                            ._visitRaw(info.assignee)._writeLine(" = " + info.argName + ";");
+                    }
+
                     this._visitJscexStatements(ast.stmts);
                 }
                 this._indentLevel--;
