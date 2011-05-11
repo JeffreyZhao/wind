@@ -68,7 +68,7 @@ Jscex.Async.Task.prototype = {
                         if (type == "normal" || type == "return") {
                             callback("success", value);
                         } else if (type == "throw") {
-                            callback("error", value);
+                            callback("failure", value);
                         } else {
                             throw "Unsupported type: " + type;
                         }
