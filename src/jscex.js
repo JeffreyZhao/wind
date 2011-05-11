@@ -991,7 +991,7 @@ Jscex = (function () {
             },
 
             "call": function (ast) {
-                
+            
                 if (_isJscexPattern(ast)) {
                     var indent = 0;
 
@@ -1002,6 +1002,13 @@ Jscex = (function () {
                     var newCode = _compileJscexPattern(ast, indent);
                     this._write(newCode);
                 } else {
+
+                    var invalidBind = JSCEX_DEBUG && (ast[1][0] == "name") && (ast[1][1] == this._binder);
+                    if (invalidBind) {
+                        this._pos = { inFunction: true };
+                        this._buffer = [];
+                    }
+
                     this._visitRaw(ast[1])._write("(");
 
                     var args = ast[2];
@@ -1011,6 +1018,10 @@ Jscex = (function () {
                     }
 
                     this._write(")");
+
+                    if (invalidBind) {
+                        throw ("Invalid bind operation: " + this._buffer.join(""));
+                    }
                 }
             },
 
