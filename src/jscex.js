@@ -1200,7 +1200,7 @@ Jscex = (function () {
             },
 
             "break": function (ast) {
-                if (this._pos.inLoop) {
+                if (this._pos.inLoop || this._pos.inSwitch) {
                     this._write("break;");
                 } else {
                     this._write("return ")._visitJscex({ type: "break", stmt: ast })._write(";");
@@ -1270,6 +1270,9 @@ Jscex = (function () {
                 this._write("switch (")._visitRaw(ast[1])._writeLine(") {");
                 this._indentLevel++;
 
+                var currInSwitch = this._pos.inSwitch;
+                this._pos.inSwitch = true;
+
                 var cases = ast[2];
                 for (var i = 0; i < cases.length; i++) {
                     var c = cases[i];
@@ -1286,6 +1289,8 @@ Jscex = (function () {
                     this._indentLevel--;
                 }
                 this._indentLevel--;
+
+                this._pos.inSwitch = currInSwitch;
 
                 this._writeIndents()
                     ._write("}");
