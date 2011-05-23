@@ -116,8 +116,8 @@ Jscex = (function () {
 
                     stmts.push({ type: type, stmt: currStmt });
 
-                } else if (type == "while" || type == "try" || type == "if" ||
-                            type == "for" || type == "do" || type == "for-in") {
+                } else if (type == "if" || type == "try" || type == "for" || type == "do"
+                           || type == "while" || type == "switch" || type == "for-in") {
 
                     var newStmt = this._visit(currStmt);
 
@@ -188,6 +188,23 @@ Jscex = (function () {
             }
 
             return false;
+        },
+
+        _collectCaseStatements: function (cases, index) {
+            var res = [];
+
+            for (var i = index; i < cases.length; i++) {
+                var rawStmts = cases[i][1];
+                for (var j = 0; j < rawStmts.length; j++) {
+                    if (rawStmts[j][0] == "break") {
+                        return res
+                    }
+
+                    res.push(rawStmts[j]);
+                }
+            }
+
+            return res;
         },
 
         _visitors: {
@@ -430,7 +447,29 @@ Jscex = (function () {
                 return loopStmt;
             },
 
-            "if": function (ast, stmts) {
+            "switch": function (ast) {
+                var noBinding = true;
+
+                var switchStmt = { type: "switch", item: ast[1], caseStmts: [] };
+
+                var cases = ast[2];
+                for (var i = 0; i < cases.length; i++) {                    
+                    var caseStmt = { item: cases[i][0], stmts: [] };
+                    switchStmt.caseStmts.push(caseStmt);
+
+                    var statements = this._collectCaseStatements(cases, i);
+                    this._visitStatements(statements, caseStmt.stmts);
+                    noBinding = noBinding && this._noBinding(caseStmt.stmts);
+                }
+
+                if (noBinding) {
+                    return { type: "raw", stmt: ast };
+                } else {
+                    return switchStmt;
+                }
+            },
+
+            "if": function (ast) {
 
                 var noBinding = true;
 
@@ -599,7 +638,7 @@ Jscex = (function () {
             for (var i = 0; i < statements.length; i++) {
                 var stmt = statements[i];
 
-                if (stmt.type == "raw" || stmt.type == "if") {
+                if (stmt.type == "raw" || stmt.type == "if" || stmt.type == "switch") {
                     this._writeIndents()
                         ._visitJscex(stmt)._writeLine();
                 } else if (stmt.type == "delay") {
@@ -806,6 +845,29 @@ Jscex = (function () {
                 }
 
                 this._indentLevel--;
+
+                this._writeIndents()
+                    ._write("}");
+            },
+
+            "switch": function (ast) {
+                this._write("switch (")._visitRaw(ast.item)._writeLine(") {");
+                this._indentLevel++;
+
+                for (var i = 0; i < ast.caseStmts.length; i++) {
+                    var caseStmt = ast.caseStmts[i];
+
+                    if (caseStmt.item) {
+                        this._writeIndents()
+                            ._write("case ")._visitRaw(caseStmt.item)._writeLine(":");
+                    } else {
+                        this._writeIndents()._writeLine("default:");
+                    }
+                    this._indentLevel++;
+
+                    this._visitJscexStatements(caseStmt.stmts);
+                    this._indentLevel--;
+                }
 
                 this._writeIndents()
                     ._write("}");
