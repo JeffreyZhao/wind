@@ -1406,7 +1406,9 @@ Jscex = (function () {
     }
 
     function compile(builderName, func) {
-        var funcCode = func.toString();
+        var funcCode = func;
+        if (typeof(funcCode) != "string") //+ func supports the string via riceball
+            funcCode = func.toString();
         var evalCode = "eval(Jscex.compile(" + JSON.stringify(builderName) + ", " + funcCode + "))"
         var evalCodeAst = UglifyJS.parse(evalCode);
 
@@ -1422,9 +1424,36 @@ Jscex = (function () {
         return cg ? cg(newCode) : newCode;
     };
 
+    /*
+     * load and compile aync function script from url via riceball
+     * 
+     * note: currently the jscex compiler supports the compiling one function only. 
+     * so u have to use the load function like this:
+     *    var moveAsync = Jscex.load("moveAsync");
+     *
+     */
+    function load(url, buildname) {
+        if (typeof(buildname) == 'undefined') buildname = 'async';
+        var http = JcxRuntime.createXmlHttp();
+        http.open('GET', url, false);
+        try {
+            http.send(null);
+        } catch(e) {
+            return null;
+        }
+
+        var text = http.responseText;
+        if (text == null) 
+            throw new Error("Unable to load URL: " + url);
+        
+        return jcxGlobal.eval(Jscex.compile(buildname, text));
+    }
+
+
     return {
         "config": {},
         "compile": compile,
+        "load": load,
         "builders": {}
     };
 
