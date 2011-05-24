@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Agent</title>
+    
+    <!--[if IE]>
+    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
+    <![endif]-->
+    <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.async.agent.js"></script>
+</head>
+<body>
+
+    <script language="javascript">
+        var moveAsync = eval(Jscex.compile("async", function(e, startPos, endPos, duration) {
+            for (var t = 0; t < duration; t += 50) {
+                e.style.left = (startPos.x + (endPos.x - startPos.x) * t / duration) + "px";
+                e.style.top = (startPos.y + (endPos.y - startPos.y) * t / duration) + "px";
+                $await(Jscex.Async.sleep(50));
+            }
+
+            e.style.left = endPos.x;
+            e.style.top = endPos.y;
+        }));
+
+        var createBlock = function () {
+            var div = document.createElement("div");
+            div.style.width = "50px";
+            div.style.height = "50px";
+            div.style.border = "solid 1px black";
+            div.style.backgroundColor = "red";
+            div.style.position = "absolute";
+
+            document.body.appendChild(div);
+            return div;
+        }
+
+        var number = 0;
+
+        var moveOneAsync = eval(Jscex.compile("async", function (n) {
+            var top = 50 + n * 60;
+            $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, 1000));
+        }));
+
+        var agent = new Jscex.Async.Agent(eval(Jscex.compile("async", function (mailbox) {
+            while (true) {
+                var n = $await(mailbox.receiveAsync());
+                var top = 50 + n * 60;
+                $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, 1000));
+            }
+        })));
+
+    </script> 
+
+    <input type="button" value="Event based" onclick="moveOneAsync(number++).start();" />
+    <input type="button" value="Agent based" onclick="agent.send(number++);" />
+</body>
+</html>
+
