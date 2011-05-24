@@ -46,7 +46,7 @@
 
         var agent = new Jscex.Async.Agent(eval(Jscex.compile("async", function (mailbox) {
             while (true) {
-                var n = $await(mailbox.receiveAsync());
+                var n = $await(mailbox.receive());
                 var top = 50 + n * 60;
                 $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, 1000));
             }

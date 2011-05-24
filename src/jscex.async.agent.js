@@ -10,7 +10,7 @@ Jscex.Async.Agent._Mailbox = function () {
     this._queue = [];
 }
 Jscex.Async.Agent._Mailbox.prototype = {
-    receiveAsync: function () {
+    receive: function () {
         var _this = this;
 
         var delegate = {
