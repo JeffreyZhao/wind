@@ -475,25 +475,26 @@ Jscex = (function () {
 
                 var ifStmt = { type: "if", conditionStmts: [] };
 
+                var currAst = ast;
                 while (true) {
-                    var condition = ast[1];
+                    var condition = currAst[1];
                     var condStmt = { cond: condition, stmts: [] };
                     ifStmt.conditionStmts.push(condStmt);
 
-                    var thenPart = ast[2];
+                    var thenPart = currAst[2];
                     this._visitBody(thenPart, condStmt.stmts);
 
                     noBinding = noBinding && this._noBinding(condStmt.stmts);
 
-                    var elsePart = ast[3];
+                    var elsePart = currAst[3];
                     if (elsePart && elsePart[0] == "if") {
-                        ast = elsePart;
+                        currAst = elsePart;
                     } else {
                         break;
                     }
                 }
     
-                var elsePart = ast[3];
+                var elsePart = currAst[3];
                 if (elsePart) {
                     ifStmt.elseStmts = [];
 
@@ -1238,21 +1239,20 @@ Jscex = (function () {
             },
 
             "if": function (ast) {
-
                 var condition = ast[1];
                 var thenPart = ast[2];
 
                 this._write("if (")._visitRaw(condition)._write(") ")._visitRawBody(thenPart);
 
-                if (thenPart[0] != "block") {
-                    this._writeLine("")
-                        ._writeIndents();
-                } else {
-                    this._write(" ");
-                }
-
                 var elsePart = ast[3];
                 if (elsePart) {
+                    if (thenPart[0] == "block") {
+                        this._write(" ");
+                    } else {
+                        this._writeLine("")
+                            ._writeIndents();
+                    }
+
                     if (elsePart[0] == "if") {
                         this._write("else ")._visitRaw(elsePart);
                     } else {
