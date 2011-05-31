@@ -40,6 +40,7 @@ http.createServer(function(request, response) {
 require("../../lib/uglifyjs-parser.js");
 require("../../src/jscex.js");
 require("../../src/jscex.async.js");
+require("../../src/jscex.builderBase.js");
 require("../../src/jscex.async.node.js");
 
 Jscex.Async.Node.Path.extend(path);

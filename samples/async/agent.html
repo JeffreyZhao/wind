@@ -8,6 +8,7 @@
     <![endif]-->
     <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.builderBase.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.agent.js"></script>
 </head>
@@ -41,14 +42,14 @@
 
         var moveOneAsync = eval(Jscex.compile("async", function (n) {
             var top = 50 + n * 60;
-            $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, 1000));
+            var duration = 200 + Math.random() * 1000;
+            $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, duration));
         }));
 
         var agent = new Jscex.Async.Agent(eval(Jscex.compile("async", function (mailbox) {
             while (true) {
                 var n = $await(mailbox.receive());
-                var top = 50 + n * 60;
-                $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, 1000));
+                $await(moveOneAsync(n));
             }
         })));
 
