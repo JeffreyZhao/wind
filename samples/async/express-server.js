@@ -47,7 +47,7 @@ var toJscex = function (func) {
             args.push(arguments[i]);
 
         var delegate = {
-            start: function (callback) {
+            onStart: function (callback) {
                 args.push(function (res) {
                     callback("success", res);
                 });

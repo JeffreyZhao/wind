@@ -6,7 +6,7 @@ Jscex.Async.Node.Path.extend = function (path) {
 
     path.existsAsync = function (filepath) {
         var delegate = {
-            "start": function (callback) {
+            "onStart": function (callback) {
                 path.exists(filepath, function (exists) {
                     callback("success", exists);
                 });
@@ -21,7 +21,7 @@ Jscex.Async.Node.FileSystem.extend = function (fs) {
 
     fs.readFileAsync = function (filepath) {
         var delegate = {
-            "start": function (callback) {
+            "onStart": function (callback) {
                 fs.readFile(filepath, function (error, data) {
                     if (error) {
                         callback("failure", error);

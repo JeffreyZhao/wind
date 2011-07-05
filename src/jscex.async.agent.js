@@ -14,13 +14,17 @@ Jscex.Async.Agent._Mailbox.prototype = {
         var _this = this;
 
         var delegate = {
-            start: function (callback) {
+            onStart: function (callback) {
                 if (_this._queue.length > 0) {
                     var message = _this._queue.shift();
                     callback("success", message);
                 } else {
                     _this._callback = callback;
                 }
+            },
+
+            onCancel: function () {
+                delete _this._callback;
             }
         };
 

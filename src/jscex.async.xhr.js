@@ -2,7 +2,7 @@ XMLHttpRequest.prototype.receiveAsync = function () {
     var _this = this;
 
     var delegate = {
-        "start": function (callback) {
+        "onStart": function (callback) {
             _this.onreadystatechange = function () {
                 if (_this.readyState == 4) {
                     callback("success", _this.responseText);
@@ -10,6 +10,10 @@ XMLHttpRequest.prototype.receiveAsync = function () {
             }
 
             _this.send();
+        },
+
+        "onCancel": function (callback) {
+            _this.abort();
         }
     };
 

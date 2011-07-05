@@ -7,11 +7,14 @@ var Jscex = {
     Async: {
         Task: function () { },
         sleep: function () { },
-        onEvent: function () { }
+        onEvent: function () { },
+        parallel: function () { }
     }
 };
 Jscex.Async.Task.prototype = {
-    start: function () { },
+    start: function (delegate) { },
+    cancel: function () { },
+    status: "ready",
     addListener: function (handler) { }
 }
 EOF
