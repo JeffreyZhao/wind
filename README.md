@@ -38,7 +38,7 @@ All the following samples can be found in samples/async folder.
 
 ### Clock:
 
-We are going to draw a clock with HTML5 canvas on the page ([samples/async/clock.html](http://files.zhaojie.me/demos/jscex/samples/async/clock.html)). It's rather easy for most front-end programmers:
+We are going to draw a clock with HTML5 canvas on the page ([samples/async/clock.html](http://files.zhaojie.me/jscex/samples/async/clock.html)). It's rather easy for most front-end programmers:
 
     function drawClock(time) {
         // clear and canvas and draw a clock on it.
@@ -91,7 +91,7 @@ It seems the implementation with Jscex is a bit longer in this simple case - ple
 
 ### Animations
 
-Animations are important for rich user interfaces. Let's build an animation like "move the element from here to there in a period of time" ([samples/async/move.html](http://files.zhaojie.me/demos/jscex/samples/async/move.html)). The traditional version of the <code>move</code> could be:
+Animations are important for rich user interfaces. Let's build an animation like "move the element from here to there in a period of time" ([samples/async/move.html](http://files.zhaojie.me/jscex/samples/async/move.html)). The traditional version of the <code>move</code> could be:
 
     var moveTraditionally = function (e, startPos, endPos, duration, callback) {
 
@@ -237,7 +237,7 @@ I believe there's no need to explain more - it's just the standard "bubble sort"
         $await(_quickSortAsync(array, 0, array.length - 1));
     }));
 
-The complete sample is in "[samples/async/sorting-animations.html](http://files.zhaojie.me/demos/jscex/samples/async/sorting-animations.html)". After opening the page with browser support HTML5 canvas, you can click the links to view the animation of three sorting algorithms: [bubble sort](http://files.zhaojie.me/demos/jscex/samples/async/sorting-animations.html?quick), [selection sort](http://files.zhaojie.me/demos/jscex/samples/async/sorting-animations.html?selection) and [quick sort](http://files.zhaojie.me/demos/jscex/samples/async/sorting-animations.html?quick).
+The complete sample is in "[samples/async/sorting-animations.html](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html)". After opening the page with browser support HTML5 canvas, you can click the links to view the animation of three sorting algorithms: [bubble sort](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html?quick), [selection sort](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html?selection) and [quick sort](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html?quick).
 
 ### Tower of Hanoi
 
@@ -257,7 +257,7 @@ which in code:
 
     hanoi(5, "A", "C", "B");
 
-If we need to show the algorithm in animation ([samples/async/hanoi.html](http://files.zhaojie.me/demos/jscex/samples/async/hanoi.html)), we could re-write the code just like the sample above:
+If we need to show the algorithm in animation ([samples/async/hanoi.html](http://files.zhaojie.me/jscex/samples/async/hanoi.html)), we could re-write the code just like the sample above:
 
     var hanoiAsync = eval(Jscex.compile("async", function(n, from, to, mid) {
         if (n > 0) {
@@ -291,7 +291,7 @@ If you open the sample page in the browser, you'll find the discs is moving one 
         }
     }));
 
-Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. In Jscex async library, "async task" only means "operation would be finished in the future". In the example above, the button's "click" event is also an async task - the task would be finished [when the button is clicked](http://files.zhaojie.me/demos/jscex/samples/async/hanoi-2.html), then the program keeps going, move a disc and wait for another click.
+Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. In Jscex async library, "async task" only means "operation would be finished in the future". In the example above, the button's "click" event is also an async task - the task would be finished [when the button is clicked](http://files.zhaojie.me/jscex/samples/async/hanoi-2.html), then the program keeps going, move a disc and wait for another click.
 
 People can write async programs without callbacks, that's how Jscex improve productivity and maintainability.
 
