@@ -52,8 +52,8 @@ Jscex.builderBase = {
         return {
             "next": function (_this, callback) {
                 try {
-                    var task = generator.call(_this);
-                    task.next(_this, callback);
+                    var step = generator.call(_this);
+                    step.next(_this, callback);
                 } catch (ex) {
                     callback("throw", ex);
                 }
@@ -61,13 +61,13 @@ Jscex.builderBase = {
         };
     },
 
-    "Combine": function (t1, t2) {
+    "Combine": function (s1, s2) {
         return {
             "next": function (_this, callback) {
-                t1.next(_this, function (type, value, target) {
+                s1.next(_this, function (type, value, target) {
                     if (type == "normal") {
                         try {
-                            t2.next(_this, callback);
+                            s2.next(_this, callback);
                         } catch (ex) {
                             callback("throw", ex);
                         }
