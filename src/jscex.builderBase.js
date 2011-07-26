@@ -6,10 +6,10 @@ Jscex.builderBase = {
 
     "Loop": function (condition, update, body, bodyFirst) {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 
-                var startBody = function (skipUpdate) {
-                    body.start(_this, function (type, value, target) {
+                var nextBody = function (skipUpdate) {
+                    body.next(_this, function (type, value, target) {
                         if (type == "normal" || type == "continue") {
                             loop(skipUpdate);
                         } else if (type == "throw" || type == "return") {
@@ -29,7 +29,7 @@ Jscex.builderBase = {
                         }
 
                         if (!condition || condition.call(_this)) {
-                            startBody(false);
+                            nextBody(false);
                         } else {
                             callback("normal");
                         }
@@ -40,7 +40,7 @@ Jscex.builderBase = {
                 }
                 
                 if (bodyFirst) {
-                    startBody(true);
+                    nextBody(true);
                 } else {
                     loop(true);
                 }
@@ -50,10 +50,10 @@ Jscex.builderBase = {
     
     "Delay": function (generator) {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 try {
                     var task = generator.call(_this);
-                    task.start(_this, callback);
+                    task.next(_this, callback);
                 } catch (ex) {
                     callback("throw", ex);
                 }
@@ -63,11 +63,11 @@ Jscex.builderBase = {
 
     "Combine": function (t1, t2) {
         return {
-            "start": function (_this, callback) {
-                t1.start(_this, function (type, value, target) {
+            "next": function (_this, callback) {
+                t1.next(_this, function (type, value, target) {
                     if (type == "normal") {
                         try {
-                            t2.start(_this, callback);
+                            t2.next(_this, callback);
                         } catch (ex) {
                             callback("throw", ex);
                         }
@@ -81,7 +81,7 @@ Jscex.builderBase = {
 
     "Return": function (result) {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 callback("return", result);
             }
         };
@@ -89,7 +89,7 @@ Jscex.builderBase = {
 
     "Normal": function () {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 callback("normal");
             }
         };
@@ -97,7 +97,7 @@ Jscex.builderBase = {
 
     "Break": function () {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 callback("break");
             }
         };
@@ -105,7 +105,7 @@ Jscex.builderBase = {
 
     "Continue": function () {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 callback("continue");
             }
         };
@@ -113,7 +113,7 @@ Jscex.builderBase = {
 
     "Throw": function (ex) {
         return {
-            "start": function (_this, callback) {
+            "next": function (_this, callback) {
                 callback("throw", ex);
             }
         };
@@ -121,13 +121,13 @@ Jscex.builderBase = {
 
     "Try": function (tryTask, catchGenerator, finallyTask) {
         return {
-            "start": function (_this, callback) {
-                tryTask.start(_this, function (type, value, target) {
+            "next": function (_this, callback) {
+                tryTask.next(_this, function (type, value, target) {
                     if (type != "throw" || !catchGenerator) {
                         if (!finallyTask) {
                             callback(type, value, target);
                         } else {
-                            finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                            finallyTask.next(_this, function (finallyType, finallyValue, finallyTarget) {
                                 if (finallyType == "normal") {
                                     callback(type, value, target);
                                 } else {
@@ -144,7 +144,7 @@ Jscex.builderBase = {
                                 catchTask = catchGenerator.call(_this, value);
                             } catch (ex) {
                                 if (finallyTask) {
-                                    finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                    finallyTask.next(_this, function (finallyType, finallyValue, finallyTarget) {
                                         if (finallyType == "normal") {
                                             callback("throw", ex);
                                         } else {
@@ -157,10 +157,10 @@ Jscex.builderBase = {
                             }
                             
                             if (catchTask) {
-                                catchTask.start(_this, function (catchType, catchValue, catchTarget) {
+                                catchTask.next(_this, function (catchType, catchValue, catchTarget) {
                                     if (catchType == "throw") {
                                         if (finallyTask) {
-                                            finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                            finallyTask.next(_this, function (finallyType, finallyValue, finallyTarget) {
                                                 if (finallyType == "normal") {
                                                     callback(catchType, catchValue, catchTarget);
                                                 } else {
@@ -172,7 +172,7 @@ Jscex.builderBase = {
                                         }
                                     } else {
                                         if (finallyTask) {
-                                            finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                                            finallyTask.next(_this, function (finallyType, finallyValue, finallyTarget) {
                                                 if (finallyType == "normal") {
                                                     callback(catchType, catchValue, catchTarget);
                                                 } else {
@@ -186,7 +186,7 @@ Jscex.builderBase = {
                                 });
                             }
                         } else {
-                            finallyTask.start(_this, function (finallyType, finallyValue, finallyTarget) {
+                            finallyTask.next(_this, function (finallyType, finallyValue, finallyTarget) {
                                 if (finallyType == "normal") {
                                     callback(type, value, target);
                                 } else {

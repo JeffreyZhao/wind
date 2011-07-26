@@ -83,7 +83,7 @@ Jscex.Async.Task.prototype = {
 
             var delegate = {
                 "onStart": function (callback) {
-                    task.start(_this, function (type, value, target) {
+                    task.next(_this, function (type, value, target) {
                         if (type == "normal" || type == "return") {
                             callback("success", value);
                         } else if (type == "throw") {
@@ -100,7 +100,7 @@ Jscex.Async.Task.prototype = {
 
         "Bind": function (task, generator) {
             return {
-                "start": function (_this, callback) {
+                "next": function (_this, callback) {
                     
                     var onComplete = function (t) {
                         if (t.status == "succeeded") {
@@ -112,7 +112,7 @@ Jscex.Async.Task.prototype = {
                                 return;
                             }
 
-                            nextTask.start(_this, callback);
+                            nextTask.next(_this, callback);
                         } else {
                             callback("throw", task.error);
                         }
