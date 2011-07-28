@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Seq Test</title>
+    
+    <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.builderBase.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.seq.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex.seq.powerpack.js"></script>
+</head>
+<body>
+
+    <script type="text/javascript">
+
+    var infinite = eval(Jscex.compile("seq", function (start) {
+        while (true) {
+            $yield(start++);
+        }
+    }));
+
+    var fib = eval(Jscex.compile("seq", function () {
+        var a = 1, b = 1;
+        while (true) {
+            var current = b;
+            b = a;
+            a = a + current;
+
+            $yield(current);
+        }
+    }))
+
+    var range = eval(Jscex.compile("seq", function (minInclusive, maxExclusive) {
+        for (var i = minInclusive; i < maxExclusive; i++) {
+            $yield(i);
+        }
+    }))
+
+    var iter = fib()
+        .filter(function (n) { return n % 2 == 0; })
+        .skip(2)
+        .take(5)
+        .zip(infinite(1))
+        .map(function (a) { return a[1] + ": " + a[0]; })
+        .foreach(function (s) { console.log(s); });
+
+    </script>
+
+
+</body>
+</html>
+
