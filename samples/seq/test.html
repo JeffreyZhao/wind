@@ -35,8 +35,8 @@
             $yield(i);
         }
     }))
-
-    var iter = fib()
+    
+    fib()
         .filter(function (n) { return n % 2 == 0; })
         .skip(2)
         .take(5)

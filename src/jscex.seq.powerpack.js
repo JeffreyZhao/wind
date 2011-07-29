@@ -1,48 +1,59 @@
-var p = Jscex.Seq.Iterator.prototype;
+(function () {
 
-p.filter = eval(Jscex.compile("seq", function (predicate) {
-    while (this.moveNext()) {
-        if (predicate(this.current)) {
-            $yield(this.current);
+    var filter = eval(Jscex.compile("seq", function (iter, predicate) {
+        while (iter.moveNext()) {
+            if (predicate(iter.current)) {
+                $yield(iter.current);
+            }
         }
-    }
-}));
-
-p.map = eval(Jscex.compile("seq", function (mapper) {
-    while (this.moveNext()) {
-        $yield(mapper(this.current));
-    }
-}));
-
-p.zip = eval(Jscex.compile("seq", function (iter) {
-    while (this.moveNext() && iter.moveNext()) {
-        $yield([this.current, iter.current]);
-    }
-}))
-
-p.skip = eval(Jscex.compile("seq", function (n) {
-    for (var i = 0; i < n; i++) {
-        if (!this.moveNext()) {
-            return;
+    }));
+    
+    var map = eval(Jscex.compile("seq", function (iter, mapper) {
+        while (iter.moveNext()) {
+            $yield(mapper(iter.current));
         }
-    }
+    }));
 
-    while (this.moveNext()) {
-        $yield(this.current);
-    }
-}));
-
-p.take = eval(Jscex.compile("seq", function (n) {
-    var count = 0;
-    while (this.moveNext()) {
-        if (count++ < n) {
-            $yield(this.current);
+    var zip = eval(Jscex.compile("seq", function (iter1, iter2) {
+        while (iter1.moveNext() && iter2.moveNext()) {
+            $yield([iter1.current, iter2.current]);
         }
-    }
-}));
+    }));
 
-p.foreach = function (action) {
-    while (this.moveNext()) {
-        action(this.current);
-    }
-}
+    var skip = eval(Jscex.compile("seq", function (iter, n) {
+        for (var i = 0; i < n; i++) {
+            if (!iter.moveNext()) {
+                return;
+            }
+        }
+
+        while (iter.moveNext()) {
+            $yield(iter.current);
+        }
+    }));
+
+    var take = eval(Jscex.compile("seq", function (iter, n) {
+        var count = 0;
+        while (iter.moveNext()) {
+            if (count++ < n) {
+                $yield(iter.current);
+            }
+        }
+    }));
+
+    var foreach = function (iter, action) {
+        while (iter.moveNext()) {
+            action(iter.current);
+        }
+    };
+
+    var p = Jscex.Seq.Iterator.prototype;
+    p.filter = function (predicate) { return filter(this, predicate); }
+    p.map = function (mapper) { return map(this, mapper); }
+    p.zip = function (iter) { return zip(this, iter); }
+    p.skip = function (n) { return skip(this, n); }
+    p.take = function (n) { return take(this, n); }
+    p.foreach = function (action) { foreach(this, action); }
+
+})();
+
