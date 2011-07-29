@@ -24,7 +24,7 @@
         while (true) {
             var current = b;
             b = a;
-            a = a + current;
+            a += current;
 
             $yield(current);
         }
