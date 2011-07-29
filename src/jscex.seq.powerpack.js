@@ -41,7 +41,7 @@
         }
     }));
 
-    var foreach = function (iter, action) {
+    var each = function (iter, action) {
         while (iter.moveNext()) {
             action(iter.current);
         }
@@ -53,7 +53,7 @@
     p.zip = function (iter) { return zip(this, iter); }
     p.skip = function (n) { return skip(this, n); }
     p.take = function (n) { return take(this, n); }
-    p.foreach = function (action) { foreach(this, action); }
+    p.each = function (action) { each(this, action); }
 
 })();
 

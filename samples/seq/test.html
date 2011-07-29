@@ -42,7 +42,7 @@
         .take(5)
         .zip(infinite(1))
         .map(function (a) { return a[1] + ": " + a[0]; })
-        .foreach(function (s) { console.log(s); });
+        .each(function (s) { console.log(s); });
 
     </script>
 
