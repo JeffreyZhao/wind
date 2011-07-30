@@ -20,19 +20,17 @@
     }));
 
     var fib = eval(Jscex.compile("seq", function () {
-        var a = 1, b = 1;
+        
+        $yield(0);
+        $yield(1);
+
+        var a = 0, current = 1;
         while (true) {
-            var current = b;
-            b = a;
-            a += current;
+            var b = a;
+            a = current;
+            current = a + b;
 
             $yield(current);
-        }
-    }))
-
-    var range = eval(Jscex.compile("seq", function (minInclusive, maxExclusive) {
-        for (var i = minInclusive; i < maxExclusive; i++) {
-            $yield(i);
         }
     }))
     
