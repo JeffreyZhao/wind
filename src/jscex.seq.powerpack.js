@@ -37,6 +37,8 @@
         while (iter.moveNext()) {
             if (count++ < n) {
                 $yield(iter.current);
+            } else {
+                return;
             }
         }
     }));

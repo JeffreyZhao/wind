@@ -29,8 +29,12 @@ Jscex.Seq = { };
         "Start": function (_this, step) {
 
             var delegate = function () {
+                TempStep = null;
                 step.next(_this, function () { });
-                return TempStep;
+
+                var tempStep = TempStep;
+                TempStep = null
+                return tempStep;
             }
 
             return new Jscex.Seq.Iterator(delegate);
@@ -44,7 +48,10 @@ Jscex.Seq = { };
                         nextDelegate: function () {
                             TempStep = null;
                             callback("normal");
-                            return TempStep;
+
+                            var tempStep = TempStep
+                            TempStep = null;
+                            return tempStep;
                         }
                     };
                 }
