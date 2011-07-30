@@ -30,10 +30,12 @@ Jscex.Seq = { };
 
             var delegate = function () {
                 TempStep = null;
-                step.next(_this, function () { });
+                step.next(_this, function (type, value) {
+                    if (type == "throw") console.log(value);
+                });
 
                 var tempStep = TempStep;
-                TempStep = null
+                TempStep = null;
                 return tempStep;
             }
 
@@ -47,9 +49,9 @@ Jscex.Seq = { };
                         item: value,
                         nextDelegate: function () {
                             TempStep = null;
-                            callback("normal");
+                            generator.call(_this).next(_this, callback);
 
-                            var tempStep = TempStep
+                            var tempStep = TempStep;
                             TempStep = null;
                             return tempStep;
                         }
