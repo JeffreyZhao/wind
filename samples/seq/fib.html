@@ -13,6 +13,10 @@
 
     <script type="text/javascript">
 
+    var print = function (s) {
+        document.write(s + "<br />");
+    }
+
     var infinite = eval(Jscex.compile("seq", function (start) {
         while (true) {
             $yield(start++);
@@ -40,7 +44,7 @@
         .take(5)
         .zip(infinite(1))
         .map(function (a) { return a[1] + ": " + a[0]; })
-        .each(function (s) { console.log(s); });
+        .each(print);
 
     </script>
 
