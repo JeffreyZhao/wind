@@ -66,6 +66,7 @@ JscexExtractor.prototype = {
             case "INDEX":
             case "OBJECT_INIT":
             case "ARRAY_INIT":
+            case "PROPERTY_INIT":
             case ".":
             case ">":
             case "<":
