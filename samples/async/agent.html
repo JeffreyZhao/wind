@@ -3,14 +3,18 @@
 <head>
     <title>Agent</title>
     
-    <!--[if IE]>
-    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
-    <![endif]-->
     <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.builderBase.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.agent.js"></script>
+	
+	<!--[if IE]>
+    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
+	<script language="javascript">
+		Jscex.config.codeGenerator = function (code) { return "false || " + code; }
+	</script>
+    <![endif]-->
 </head>
 <body>
 
@@ -52,7 +56,6 @@
                 $await(moveOneAsync(n));
             }
         })));
-
     </script> 
 
     <input type="button" value="Event based" onclick="moveOneAsync(number++).start();" />

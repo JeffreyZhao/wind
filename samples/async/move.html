@@ -2,15 +2,18 @@
 <html>
 <head>
     <title>Jscex Animation</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=9" />
     
-    <!--[if IE]>
-    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
-    <![endif]-->
     <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.builderBase.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex.async.js"></script>
+	
+	<!--[if IE]>
+    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
+	<script language="javascript">
+		Jscex.config.codeGenerator = function (code) { return "false || " + code; }
+	</script>
+    <![endif]-->
     
     <script type="text/javascript">
         var moveAsync = eval(Jscex.compile("async", function(e, startPos, endPos, duration) {
