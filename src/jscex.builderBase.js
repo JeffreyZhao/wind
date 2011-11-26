@@ -1,12 +1,12 @@
 if ((typeof Jscex) == "undefined") {
-    Jscex = { "builders": { } };
+    Jscex = { builders: { } };
 }
 
 Jscex.builderBase = {
 
-    "Loop": function (condition, update, body, bodyFirst) {
+    Loop: function (condition, update, body, bodyFirst) {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 
                 var nextBody = function (skipUpdate) {
                     body.next(_this, function (type, value, target) {
@@ -17,7 +17,7 @@ Jscex.builderBase = {
                         } else if (type == "break") {
                             callback("normal");
                         } else {
-                            throw 'Invalid type for "Loop": ' + type;
+                            throw new Error('Invalid type for "Loop": ' + type);
                         }
                     });
                 }
@@ -48,9 +48,9 @@ Jscex.builderBase = {
         };
     },
     
-    "Delay": function (generator) {
+    Delay: function (generator) {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 try {
                     var step = generator.call(_this);
                     step.next(_this, callback);
@@ -61,9 +61,9 @@ Jscex.builderBase = {
         };
     },
 
-    "Combine": function (s1, s2) {
+    Combine: function (s1, s2) {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 s1.next(_this, function (type, value, target) {
                     if (type == "normal") {
                         try {
@@ -79,49 +79,49 @@ Jscex.builderBase = {
         };
     },
 
-    "Return": function (result) {
+    Return: function (result) {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 callback("return", result);
             }
         };
     },
 
-    "Normal": function () {
+    Normal: function () {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 callback("normal");
             }
         };
     },
 
-    "Break": function () {
+    Break: function () {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 callback("break");
             }
         };
     },
 
-    "Continue": function () {
+    Continue: function () {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 callback("continue");
             }
         };
     },
 
-    "Throw": function (ex) {
+    Throw: function (ex) {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 callback("throw", ex);
             }
         };
     },
 
-    "Try": function (tryTask, catchGenerator, finallyTask) {
+    Try: function (tryTask, catchGenerator, finallyTask) {
         return {
-            "next": function (_this, callback) {
+            next: function (_this, callback) {
                 tryTask.next(_this, function (type, value, target) {
                     if (type != "throw" || !catchGenerator) {
                         if (!finallyTask) {

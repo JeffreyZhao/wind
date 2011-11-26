@@ -1,24 +1,29 @@
 Jscex.Async = { };
 
+Jscex.Async.CanceledError = function () {
+    
+}
+
 /** @constructor */
 Jscex.Async.Task = function (delegate) {
     this._delegate = delegate;
     this._handlers = [];
     this.status = "ready";
 }
+
 Jscex.Async.Task.prototype = {
     start: function () {
         if (this.status != "ready") {
-            throw 'Task can only be started in "ready" status.';
+            throw new Error('Task can only be started in "ready" status.');
         }
 
         var _this = this;
 
         this.status = "running";
-        this._delegate["onStart"](function (type, value) {
+        this._delegate.onStart(function (type, value) {
 
             if (_this.status != "running") {
-                throw ('Callback can only be used in "running" status.');
+                throw new Error('Callback can only be used in "running" status.');
             }
 
             if (type == "success") {
@@ -28,44 +33,29 @@ Jscex.Async.Task.prototype = {
 
             } else if (type == "failure") {
 
-                _this.error = value;
-                _this.status = "failed";
-
-            } else if (type == "cancel") {
-
-                _this.status = "canceled";
+                if (value instanceof Jscex.Async.CanceledError) {
+                    _this.status = "canceled";
+                } else {
+                    _this.error = value;
+                    _this.status = "failed";
+                }
 
             } else {
-                throw ("Unsupported type: " + type);
+                throw new Error("Unsupported type: " + type);
             }
             
-            _this._notify();
-        });
-    },
-
-    cancel: function () {
-        if (this.status != "running") {
-            throw 'Task can only be canceled in "running" status';
-        }
-
-        var onCancel = this._delegate["onCancel"];
-        if (onCancel) onCancel();
-
-        this._notify();
-    },
-
-    _notify: function () {
-        var handlers = this._handlers;
-        delete this._handlers;
+            var handlers = _this._handlers;
+            delete _this._handlers;
         
-        for (var i = 0; i < handlers.length; i++) {
-            handlers[i](this);
-        }
+            for (var i = 0; i < handlers.length; i++) {
+                handlers[i](_this);
+            }
+        });
     },
 
     addListener: function (handler) {
         if (!this._handlers) {
-            throw ('Listeners can only be added in "ready" or "running" status.');
+            throw new Error('Listeners can only be added in "ready" or "running" status.');
         }
 
         this._handlers.push(handler);
@@ -77,19 +67,19 @@ Jscex.Async.Task.prototype = {
     var AsyncBuilder = function () { }
 
     AsyncBuilder.prototype = {
-        "binder": "$await",
+        binder: "$await",
 
-        "Start": function (_this, task) {
+        Start: function (_this, task) {
 
             var delegate = {
-                "onStart": function (callback) {
+                onStart: function (callback) {
                     task.next(_this, function (type, value, target) {
                         if (type == "normal" || type == "return") {
                             callback("success", value);
                         } else if (type == "throw") {
                             callback("failure", value);
                         } else {
-                            throw "Unsupported type: " + type;
+                            throw new Error("Unsupported type: " + type);
                         }
                     });
                 }
@@ -98,9 +88,9 @@ Jscex.Async.Task.prototype = {
             return new Jscex.Async.Task(delegate);
         },
 
-        "Bind": function (task, generator) {
+        Bind: function (task, generator) {
             return {
-                "next": function (_this, callback) {
+                next: function (_this, callback) {
                     
                     var onComplete = function (t) {
                         if (t.status == "succeeded") {
@@ -140,14 +130,9 @@ Jscex.Async.Task.prototype = {
     var async = Jscex.Async;
 
     async.sleep = function (delay) {
-        var id;
         var delegate = {
-            "onStart": function (callback) {
-                id = setTimeout(function () { callback("success"); }, delay);
-            },
-
-            "onCancel": function () {
-                clearTimeout(id);
+            onStart: function (callback) {
+                setTimeout(function () { callback("success"); }, delay);
             }
         };
 
@@ -158,17 +143,13 @@ Jscex.Async.Task.prototype = {
         var eventName = "on" + ev;
 
         var delegate = {
-            "onStart": function (callback) {
+            onStart: function (callback) {
                 var handler = function (ev) {
                     ele[eventName] = null;
                     callback("success", ev);
                 }
 
                 ele[eventName] = handler;
-            },
-
-            "onCancel": function () {
-                ele[eventName] = null;
             }
         };
 
@@ -178,7 +159,7 @@ Jscex.Async.Task.prototype = {
     async.parallel = function (tasks) {
         
         var delegate = {
-            "onStart": function (callback) {
+            onStart: function (callback) {
 
                 var tasksClone = [];
                 for (var i = 0; i < tasks.length; i++) {

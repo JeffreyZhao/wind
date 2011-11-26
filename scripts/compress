@@ -1,0 +1,14 @@
+scripts=(jscex.async jscex.builderBase)
+
+for s in ${scripts[@]}; do
+
+    echo Compressing $s.js
+
+    java \
+        -jar ../tools/compiler.jar \
+        --js ../src/${s}.js \
+        --js_output_file ../bin/${s}.min.js \
+        --compilation_level SIMPLE_OPTIMIZATIONS
+done
+
+
