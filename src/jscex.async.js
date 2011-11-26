@@ -31,7 +31,7 @@ Jscex.Async.CancellationToken.prototype = {
             try {
                 handlers[i]();
             } catch (ex) {
-                // TODO: logging
+                Jscex.log("Cancellation handler threw an error: " + ex);
             }
         }
     },
@@ -94,7 +94,7 @@ Jscex.Async.Task.prototype = {
             try {
                 listeners[i](this);
             } catch (ex) {
-                // TODO: logging
+                Jscex.log("Task listener threw an error: " + ex);
             }
         }
     },

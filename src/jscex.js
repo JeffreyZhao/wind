@@ -1,6 +1,3 @@
-/** @define {boolean} */
-var JSCEX_DEBUG = true;
-
 /**
  * Defined in global, no "var".
  */
@@ -8,9 +5,6 @@ Jscex = (function () {
 
     var tempVarSeed = 0;
 
-    /**
-     * @constructor
-     */
     function JscexTreeGenerator(builderName) {
         this._binder = Jscex.builders[builderName].binder;
         this._root = null;
@@ -164,7 +158,7 @@ Jscex = (function () {
 
             if (visitor) {
                 return visitor.call(this, ast);
-            } else if (JSCEX_DEBUG) {
+            } else {
                 throwUnsupportedError();
             }
         },
@@ -549,9 +543,6 @@ Jscex = (function () {
         }
     }
 
-    /**
-     * @constructor
-     */
     function CodeGenerator(builderName, indent) {
         this._builderName = builderName;
         this._binder = Jscex.builders[builderName].binder;
@@ -628,7 +619,7 @@ Jscex = (function () {
 
             if (visitor) {
                 visitor.call(this, ast);
-            } else if (JSCEX_DEBUG) {
+            } else {
                 throwUnsupportedError();
             }
 
@@ -963,8 +954,7 @@ Jscex = (function () {
                     return !(type == "num" || type == "name" || type == "dot");
                 }
 
-                var lnb = (!JSCEX_DEBUG) || needBracket(left);
-                if (lnb) {
+                if (needBracket(left)) {
                     this._write("(")._visitRaw(left)._write(") ");
                 } else {
                     this._visitRaw(left)._write(" ");
@@ -972,8 +962,7 @@ Jscex = (function () {
 
                 this._write(op);
 
-                var rnb = (!JSCEX_DEBUG) || needBracket(right);
-                if (rnb) {
+                if (needBracket(right)) {
                     this._write(" (")._visitRaw(right)._write(")");
                 } else {
                     this._write(" ")._visitRaw(right);
@@ -987,8 +976,7 @@ Jscex = (function () {
                     return !(prop[0] == "name")
                 }
 
-                var nb = (!JSCEX_DEBUG) || needBracket();
-                if (nb) {
+                if (needBracket()) {
                     this._write("(")._visitRaw(prop)._write(")[")._visitRaw(index)._write("]");
                 } else {
                     this._visitRaw(prop)._write("[")._visitRaw(index)._write("]");
@@ -1031,8 +1019,7 @@ Jscex = (function () {
                     return !(leftOp == "dot" || leftOp == "name");
                 }
 
-                var nb = (!JSCEX_DEBUG) || needBracket();
-                if (nb) {
+                if (needBracket()) {
                     this._write("(")._visitRaw(ast[1])._write(").")._write(ast[2]);
                 } else {
                     this._visitRaw(ast[1])._write(".")._write(ast[2]);
@@ -1056,17 +1043,12 @@ Jscex = (function () {
             "call": function (ast) {
             
                 if (_isJscexPattern(ast)) {
-                    var indent = 0;
-
-                    if (JSCEX_DEBUG) {
-                        indent = this._indent + this._indentLevel * 4;
-                    }
-
+                    var indent = this._indent + this._indentLevel * 4;
                     var newCode = _compileJscexPattern(ast, indent);
                     this._write(newCode);
                 } else {
 
-                    var invalidBind = JSCEX_DEBUG && (ast[1][0] == "name") && (ast[1][1] == this._binder);
+                    var invalidBind = (ast[1][0] == "name") && (ast[1][1] == this._binder);
                     if (invalidBind) {
                         this._pos = { inFunction: true };
                         this._buffer = [];
@@ -1360,13 +1342,6 @@ Jscex = (function () {
         }
     }
 
-    function _log(funcCode, newCode) {
-        var config = Jscex.config || {};
-        if (config.logger) {
-            config.logger(funcCode, newCode);
-        }
-    }
-
     function _isJscexPattern(ast) {
         if (ast[0] != "call") return false;
         
@@ -1414,24 +1389,17 @@ Jscex = (function () {
         var evalAst = evalCodeAst[1][0][1];
         var newCode = _compileJscexPattern(evalAst, 0);
 
-        if (JSCEX_DEBUG) {
-            _log(funcCode, newCode);
-        }
+        Jscex.log(funcCode + "\n\n>>>\n\n" + newCode);
         
         var cg = Jscex.config.codeGenerator;
         return cg ? cg(newCode) : newCode;
     };
 
     return {
-        "config": {},
-        "compile": compile,
-        "builders": {}
+        config: { },
+        log: function () { },
+        compile: compile,
+        builders: { }
     };
 
 })();
-
-if (JSCEX_DEBUG && typeof(console) != "undefined" && console.log) {
-    Jscex.config.logger = function (funcCode, newCode) {
-        console.log(funcCode + "\n\n>>>\n\n" + newCode);
-    }
-}

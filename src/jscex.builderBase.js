@@ -2,6 +2,12 @@ if ((typeof Jscex) == "undefined") {
     Jscex = { builders: { } };
 }
 
+Jscex.log = function (text) {
+    try {
+        console.log(text);
+    } catch (ex) { };
+}
+
 Jscex.builderBase = {
 
     Loop: function (condition, update, body, bodyFirst) {
