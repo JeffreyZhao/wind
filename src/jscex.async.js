@@ -1,16 +1,53 @@
 Jscex.Async = { };
 
-Jscex.Async.CanceledError = function () {
-    
-}
+Jscex.Async.CanceledError = function () { }
 
-/** @constructor */
+Jscex.Async.CancellationToken = function () { }
+Jscex.Async.CancellationToken.prototype = {
+
+    register: function (handler) {
+        if (this.isCancellationRequested) {
+            handler();
+        }
+
+        if (!this._handlers) {
+            this._handlers = [];
+        }
+
+        this._handlers.push(handler);
+    },
+    
+    cancel: function () {
+        if (this.isCancellationRequested) {
+            return;
+        }
+
+        this.isCancellationRequested = true;
+
+        var handlers = this._handlers;
+        delete this._handlers;
+
+        for (var i = 0; i < handlers.length; i++) {
+            try {
+                handlers[i]();
+            } catch (ex) {
+                // TODO: logging
+            }
+        }
+    },
+
+    throwIfCancellationRequested: function () {
+        if (this.isCancellationRequested) {
+            throw new Jscex.Async.CanceledError();
+        }
+    }
+};
+
 Jscex.Async.Task = function (delegate) {
     this._delegate = delegate;
-    this._handlers = [];
+    this._listeners = [];
     this.status = "ready";
 }
-
 Jscex.Async.Task.prototype = {
     start: function () {
         if (this.status != "ready") {
@@ -33,10 +70,11 @@ Jscex.Async.Task.prototype = {
 
             } else if (type == "failure") {
 
+                _this.error = value;
+
                 if (value instanceof Jscex.Async.CanceledError) {
                     _this.status = "canceled";
                 } else {
-                    _this.error = value;
                     _this.status = "failed";
                 }
 
@@ -44,21 +82,29 @@ Jscex.Async.Task.prototype = {
                 throw new Error("Unsupported type: " + type);
             }
             
-            var handlers = _this._handlers;
-            delete _this._handlers;
-        
-            for (var i = 0; i < handlers.length; i++) {
-                handlers[i](_this);
-            }
+            _this._notify();
         });
     },
 
-    addListener: function (handler) {
-        if (!this._handlers) {
+    _notify: function () {
+        var listeners = this._listeners;
+        delete this._listeners;
+
+        for (var i = 0; i < listeners.length; i++) {
+            try {
+                listeners[i](this);
+            } catch (ex) {
+                // TODO: logging
+            }
+        }
+    },
+
+    addListener: function (listener) {
+        if (!this._listeners) {
             throw new Error('Listeners can only be added in "ready" or "running" status.');
         }
 
-        this._handlers.push(handler);
+        this._listeners.push(listener);
     }
 };
 
