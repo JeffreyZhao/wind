@@ -2,11 +2,22 @@
 
     var Async = Jscex.Async;
     var Task = Async.Task;
+    var CanceledError = Async.CanceledError;
 
-    Async.sleep = function (delay) {
+    Async.sleep = function (delay, /* CancellationToken */ ct) {
         var delegate = {
             onStart: function (callback) {
-                setTimeout(function () { callback("success"); }, delay);
+                if (ct) {
+                    ct.throwIfCancellationRequested();
+                }
+
+                var seed = setTimeout(function () { callback("success"); }, delay);
+                if (ct) {
+                    ct.register(function () {
+                        clearTimeout(seed);
+                        callback("failure", new CanceledError());
+                    });
+                }
             }
         };
 

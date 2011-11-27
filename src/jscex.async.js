@@ -150,18 +150,18 @@ Jscex.Async = (function () {
                 next: function (_this, callback) {
                     
                     var onComplete = function (t) {
-                        if (t.status == "succeeded") {
+                        if (t.error) {
+                            callback("throw", t.error);
+                        } else {
                             var nextTask;
                             try {
-                                nextTask = generator.call(_this, task.result);
+                                nextTask = generator.call(_this, t.result);
                             } catch (ex) {
                                 callback("throw", ex);
                                 return;
                             }
 
                             nextTask.next(_this, callback);
-                        } else {
-                            callback("throw", task.error);
                         }
                     }
 
