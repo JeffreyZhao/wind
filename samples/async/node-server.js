@@ -39,12 +39,13 @@ http.createServer(function(request, response) {
 
 require("../../lib/uglifyjs-parser.js");
 require("../../src/jscex.js");
-require("../../src/jscex.async.js");
 require("../../src/jscex.builderBase.js");
-require("../../src/jscex.async.node.js");
+require("../../src/jscex.async.js");
 
-Jscex.Async.Node.Path.extend(path);
-Jscex.Async.Node.FileSystem.extend(fs);
+var jscexify = require("../../src/jscex.async.node.js");
+
+path.existsAsync = jscexify.fromCallback(path.exists);
+fs.readFileAsync = jscexify.fromStandard(fs.readFile);
 
 var transferFileAsync = eval(Jscex.compile("async", function (request, response) {
     var uri = url.parse(request.url).pathname;
@@ -55,7 +56,6 @@ var transferFileAsync = eval(Jscex.compile("async", function (request, response)
         response.writeHead(404, {"Content-Type": "text/plain"});
         response.write("404 Not Found\n");
     } else {
-
         try {
             var data = $await(fs.readFileAsync(filepath));
             response.writeHead(200);
