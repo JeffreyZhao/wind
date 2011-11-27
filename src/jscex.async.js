@@ -1,118 +1,129 @@
-Jscex.Async = { };
+Jscex.Async = (function () {
 
-Jscex.Async.CanceledError = function () { }
+    var CanceledError = function () { }
 
-Jscex.Async.CancellationToken = function () { }
-Jscex.Async.CancellationToken.prototype = {
+    var CancellationToken = function () { }
+    CancellationToken.prototype = {
 
-    register: function (handler) {
-        if (this.isCancellationRequested) {
-            handler();
-        }
+        register: function (handler) {
+            if (this.isCancellationRequested) {
+                handler();
+            }
 
-        if (!this._handlers) {
-            this._handlers = [];
-        }
+            if (!this._handlers) {
+                this._handlers = [];
+            }
 
-        this._handlers.push(handler);
-    },
-    
-    cancel: function () {
-        if (this.isCancellationRequested) {
-            return;
-        }
+            this._handlers.push(handler);
+        },
+        
+        cancel: function () {
+            if (this.isCancellationRequested) {
+                return;
+            }
 
-        this.isCancellationRequested = true;
+            this.isCancellationRequested = true;
 
-        var handlers = this._handlers;
-        delete this._handlers;
+            var handlers = this._handlers;
+            delete this._handlers;
 
-        for (var i = 0; i < handlers.length; i++) {
-            try {
-                handlers[i]();
-            } catch (ex) {
-                Jscex.log("Cancellation handler threw an error: " + ex);
+            for (var i = 0; i < handlers.length; i++) {
+                try {
+                    handlers[i]();
+                } catch (ex) {
+                    Jscex.log("Cancellation handler threw an error: " + ex);
+                }
+            }
+        },
+
+        throwIfCancellationRequested: function () {
+            if (this.isCancellationRequested) {
+                throw new CanceledError();
             }
         }
-    },
+    };
 
-    throwIfCancellationRequested: function () {
-        if (this.isCancellationRequested) {
-            throw new Jscex.Async.CanceledError();
-        }
+    var taskIdSeed = 0;
+
+    var Task = function (delegate) {
+        this.id = (++taskIdSeed);
+        this._delegate = delegate;
+        this._listeners = [];
+        this.status = "ready";
     }
-};
-
-Jscex.Async.Task = function (delegate) {
-    this._delegate = delegate;
-    this._listeners = [];
-    this.status = "ready";
-}
-Jscex.Async.Task.prototype = {
-    start: function () {
-        if (this.status != "ready") {
-            throw new Error('Task can only be started in "ready" status.');
-        }
-
-        var _this = this;
-
-        this.status = "running";
-        this._delegate.onStart(function (type, value) {
-
-            if (_this.status != "running") {
-                throw new Error('Callback can only be used in "running" status.');
+    Task.prototype = {
+        start: function () {
+            if (this.status != "ready") {
+                throw new Error('Task can only be started in "ready" status.');
             }
 
-            if (type == "success") {
+            var _this = this;
 
-                _this.result = value;
-                _this.status = "succeeded";
+            this.status = "running";
+            this._delegate.onStart(function (type, value) {
 
-            } else if (type == "failure") {
-
-                _this.error = value;
-
-                if (value instanceof Jscex.Async.CanceledError) {
-                    _this.status = "canceled";
-                } else {
-                    _this.status = "failed";
+                if (_this.status != "running") {
+                    throw new Error('Callback can only be used in "running" status.');
                 }
 
-            } else {
-                throw new Error("Unsupported type: " + type);
+                if (type == "success") {
+
+                    _this.result = value;
+                    _this.status = "succeeded";
+
+                } else if (type == "failure") {
+
+                    _this.error = value;
+
+                    if (value instanceof CanceledError) {
+                        _this.status = "canceled";
+                    } else {
+                        _this.status = "failed";
+                    }
+
+                } else {
+                    throw new Error("Unsupported type: " + type);
+                }
+                
+                _this._notify();
+            });
+        },
+
+        _notify: function () {
+            var listeners = this._listeners;
+            delete this._listeners;
+
+            for (var i = 0; i < listeners.length; i++) {
+                try {
+                    listeners[i](this);
+                } catch (ex) {
+                    Jscex.log("Task listener threw an error: " + ex);
+                }
             }
-            
-            _this._notify();
-        });
-    },
+        },
 
-    _notify: function () {
-        var listeners = this._listeners;
-        delete this._listeners;
+        addListener: function (listener) {
+            if (!this._listeners) {
+                throw new Error('Listeners can only be added in "ready" or "running" status.');
+            }
 
-        for (var i = 0; i < listeners.length; i++) {
-            try {
-                listeners[i](this);
-            } catch (ex) {
-                Jscex.log("Task listener threw an error: " + ex);
+            this._listeners.push(listener);
+        },
+
+        removeListener: function (listener) {
+            if (!this._listeners) {
+                throw new Error('Listeners can only be removed in "ready" or "running" status.');
+            }
+
+            var index = this._listeners.indexOf(listener);
+            if (index > 0) {
+                this._listeners.splice(index, 1);
             }
         }
-    },
+    };
 
-    addListener: function (listener) {
-        if (!this._listeners) {
-            throw new Error('Listeners can only be added in "ready" or "running" status.');
-        }
-
-        this._listeners.push(listener);
-    }
-};
-
-(function () {
-
-    var AsyncBuilder = function () { }
-
-    AsyncBuilder.prototype = {
+    var Builder = function () { }
+    Builder.prototype = {
         binder: "$await",
 
         Start: function (_this, task) {
@@ -131,7 +142,7 @@ Jscex.Async.Task.prototype = {
                 }
             };
 
-            return new Jscex.Async.Task(delegate);
+            return new Task(delegate);
         },
 
         Bind: function (task, generator) {
@@ -168,94 +179,16 @@ Jscex.Async.Task.prototype = {
     }
 
     for (var m in Jscex.builderBase) {
-        AsyncBuilder.prototype[m] = Jscex.builderBase[m];
+        Builder.prototype[m] = Jscex.builderBase[m];
     }
 
-    Jscex.builders["async"] = new AsyncBuilder();
+    return {
+        CancellationToken: CancellationToken,
+        CanceledError: CanceledError,
+        Task: Task,
+        Builder: Builder
+    };
 
-    var async = Jscex.Async;
-
-    async.sleep = function (delay) {
-        var delegate = {
-            onStart: function (callback) {
-                setTimeout(function () { callback("success"); }, delay);
-            }
-        };
-
-        return new Jscex.Async.Task(delegate);
-    }
-
-    async.onEvent = function (ele, ev) {
-        var eventName = "on" + ev;
-
-        var delegate = {
-            onStart: function (callback) {
-                var handler = function (ev) {
-                    ele[eventName] = null;
-                    callback("success", ev);
-                }
-
-                ele[eventName] = handler;
-            }
-        };
-
-        return new Jscex.Async.Task(delegate);
-    }
-
-    async.parallel = function (tasks) {
-        
-        var delegate = {
-            onStart: function (callback) {
-
-                var tasksClone = [];
-                for (var i = 0; i < tasks.length; i++) {
-                    var t = tasks[i];
-                    t._p_idx = i;
-
-                    tasksClone.push(t);
-                }
-
-                var finished = false;
-                var runningNumber = tasksClone.length;
-                var results = [];
-
-                var taskCompleted = function (t) {
-                    if (finished) return;
-
-                    if (t.status == "failed") {
-                        finished = true;
-                        callback("failure", { task: t });
-                    } else if (t.status == "succeeded") {
-                        results[t._p_idx] = t.result;
-
-                        runningNumber--;
-                        if (runningNumber == 0) {
-                            finished = true;
-                            callback("success", results);
-                        }
-                    }
-                }
-
-                for (var i = 0; i < tasksClone.length; i++) {
-                    var t = tasksClone[i];
-                    switch (t.status) {
-                        case "failed":
-                        case "succeeded":
-                            taskCompleted(t);
-                            break;
-                        case "running":
-                            t.addListener(taskCompleted);
-                            break;
-                        case "ready":
-                            t.addListener(taskCompleted);
-                            t.start();
-                            break;
-                    }
-                }
-            }
-        };
-
-        return new Jscex.Async.Task(delegate);
-    }
-       
 })();
+
+Jscex.builders["async"] = new Jscex.Async.Builder();

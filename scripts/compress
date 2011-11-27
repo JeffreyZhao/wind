@@ -1,4 +1,4 @@
-scripts=(jscex.async jscex.builderBase)
+scripts=(jscex.async jscex.builderBase jscex.async.powerpack)
 
 for s in ${scripts[@]}; do
 
