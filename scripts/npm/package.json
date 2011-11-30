@@ -8,5 +8,6 @@
     "bugs": {
         "url": "https://github.com/JeffreyZhao/jscex/issues",
         "email": "jeffz@live.com"
-    }
+    },
+    "dependencies": { <dependencies> }
 }
