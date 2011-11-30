@@ -57,12 +57,7 @@
 
  ***********************************************************************/
 
-/**
- * Defined in global, no "var".
- */
-UglifyJS = {};
-
-(function (exports) {
+(function () {
 
 /* -----[ Tokenizer (constants) ]----- */
 
@@ -1308,22 +1303,29 @@ var warn = function() {};
 
 /* -----[ Exports ]----- */
 
-exports.tokenizer = tokenizer;
-exports.parse = parse;
-exports.slice = slice;
-exports.curry = curry;
-exports.member = member;
-exports.array_to_hash = array_to_hash;
-exports.PRECEDENCE = PRECEDENCE;
-exports.KEYWORDS_ATOM = KEYWORDS_ATOM;
-exports.RESERVED_WORDS = RESERVED_WORDS;
-exports.KEYWORDS = KEYWORDS;
-exports.ATOMIC_START_TOKEN = ATOMIC_START_TOKEN;
-exports.OPERATORS = OPERATORS;
-exports.is_alphanumeric_char = is_alphanumeric_char;
-exports.set_logger = function(logger) {
-        warn = logger;
+var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+
+if (!isCommonJS) {
+    UglifyJS = { };
+}
+
+var scope = isCommonJS ? module.exports : UglifyJS;
+
+scope.tokenizer = tokenizer;
+scope.parse = parse;
+scope.slice = slice;
+scope.curry = curry;
+scope.member = member;
+scope.array_to_hash = array_to_hash;
+scope.PRECEDENCE = PRECEDENCE;
+scope.KEYWORDS_ATOM = KEYWORDS_ATOM;
+scope.RESERVED_WORDS = RESERVED_WORDS;
+scope.KEYWORDS = KEYWORDS;
+scope.ATOMIC_START_TOKEN = ATOMIC_START_TOKEN;
+scope.OPERATORS = OPERATORS;
+scope.is_alphanumeric_char = is_alphanumeric_char;
+scope.set_logger = function (logger) {
+    warn = logger;
 };
 
-
-})(UglifyJS);
+})();

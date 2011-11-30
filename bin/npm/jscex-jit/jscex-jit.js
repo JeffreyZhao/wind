@@ -1,14 +1,18 @@
-require("./uglifyjs-parser");
+(function () {
 
-/**
- * Defined in global, no "var".
- */
-Jscex = (function () {
+    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+    
+    if (!isCommonJS) {
+        /* Defined in global. */
+        Jscex = { };
+    }
+    
+    var scope = isCommonJS ? module.exports : Jscex;
 
     var tempVarSeed = 0;
 
     function JscexTreeGenerator(builderName) {
-        this._binder = Jscex.builders[builderName].binder;
+        this._binder = scope.builders[builderName].binder;
         this._root = null;
     }
     JscexTreeGenerator.prototype = {
@@ -547,7 +551,7 @@ Jscex = (function () {
 
     function CodeGenerator(builderName, indent) {
         this._builderName = builderName;
-        this._binder = Jscex.builders[builderName].binder;
+        this._binder = scope.builders[builderName].binder;
         this._normalMode = false;
         this._indent = indent;
         this._indentLevel = 0;
@@ -1382,26 +1386,29 @@ Jscex = (function () {
         return newCode;
     }
 
+    var uglifyJS = isCommonJS ? require("./uglifyjs-parser") : UglifyJS;
+    
     function compile(builderName, func) {
         var funcCode = func.toString();
         var evalCode = "eval(Jscex.compile(" + JSON.stringify(builderName) + ", " + funcCode + "))"
-        var evalCodeAst = UglifyJS.parse(evalCode);
+        var evalCodeAst = uglifyJS.parse(evalCode);
 
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
         var evalAst = evalCodeAst[1][0][1];
         var newCode = _compileJscexPattern(evalAst, 0);
 
-        Jscex.log(funcCode + "\n\n>>>\n\n" + newCode);
+        scope.log(funcCode + "\n\n>>>\n\n" + newCode);
         
-        var cg = Jscex.config.codeGenerator;
+        var cg = scope.config.codeGenerator;
         return cg ? cg(newCode) : newCode;
     };
 
-    return {
-        config: { },
-        log: function () { },
-        compile: compile,
-        builders: { }
+    scope.config = { };
+    scope.compile = compile;
+    scope.builders = { };
+    scope.log = function (text) {
+        try { console.log(text); }
+        catch (ex) { }
     };
 
 })();
