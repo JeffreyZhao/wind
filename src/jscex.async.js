@@ -1,10 +1,10 @@
-Jscex.Async = (function () {
+(function () {
 
     var CanceledError = function () { }
+    CanceledError.prototype.isCancellation = true;
 
     var CancellationToken = function () { }
     CancellationToken.prototype = {
-
         register: function (handler) {
             if (this.isCancellationRequested) {
                 handler();
@@ -75,7 +75,7 @@ Jscex.Async = (function () {
 
                     _this.error = value;
 
-                    if (value instanceof CanceledError) {
+                    if (value.isCancellation) {
                         _this.status = "canceled";
                     } else {
                         _this.status = "failed";
@@ -178,17 +178,29 @@ Jscex.Async = (function () {
         }
     }
 
-    for (var m in Jscex.builderBase) {
-        Builder.prototype[m] = Jscex.builderBase[m];
+    var extend = function (scope) {
+        scope.Async = {
+            CancellationToken: CancellationToken,
+            CanceledError: CanceledError,
+            Task: Task,
+            Builder: Builder
+        };
+        
+        if (!scope.builders) {
+            scope.builders = [];
+        }
+
+        scope.builders["async"] = new Builder();
+    }
+    
+    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+    
+    if (isCommonJS) {
+        require("jscex-builderbase").standardizeBuilder(Builder.prototype);
+        module.exports.extend = extend;
+    } else {
+        Jscex.standardizeBuilder(Builder.prototype);
+        extend(Jscex);
     }
 
-    return {
-        CancellationToken: CancellationToken,
-        CanceledError: CanceledError,
-        Task: Task,
-        Builder: Builder
-    };
-
 })();
-
-Jscex.builders["async"] = new Jscex.Async.Builder();
