@@ -196,7 +196,7 @@
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
     
     if (isCommonJS) {
-        require("jscex-builderbase").standardizeBuilder(Builder.prototype);
+        require("./jscex-builderbase").standardizeBuilder(Builder.prototype);
         module.exports.extend = extend;
     } else {
         Jscex.standardizeBuilder(Builder.prototype);

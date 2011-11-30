@@ -1,8 +1,5 @@
-require("../../lib/uglifyjs-parser.js");
-require("../../src/jscex.js");
-require("../../src/jscex.builderBase.js");
-require("../../src/jscex.async.js");
-require("../../src/jscex.async.node.js");
+var Jscex = require("../../src/jscex-jit.js");
+require("../../src/jscex-async.js").extend(Jscex);
 
 var app = require('express').createServer();
 

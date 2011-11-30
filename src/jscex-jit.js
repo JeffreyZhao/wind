@@ -1386,7 +1386,7 @@
         return newCode;
     }
 
-    var uglifyJS = isCommonJS ? require("uglifyjs-parser") : UglifyJS;
+    var uglifyJS = isCommonJS ? require("./uglifyjs-parser") : UglifyJS;
     
     function compile(builderName, func) {
         var funcCode = func.toString();

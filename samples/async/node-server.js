@@ -37,10 +37,9 @@ http.createServer(function(request, response) {
 
 //////////////////////////////////////////////////////////
 
-require("../../lib/uglifyjs-parser.js");
-require("../../src/jscex.js");
-require("../../src/jscex.builderBase.js");
-require("../../src/jscex.async.js");
+// TODO: avoid global (change node support)
+Jscex = require("../../src/jscex-jit");
+require("../../src/jscex-async").extend(Jscex);
 
 var jscexify = require("../../src/jscex.async.node.js");
 
