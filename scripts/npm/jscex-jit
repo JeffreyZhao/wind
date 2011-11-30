@@ -1,0 +1,23 @@
+SOURCE_DIR=`dirname $0`
+PROJECT_DIR=${SOURCE_DIR}/../..
+PACKAGE_DIR=${PROJECT_DIR}/bin/npm/jscex-jit
+TARGET_FILE=${PACKAGE_DIR}/jscex.js
+
+if [ -d $PACKAGE_DIR ]; then
+    find $PACKAGE_DIR/* | xargs rm -r
+else
+    mkdir -p $PACKAGE_DIR
+fi
+
+
+cp ${PROJECT_DIR}/lib/uglifyjs-parser.js ${PACKAGE_DIR}
+echo 'require("./uglifyjs-parser");' > $TARGET_FILE
+echo '' >> $TARGET_FILE
+cat ${PROJECT_DIR}/src/jscex.js >> $TARGET_FILE
+
+sed \
+    -e 's/<name>/jscex-jit/g' \
+    -e 's/<version>/0.5.0/g' \
+    -e 's/<main>/jscex.js/g' \
+    -e 's/<description>/The JIT compiler for Jscex, providing the monadic code transformation ability without losing traditional JavaScript programming experience./g' \
+    ${SOURCE_DIR}/package.json > ${PACKAGE_DIR}/package.json

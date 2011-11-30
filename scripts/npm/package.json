@@ -1,0 +1,12 @@
+{
+    "name": "<name>",
+    "version": "<version>",
+    "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
+    "description": "<description>",
+    "homepage": "https://github.com/JeffreyZhao/jscex",
+    "main": "<main>",
+    "bugs": {
+        "url": "https://github.com/JeffreyZhao/jscex/issues",
+        "email": "jeffz@live.com"
+    }
+}
