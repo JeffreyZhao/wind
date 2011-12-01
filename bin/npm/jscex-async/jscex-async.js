@@ -124,8 +124,6 @@
 
     var Builder = function () { }
     Builder.prototype = {
-        binder: "$await",
-
         Start: function (_this, task) {
 
             var delegate = {
@@ -178,7 +176,11 @@
         }
     }
 
-    var init = function (scope) {
+    var init = function (scope, compiler) {
+    
+        if (!compiler) {
+            compiler = scope;
+        }
     
         if (!scope.Async) {
             scope.Async = { };
@@ -196,6 +198,10 @@
         
         if (!scope.builders["async"]) {
             scope.builders["async"] = new Builder();
+        }
+        
+        if (compiler.binders) {
+            compiler.binders["async"] = "$await";
         }
     }
     

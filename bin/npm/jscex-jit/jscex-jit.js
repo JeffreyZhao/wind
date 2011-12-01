@@ -7,12 +7,12 @@
         Jscex = { };
     }
     
-    var scope = isCommonJS ? module.exports : Jscex;
+    var compiler = isCommonJS ? module.exports : Jscex;
 
     var tempVarSeed = 0;
 
     function JscexTreeGenerator(builderName) {
-        this._binder = scope.builders[builderName].binder;
+        this._binder = compiler.binders[builderName];
         this._root = null;
     }
     JscexTreeGenerator.prototype = {
@@ -551,7 +551,7 @@
 
     function CodeGenerator(builderName, indent) {
         this._builderName = builderName;
-        this._binder = scope.builders[builderName].binder;
+        this._binder = compiler.builders[builderName].binder;
         this._normalMode = false;
         this._indent = indent;
         this._indentLevel = 0;
@@ -1397,16 +1397,16 @@
         var evalAst = evalCodeAst[1][0][1];
         var newCode = _compileJscexPattern(evalAst, 0);
 
-        scope.log(funcCode + "\n\n>>>\n\n" + newCode);
+        compiler.log(funcCode + "\n\n>>>\n\n" + newCode);
         
-        var cg = scope.config.codeGenerator;
+        var cg = compiler.config.codeGenerator;
         return cg ? cg(newCode) : newCode;
     };
 
-    scope.config = { };
-    scope.compile = compile;
-    scope.builders = { };
-    scope.log = function (text) {
+    compiler.config = { };
+    compiler.compile = compile;
+    compiler.binders = { };
+    compiler.log = function (text) {
         try { console.log(text); }
         catch (ex) { }
     };

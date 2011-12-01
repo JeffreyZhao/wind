@@ -124,8 +124,6 @@
 
     var Builder = function () { }
     Builder.prototype = {
-        binder: "$await",
-
         Start: function (_this, task) {
 
             var delegate = {
@@ -178,24 +176,32 @@
         }
     }
 
-    var init = function (scope) {
+    var init = function (root, compiler) {
     
-        if (!scope.Async) {
-            scope.Async = { };
+        if (!compiler) {
+            compiler = root;
+        }
+    
+        if (!root.Async) {
+            root.Async = { };
         };
         
-        var async = scope.Async;
+        var async = root.Async;
         async.CancellationToken = CancellationToken;
         async.CanceledError = CanceledError;
         async.Task = Task;
         async.Builder = Builder;
         
-        if (!scope.builders) {
-            scope.builders = [];
+        if (!root.builders) {
+            root.builders = [];
         }
         
-        if (!scope.builders["async"]) {
-            scope.builders["async"] = new Builder();
+        if (!root.builders["async"]) {
+            root.builders["async"] = new Builder();
+        }
+        
+        if (compiler.binders) {
+            compiler.binders["async"] = "$await";
         }
     }
     
