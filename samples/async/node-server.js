@@ -39,7 +39,7 @@ http.createServer(function(request, response) {
 
 // TODO: avoid global (change node support)
 Jscex = require("../../src/jscex-jit");
-require("../../src/jscex-async").extend(Jscex);
+require("../../src/jscex-async").init(Jscex);
 
 var jscexify = require("../../src/jscex.async.node.js");
 

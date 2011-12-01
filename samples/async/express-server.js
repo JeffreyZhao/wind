@@ -1,5 +1,5 @@
 var Jscex = require("../../src/jscex-jit.js");
-require("../../src/jscex-async.js").extend(Jscex);
+require("../../src/jscex-async.js").init(Jscex);
 
 var app = require('express').createServer();
 

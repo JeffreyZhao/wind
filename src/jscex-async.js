@@ -178,7 +178,7 @@
         }
     }
 
-    var extend = function (scope) {
+    var init = function (scope) {
         scope.Async = {
             CancellationToken: CancellationToken,
             CanceledError: CanceledError,
@@ -197,10 +197,10 @@
     
     if (isCommonJS) {
         require("./jscex-builderbase").standardizeBuilder(Builder.prototype);
-        module.exports.extend = extend;
+        module.exports.init = init;
     } else {
         Jscex.standardizeBuilder(Builder.prototype);
-        extend(Jscex);
+        init(Jscex);
     }
 
 })();
