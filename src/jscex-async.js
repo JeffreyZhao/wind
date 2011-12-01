@@ -179,18 +179,24 @@
     }
 
     var init = function (scope) {
-        scope.Async = {
-            CancellationToken: CancellationToken,
-            CanceledError: CanceledError,
-            Task: Task,
-            Builder: Builder
+    
+        if (!scope.Async) {
+            scope.Async = { };
         };
+        
+        var async = scope.Async;
+        async.CancellationToken = CancellationToken;
+        async.CanceledError = CanceledError;
+        async.Task = Task;
+        async.Builder = Builder;
         
         if (!scope.builders) {
             scope.builders = [];
         }
-
-        scope.builders["async"] = new Builder();
+        
+        if (!scope.builders["async"]) {
+            scope.builders["async"] = new Builder();
+        }
     }
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
