@@ -1,18 +1,8 @@
-require("jscex-jit");
+(function () {
 
-if ((typeof Jscex) == "undefined") {
-    Jscex = { builders: { } };
-}
+    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
 
-Jscex.log = function (text) {
-    try {
-        console.log(text);
-    } catch (ex) { };
-}
-
-Jscex.builderBase = {
-
-    Loop: function (condition, update, body, bodyFirst) {
+    var Loop = function (condition, update, body, bodyFirst) {
         return {
             next: function (_this, callback) {
                 
@@ -54,9 +44,9 @@ Jscex.builderBase = {
                 }
             }
         };
-    },
+    };
     
-    Delay: function (generator) {
+    var Delay = function (generator) {
         return {
             next: function (_this, callback) {
                 try {
@@ -67,9 +57,9 @@ Jscex.builderBase = {
                 }
             }
         };
-    },
+    };
 
-    Combine: function (s1, s2) {
+    var Combine = function (s1, s2) {
         return {
             next: function (_this, callback) {
                 s1.next(_this, function (type, value, target) {
@@ -85,49 +75,49 @@ Jscex.builderBase = {
                 });
             }
         };
-    },
+    };
 
-    Return: function (result) {
+    var Return = function (result) {
         return {
             next: function (_this, callback) {
                 callback("return", result);
             }
         };
-    },
+    };
 
-    Normal: function () {
+    var Normal = function () {
         return {
             next: function (_this, callback) {
                 callback("normal");
             }
         };
-    },
+    };
 
-    Break: function () {
+    var Break = function () {
         return {
             next: function (_this, callback) {
                 callback("break");
             }
         };
-    },
+    };
 
-    Continue: function () {
+    var Continue = function () {
         return {
             next: function (_this, callback) {
                 callback("continue");
             }
         };
-    },
+    };
 
-    Throw: function (ex) {
+    var Throw = function (ex) {
         return {
             next: function (_this, callback) {
                 callback("throw", ex);
             }
         };
-    },
+    };
 
-    Try: function (tryTask, catchGenerator, finallyTask) {
+    var Try = function (tryTask, catchGenerator, finallyTask) {
         return {
             next: function (_this, callback) {
                 tryTask.next(_this, function (type, value, target) {
@@ -207,4 +197,28 @@ Jscex.builderBase = {
             }
         };
     }
-};
+    
+    var standardizeBuilder = function (builder) {
+        builder.Loop = Loop;
+        builder.Delay = Delay;
+        builder.Combine = Combine;
+        builder.Return = Return;
+        builder.Normal = Normal;
+        builder.Break = Break;
+        builder.Continue = Continue;
+        builder.Throw = Throw;
+        builder.Try = Try;
+    };
+    
+    if (isCommonJS) {
+        module.exports.standardizeBuilder = standardizeBuilder;
+    } else {
+        if (typeof Jscex == "undefined") {
+            /* Defined in global */
+            Jscex = { };
+        }
+        
+        Jscex.standardizeBuilder = standardizeBuilder;
+    }
+
+})();

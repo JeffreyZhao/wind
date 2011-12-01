@@ -1,13 +1,13 @@
 {
-    "name": "jscex-builderbase",
+    "name": "jscex-async",
     "version": "0.5.0",
     "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
-    "description": "The base implementation for general Jscex builders.",
+    "description": "",
     "homepage": "https://github.com/JeffreyZhao/jscex",
-    "main": "jscex.builderBase.js",
+    "main": "jscex-async.js",
     "bugs": {
         "url": "https://github.com/JeffreyZhao/jscex/issues",
         "email": "jeffz@live.com"
     },
-    "dependencies": { "jscex-jit": "0.5.0" }
+    "dependencies": {  }
 }
