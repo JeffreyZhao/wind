@@ -17,6 +17,17 @@
             this._handlers.push(handler);
         },
         
+        unregister: function (handler) {
+            if (!this._handlers) {
+                return;
+            }
+            
+            var index = this._handlers.indexOf(handler);
+            if (index >= 0) {
+                this._handlers.splice(index, 1);
+            }
+        },
+        
         cancel: function () {
             if (this.isCancellationRequested) {
                 return;
@@ -116,7 +127,7 @@
             }
 
             var index = this._listeners.indexOf(listener);
-            if (index > 0) {
+            if (index >= 0) {
                 this._listeners.splice(index, 1);
             }
         }
