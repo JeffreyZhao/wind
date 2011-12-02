@@ -181,6 +181,18 @@
         if (!compiler) {
             compiler = root;
         }
+        
+        if (compiler.binders) {
+            compiler.binders["async"] = "$await";
+        }
+        
+        if (!root.modules) {
+            root.modules = { };
+        }
+        
+        if (root.modules["async"]) {
+            return;
+        }
     
         if (!root.Async) {
             root.Async = { };
@@ -196,13 +208,9 @@
             root.builders = [];
         }
         
-        if (!root.builders["async"]) {
-            root.builders["async"] = new Builder();
-        }
+        root.builders["async"] = new Builder();
         
-        if (compiler.binders) {
-            compiler.binders["async"] = "$await";
-        }
+        root.modules["async"] = true;
     }
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);

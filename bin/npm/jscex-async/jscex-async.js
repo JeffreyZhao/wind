@@ -176,33 +176,41 @@
         }
     }
 
-    var init = function (scope, compiler) {
+    var init = function (root, compiler) {
     
         if (!compiler) {
-            compiler = scope;
-        }
-    
-        if (!scope.Async) {
-            scope.Async = { };
-        };
-        
-        var async = scope.Async;
-        async.CancellationToken = CancellationToken;
-        async.CanceledError = CanceledError;
-        async.Task = Task;
-        async.Builder = Builder;
-        
-        if (!scope.builders) {
-            scope.builders = [];
-        }
-        
-        if (!scope.builders["async"]) {
-            scope.builders["async"] = new Builder();
+            compiler = root;
         }
         
         if (compiler.binders) {
             compiler.binders["async"] = "$await";
         }
+        
+        if (!root.modules) {
+            root.modules = { };
+        }
+        
+        if (root.modules["async"]) {
+            return;
+        }
+    
+        if (!root.Async) {
+            root.Async = { };
+        };
+        
+        var async = root.Async;
+        async.CancellationToken = CancellationToken;
+        async.CanceledError = CanceledError;
+        async.Task = Task;
+        async.Builder = Builder;
+        
+        if (!root.builders) {
+            root.builders = [];
+        }
+        
+        root.builders["async"] = new Builder();
+        
+        root.modules["async"] = true;
     }
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
