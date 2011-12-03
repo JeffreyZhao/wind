@@ -116,7 +116,7 @@
                         } else {
                             results[taskIds[t.id]] = t.result;
 
-                            var index = tasksClone.indexOf(t);
+                            var index = runningTasks.indexOf(t);
                             runningTasks.splice(index, 1);
 
                             if (runningTasks.length == 0) {
@@ -130,11 +130,11 @@
                         var t = tasks[i];
                         switch (t.status) {
                             case "ready":
-                                t.addListener(taskCompleted);
+                                t.addEventListener("complete", taskCompleted);
                                 t.start();
                                 break;
                             case "running":
-                                t.addListener(taskCompleted);
+                                t.addEventListener("complete", taskCompleted);
                                 break;
                             default:
                                 taskCompleted(t);

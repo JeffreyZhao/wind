@@ -1,6 +1,8 @@
 var Jscex = require("../../src/jscex-jit");
 require("../../src/jscex-async").init(Jscex);
+require("../../src/jscex-async-powerpack").init(Jscex);
 
+var jscexify = require("../../src/jscex-async-node").getJscexify(Jscex);
 var app = require('express').createServer();
 
 app.getAsync = function (path, handler) {
@@ -35,31 +37,9 @@ var cache = {
     }
 }
 
-var toJscex = function (func) {
-    return function () {
-        var _this = this;
-
-        var args = [];
-        for (var i = 0; i < arguments.length; i++)
-            args.push(arguments[i]);
-
-        var delegate = {
-            onStart: function (callback) {
-                args.push(function (res) {
-                    callback("success", res);
-                });
-                
-                func.apply(_this, args);
-            }
-        };
-
-        return new Jscex.Async.Task(delegate);
-    }
-}
-
-db.getKeysAsync = toJscex(db.getKeys);
-db.getItemAsync = toJscex(db.getItem);
-cache.getAsync = toJscex(cache.get);
+db.getKeysAsync = jscexify.fromCallback(db.getKeys);
+db.getItemAsync = jscexify.fromCallback(db.getItem);
+cache.getAsync = jscexify.fromCallback(cache.get);
 
 app.get("/:n", function (req, res) {
     var time = new Date();
@@ -127,7 +107,7 @@ app.getAsync("/jscex/:n/parallel", eval(Jscex.compile("async", function (req, re
         tasks.push(getItemAsync(keys[i]));
     }
 
-    var items = $await(Jscex.Async.parallel(tasks));
+    var items = $await(Jscex.Async.Task.whenAll(tasks));
     var timePassed = (new Date()) - time;
     var output = { timePassed: timePassed + "ms", items: items };
     res.send(JSON.stringify(output));
