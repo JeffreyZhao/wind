@@ -47,24 +47,52 @@
             return new Task(delegate);
         }
         
-        Async.onEvent = function (ele, ev) {
-            var eventName = "on" + ev;
-
+        Async.onEvent = function (target, eventName, /* CancellationToken*/ ct) {
             var delegate = {
                 onStart: function (callback) {
-                    var handler = function (ev) {
-                        ele[eventName] = null;
-                        callback("success", ev);
+                    if (ct) {
+                        ct.throwIfCancellationRequested();
                     }
 
-                    ele[eventName] = handler;
+                    var eventHandler;
+                    var cancelHandler;
+
+                    if (ct) {
+                        cancelHandler = function () {
+                            if (target.removeEventListener) {
+                                target.removeEventListener(eventName, eventHandler);
+                            } else {
+                                target.detachEvent(eventName, eventHandler);
+                            }
+
+                            callback("failure", new CanceledError());
+                        }
+                    }
+                    
+                    var eventHandler = function (ev) {
+                        if (ct) {
+                            ct.unregister(cancelHandler);
+                        }
+
+                        callback("success", ev);
+                    }
+                    
+                    if (target.addEventListener) {
+                        target.addEventListener(eventName, eventHandler);
+                    } else {
+                        target.attachEvent(eventName, eventHandler);
+                    }
+                    
+                    if (ct) {
+                        ct.register(cancelHandler);
+                    }
                 }
             };
 
             return new Task(delegate);
         }
         
-        Task.waitAll = function (tasks) {
+        Task.whenAll = function (tasks) {
             
             var delegate = {
                 onStart: function (callback) {
