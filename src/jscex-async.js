@@ -3,57 +3,6 @@
     var CanceledError = function () { }
     CanceledError.prototype.isCancellation = true;
 
-    var CancellationToken = function () { }
-    CancellationToken.prototype = {
-        register: function (handler) {
-            if (this.isCancellationRequested) {
-                handler();
-            }
-
-            if (!this._handlers) {
-                this._handlers = [];
-            }
-
-            this._handlers.push(handler);
-        },
-        
-        unregister: function (handler) {
-            if (!this._handlers) {
-                return;
-            }
-            
-            var index = this._handlers.indexOf(handler);
-            if (index >= 0) {
-                this._handlers.splice(index, 1);
-            }
-        },
-        
-        cancel: function () {
-            if (this.isCancellationRequested) {
-                return;
-            }
-
-            this.isCancellationRequested = true;
-
-            var handlers = this._handlers;
-            delete this._handlers;
-
-            for (var i = 0; i < handlers.length; i++) {
-                try {
-                    handlers[i]();
-                } catch (ex) {
-                    Jscex.log("Cancellation handler threw an error: " + ex);
-                }
-            }
-        },
-
-        throwIfCancellationRequested: function () {
-            if (this.isCancellationRequested) {
-                throw new CanceledError();
-            }
-        }
-    };
-
     var taskIdSeed = 0;
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
@@ -75,6 +24,57 @@
         if (root.modules["async"]) {
             return;
         }
+        
+        var CancellationToken = function () { }
+        CancellationToken.prototype = {
+            register: function (handler) {
+                if (this.isCancellationRequested) {
+                    handler();
+                }
+
+                if (!this._handlers) {
+                    this._handlers = [];
+                }
+
+                this._handlers.push(handler);
+            },
+            
+            unregister: function (handler) {
+                if (!this._handlers) {
+                    return;
+                }
+                
+                var index = this._handlers.indexOf(handler);
+                if (index >= 0) {
+                    this._handlers.splice(index, 1);
+                }
+            },
+            
+            cancel: function () {
+                if (this.isCancellationRequested) {
+                    return;
+                }
+
+                this.isCancellationRequested = true;
+
+                var handlers = this._handlers;
+                delete this._handlers;
+
+                for (var i = 0; i < handlers.length; i++) {
+                    try {
+                        handlers[i]();
+                    } catch (ex) {
+                        root.log("WARNING: Cancellation handler threw an error: " + ex);
+                    }
+                }
+            },
+
+            throwIfCancellationRequested: function () {
+                if (this.isCancellationRequested) {
+                    throw new CanceledError();
+                }
+            }
+        };
     
         var Task = function (delegate) {
             this.id = (++taskIdSeed).toString();
