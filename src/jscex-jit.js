@@ -9,7 +9,10 @@
     
     var compiler = isCommonJS ? module.exports : Jscex;
 
-    var tempVarSeed = 0;
+    // seed defined in global
+    if (typeof __jscex__tempVarSeed === "undefined") {
+        __jscex__tempVarSeed = 0;
+    }
 
     function JscexTreeGenerator(builderName) {
         this._binder = compiler.binders[builderName];
@@ -244,10 +247,10 @@
 
             "for-in": function (ast) {
 
-                var membersVar = "$$_members_$$_" + tempVarSeed;
-                var indexVar = "$$_index_$$_" + tempVarSeed;
-                var memVar = "$$_mem_$$_" + tempVarSeed;
-                tempVarSeed++;
+                var id = (__jscex__tempVarSeed++);
+                var membersVar = "$$_members_$$_" + id;
+                var indexVar = "$$_index_$$_" + id;
+                var memVar = "$$_mem_$$_" + id;
 
                 var obj = ast[3];
     
@@ -555,7 +558,7 @@
         this._normalMode = false;
         this._indent = indent;
         this._indentLevel = 0;
-        this._builderVar = "$$_builder_$$_" + (tempVarSeed++);
+        this._builderVar = "$$_builder_$$_" + (__jscex__tempVarSeed++);
     }
     CodeGenerator.prototype = {
         _write: function (s) {

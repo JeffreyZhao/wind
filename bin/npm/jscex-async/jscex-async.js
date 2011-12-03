@@ -3,7 +3,10 @@
     var CanceledError = function () { }
     CanceledError.prototype.isCancellation = true;
 
-    var taskIdSeed = 0;
+    // seed defined in global
+    if (typeof __jscex__taskIdSeed === "undefined") {
+        __jscex__taskIdSeed = 0;
+    }
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
 
@@ -77,7 +80,7 @@
         };
     
         var Task = function (delegate) {
-            this.id = (++taskIdSeed).toString();
+            this.id = (++__jscex__taskIdSeed);
             this._delegate = delegate;
             this._listeners = { };
             this.status = "ready";
