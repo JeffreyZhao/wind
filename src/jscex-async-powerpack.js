@@ -94,6 +94,10 @@
         
         Task.whenAll = function (tasks) {
             
+			if (Object.prototype.toString.call(tasks) !== '[object Array]') {
+				tasks = arguments;
+			}
+			
             var delegate = {
                 onStart: function (callback) {
 
