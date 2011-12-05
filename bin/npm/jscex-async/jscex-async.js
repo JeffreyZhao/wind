@@ -91,41 +91,40 @@
                     throw new Error('Task can only be started in "ready" status.');
                 }
 
-                var _this = this;
-
                 this.status = "running";
-                this._delegate.onStart(function (type, value) {
+                this._delegate(this);
+            },
+			
+			complete: function (type, value) {
+				if (this.status != "running") {
+                    throw new Error('The "complete" method can only be called in "running" status.');
+                }
 
-                    if (_this.status != "running") {
-                        throw new Error('Callback can only be used in "running" status.');
-                    }
+                if (type == "success") {
 
-                    if (type == "success") {
+                    this.result = value;
+                    this.status = "succeeded";
+                    this._notify("success");
 
-                        _this.result = value;
-                        _this.status = "succeeded";
-                        _this._notify("success");
+                } else if (type == "failure") {
 
-                    } else if (type == "failure") {
+                    this.error = value;
 
-                        _this.error = value;
-
-                        if (value.isCancellation) {
-                            _this.status = "canceled";
-                        } else {
-                            _this.status = "failed";
-                        }
-                        
-                        _this._notify("failure");
-
+                    if (value.isCancellation) {
+                        this.status = "canceled";
                     } else {
-                        throw new Error("Unsupported type: " + type);
+                        this.status = "failed";
                     }
                     
-                    _this._notify("complete");
-                    delete _this._listeners;
-                });
-            },
+                    this._notify("failure");
+
+                } else {
+                    throw new Error("Unsupported type: " + type);
+                }
+                
+                this._notify("complete");
+                delete this._listeners;
+			},
 
             _notify: function (ev) {
                 var listeners = this._listeners[ev];
@@ -168,26 +167,25 @@
                 }
             }
         };
+		
+		Task.create = function (delegate) {
+			return new Task(delegate);
+		}
         
         var Builder = function () { }
         Builder.prototype = {
             Start: function (_this, task) {
-
-                var delegate = {
-                    onStart: function (callback) {
-                        task.next(_this, function (type, value, target) {
-                            if (type == "normal" || type == "return") {
-                                callback("success", value);
-                            } else if (type == "throw") {
-                                callback("failure", value);
-                            } else {
-                                throw new Error("Unsupported type: " + type);
-                            }
-                        });
-                    }
-                };
-
-                return new Task(delegate);
+				return Task.create(function (t) {
+					task.next(_this, function (type, value, target) {
+                        if (type == "normal" || type == "return") {
+                            t.complete("success", value);
+                        } else if (type == "throw") {
+                            t.complete("failure", value);
+                        } else {
+                            throw new Error("Unsupported type: " + type);
+                        }
+                    });
+				});
             },
 
             Bind: function (task, generator) {

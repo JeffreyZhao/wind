@@ -26,22 +26,17 @@
                 var _this = this;
                 var args = collectArgs(arguments, requiredArgs || 0);
 
-                var delegate = {
-                    onStart: function (callback) {
-
-                        args.push(function (error, result) {
-                            if (error) {
-                                callback("failure", error);
-                            } else {
-                                callback("success", result);
-                            }
-                        });
-
-                        fn.apply(_this, args);
-                    }
-                };
-                
-                return new Task(delegate);
+				return Task.create(function (t) {
+					args.push(function (error, result) {
+					    if (error) {
+					        t.complete("failure", error);
+					    } else {
+					        t.complete("success", result);
+					    }
+					});
+					
+					fn.apply(_this, args);
+				});
             };
         };
         
@@ -51,18 +46,13 @@
                 var _this = this;
                 var args = collectArgs(arguments, requiredArgs || 0);
 
-                var delegate = {
-                    onStart: function (callback) {
-
-                        args.push(function (result) {
-                            callback("success", result);
-                        });
-
-                        fn.apply(_this, args);
-                    }
-                };
-                
-                return new Task(delegate);
+				return Task.create(function (t) {
+					args.push(function (result) {
+					    t.complete("success", result);
+					});
+					
+					fn.apply(_this, args);
+				});
             };
         };
 

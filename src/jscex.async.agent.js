@@ -13,29 +13,21 @@ Jscex.Async.Agent._Mailbox.prototype = {
     receive: function () {
         var _this = this;
 
-        var delegate = {
-            onStart: function (callback) {
-                if (_this._queue.length > 0) {
-                    var message = _this._queue.shift();
-                    callback("success", message);
-                } else {
-                    _this._callback = callback;
-                }
-            },
-
-            onCancel: function () {
-                delete _this._callback;
+        return Jscex.Async.Task.create(function (t) {
+            if (_this._queue.length > 0) {
+                var message = _this._queue.shift();
+                t.complete("success", message);
+            } else {
+                _this._task = t;
             }
-        };
-
-        return new Jscex.Async.Task(delegate);
+        });
     },
 
     enqueue: function (message) {
-        if (this._callback) {
-            var callback = this._callback;
-            delete this._callback;
-            callback("success", message);
+        if (this._task) {
+            var task = this._task;
+            delete this._task;
+            task.complete("success", message);
         } else {
             this._queue.push(message);
         }
