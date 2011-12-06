@@ -1,4 +1,4 @@
-## 中文用户请[点此访问中文版](blob/master/README-cn.md)。
+## 中文用户请[点此访问中文版](https://github.com/JeffreyZhao/jscex/blob/master/README-cn.md)。
 
 "Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm), including mainstream browsers or server side JavaScript environments (e.g., [Node.js](http://nodejs.org/)).
 
