@@ -74,7 +74,7 @@ Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex�
 
 此时，您将会在浏览器工具或是Node.js标准输出里看到菲薄纳契数列，每隔一秒输出一项。
 
-您也可以在[示例目录](samples/async)下找到quick-start.html及quick-start.js文件。
+您也可以在[示例目录](samples/async)下找到[quick-start.html](samples/async/quick-start.html)及[quick-start.js](samples/async/quick-start.js)文件。
 
 ### 其他
 
