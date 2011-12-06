@@ -36,7 +36,7 @@ Jscex可以在任何JavaScript引擎上执行，我们这里目前最典型的�
 
 #### 浏览器
 
-请下载[src](src)目录下的所有文件，并在相同目录下创建quick-start.html文件，写入：
+请下载[src目录](src)下的所有文件，并在相同目录下创建quick-start.html文件，写入：
 
     <script src="uglifyjs-parser.js"></script>
     <script src="jscex-jit.js"></script>
