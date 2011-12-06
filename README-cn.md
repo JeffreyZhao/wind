@@ -62,7 +62,7 @@ Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex�
 
 基于Jscex实现“每隔一秒打印菲薄纳契数列”十分简单直接，请在quick-start.html或quick-start.js里写入以下脚本：
 
-    var fib = eval(Jscex.compile("async", function () {        $await(Jscex.Async.sleep(1000)); // “暂停”一秒        console.log(0);                $await(Jscex.Async.sleep(1000)); // “暂停”一秒        console.log(1);        var a = 0, current = 1;        while (true) {            var b = a;            a = current;            current = a + b;            $await(Jscex.Async.sleep(1000)); // “休眠”一秒            console.log(current);        }    }));
+    var fib = eval(Jscex.compile("async", function () {        $await(Jscex.Async.sleep(1000)); // “暂停”一秒        console.log(0);                $await(Jscex.Async.sleep(1000)); // “暂停”一秒        console.log(1);        var a = 0, current = 1;        while (true) {            var b = a;            a = current;            current = a + b;            $await(Jscex.Async.sleep(1000)); // “暂停”一秒            console.log(current);        }    }));
 
     fib().start();
 
