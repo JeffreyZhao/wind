@@ -58,7 +58,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
     // 输出“Hello World”
     print("Hello World");
 
-    // 得到Task对象
+    // 得到Jscex.Async.Task对象
     var task = printAsync("Hello World");
 
 如果要启动这个task对象，只需调用其`start()`方法即可：
@@ -73,7 +73,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
     var printAllAsync = eval(Jscex.compile("async", function (texts) {
         for (var i = 0; i < texts.length; i++) {
-            $await(printAsync(text[i])); // 使用$await命令执行一个Task对象
+            $await(printAsync(text[i])); // 使用$await命令执行一个任务对象
         }
     }));
 
