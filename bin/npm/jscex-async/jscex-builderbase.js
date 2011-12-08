@@ -1,7 +1,5 @@
 (function () {
 
-    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
-
     var Loop = function (condition, update, body, bodyFirst) {
         return {
             next: function (_this, callback) {
@@ -210,15 +208,30 @@
         builder.Try = Try;
     };
     
+    var init = function (root) {
+        if (!root.modules) {
+            root.modules = { };
+        }
+        
+        if (root.modules["builderbase"]) {
+            return;
+        }
+        
+        root.modules["builderbase"] = true;
+        root.standardizeBuilder = standardizeBuilder;
+    }
+    
+    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+    
     if (isCommonJS) {
-        module.exports.standardizeBuilder = standardizeBuilder;
+        module.exports.init = init;
     } else {
         if (typeof Jscex == "undefined") {
             /* Defined in global */
             Jscex = { };
         }
         
-        Jscex.standardizeBuilder = standardizeBuilder;
+        init(Jscex);
     }
 
 })();

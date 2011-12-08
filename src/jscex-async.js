@@ -16,12 +16,16 @@
             compiler = root;
         }
         
-        if (compiler.binders) {
-            compiler.binders["async"] = "$await";
+        if (!root.modules || !root.modules["builderbase"]) {
+            if (isCommonJS) {
+                require("./jscex-builderbase").init(root);
+            } else {
+                throw new Error('Missing essential component, please initialize "builderbase" module first.');
+            }
         }
         
-        if (!root.modules) {
-            root.modules = { };
+        if (compiler.binders) {
+            compiler.binders["async"] = "$await";
         }
         
         if (root.modules["async"]) {
@@ -221,11 +225,7 @@
             }
         }
         
-        if (isCommonJS) {
-            require("./jscex-builderbase").standardizeBuilder(Builder.prototype);
-        } else {
-            root.standardizeBuilder(Builder.prototype);
-        }
+        root.standardizeBuilder(Builder.prototype);
     
         if (!root.Async) {
             root.Async = { };
