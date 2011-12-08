@@ -48,7 +48,7 @@ Jscex模块化十分细致，但您暂时无需了解以上脚本的含义。
 
 #### Node.js
 
-Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用Node Package Manager（即npm命令）安装jscex-jit及jscex-async两个模块。
+Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装jscex-jit及jscex-async两个模块。
 
     npm install jscex-jit jscex-async
 
@@ -68,7 +68,7 @@ Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex�
 
 ### 执行
 
-请使用Chrome，Firefox，Safari或IE8及以上版本浏览器打开quick-start.html页面（Jscex支持IE 6及以上浏览器，但当前示例并不支持，详细信息请参考“[引入Jscex脚本](README.md)”），或使用Node.js执行quick-start.js文件：
+请使用Chrome，Firefox，Safari或IE8及以上版本浏览器打开quick-start.html页面（Jscex支持IE 6及以上浏览器，但当前示例并不支持，详细信息请参考“[Jscex JIT编译器使用指南](doc/jscex-jit-cn.md)”），或使用Node.js执行quick-start.js文件：
 
     node quick-start.js
 
@@ -86,7 +86,7 @@ JavaScript的异步及非阻塞特性，让程序员无法使用传统方式表�
 
 ## 错误及反馈
 
-请在[GitHub上汇报错误](issues)。如果您对Jscex有任何建议或意见，请加入[邮件列表](http://groups.google.com/group/jscex)或直接[与我联系](mailto:jeffz@live.com)。
+请在[GitHub上汇报错误](https://github.com/JeffreyZhao/jscex/issues)。如果您对Jscex有任何建议或意见，请加入[邮件列表](http://groups.google.com/group/jscex)或直接[与我联系](mailto:jeffz@live.com)。
 
 ## 授权
 
