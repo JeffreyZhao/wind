@@ -1001,7 +1001,12 @@
             "unary-prefix": function (ast) {
                 var op = ast[1];
                 var item = ast[2];
-                this._write(op)._visitRaw(item);
+                this._write(op);
+                if (op == "typeof") {
+                    this._write("(")._visitRaw(item)._write(")");
+                } else {
+                    this._visitRaw(item);
+                }
             },
 
             "assign": function (ast) {
