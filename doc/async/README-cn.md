@@ -53,7 +53,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 ### 直接使用
 
-与普通使用不同的是，异步方法在执行后并不会立即启动方法体内的代码，而是会返回一个`Jscex.Async.Task`类型的对象（后文也会称做“任务对象”或是`Task`对象）：
+与普通使用不同的是，异步方法在执行后并不会立即启动方法体内的代码，而是会返回一个`Jscex.Async.Task`类型的对象（后文也会称做“任务对象”或是Task对象）：
 
     // 输出“Hello World”
     print("Hello World");
@@ -69,15 +69,15 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 ### 在其他异步方法内使用
 
-对于一个Jscex异步方法返回的任务对象来说，最常见的使用方式便是在另一个异步方法内，通过`$await`命令来执行。例如：
+对于一个Jscex异步方法返回的Task对象来说，最常见的使用方式便是在另一个异步方法内，通过`$await`命令来执行。例如：
 
     var printAllAsync = eval(Jscex.compile("async", function (texts) {
         for (var i = 0; i < texts.length; i++) {
-            $await(printAsync(text[i])); // 使用$await命令执行一个任务对象
+            $await(printAsync(text[i])); // 使用$await命令执行一个Task对象
         }
     }));
 
-当然，对于这里的`printAsync`方法来说，由于其内部并没有其他异步操作（您可以简单的理解为“没有`$await`命令”），因此它所返回的任务对象，其执行效果和普通的`print`方法没有什么区别。但是在实际使用时，我们使用的是更有意义的异步操作，例如在[异步增强模块](async-powerpack-cn.md)中引入的`Jscex.Async.sleep`方法：
+当然，对于这里的`printAsync`方法来说，由于其内部并没有其他异步操作（您可以简单的理解为“没有`$await`命令”），因此它所返回的Task对象，其执行效果和普通的`print`方法没有什么区别。但是在实际使用时，我们使用的是更有意义的异步操作，例如在[异步增强模块](async-powerpack-cn.md)中引入的`Jscex.Async.sleep`方法：
 
     var printEverySecond = eval(Jscex.compile("async", function (texts) {
         for (var i = 0; i < texts.length; i++) {
@@ -96,7 +96,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
 `$await`指令的使用形式便是普通的方法调用，但事实上在上下文中并没有这个方法。它的作用与`eval(Jscex.compile("async", …))`一样，仅仅是个占位符，让Jscex知道在这个地方需要进行“特殊处理”。
 
-`$await`指令的参数只有一个，便是一个`Jscex.Async.Task`类型的对象，这个对象可以是一个异步方法的返回结果，或是由其他任何方式得到。例如，之前所演示的`Jscex.Async.sleep(1000)`，其实便是返回一个表示“等待1秒钟”的任务对象。因此这句代码：
+`$await`指令的参数只有一个，便是一个`Jscex.Async.Task`类型的对象，这个对象可以是一个异步方法的返回结果，或是由其他任何方式得到。例如，之前所演示的`Jscex.Async.sleep(1000)`，其实便是返回一个表示“等待1秒钟”的Task对象。因此这句代码：
 
     $await(Jscex.Async.sleep(1000));
 
@@ -105,7 +105,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
     var task = Jscex.Async.sleep(1000);
     $await(task)
 
-`$await`指令的确切语义是：“**等待该任务对象结束（返回结果或抛出错误）；如果它尚未启动，则启动该任务；如果已经完成，则立即返回**”。因此，我们也可以在需要的时候灵活使用`$await`指令。例如在一个Node.js应用程序中，时常会实现下面的逻辑：
+`$await`指令的确切语义是：“**等待该Task对象结束（返回结果或抛出错误）；如果它尚未启动，则启动该任务；如果已经完成，则立即返回结果（或抛出错误）**”。因此，我们也可以在需要的时候灵活使用`$await`指令。例如在一个Node.js应用程序中，时常会实现下面的逻辑：
     
     var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
 
@@ -164,20 +164,24 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
         };
     });
 
-`whenAll`辅助方法会将输入的多个任务封装为一个整体，并同样以任务对象的形式返回。新的任务对象只有在所有输入任务都结束的情况下才会完成，并使用数组返回其结果。
+`whenAll`辅助方法会将输入的多个任务封装为一个整体，并同样以Task对象的形式返回。新的Task对象只有在所有输入任务都结束的情况下才会完成，并使用数组返回其结果。
 
 Jscex的异步模型经过C#，F#及Scala等多种语言平台的检验，可以说拥有非常灵活而丰富的使用模式。
 
 ## 取消模型
-TODO
+
+取消操作也是异步编程中十分常见但也十分麻烦的部分。因此，Jscex异步模块在任务模型中融入一个简单的取消功能，丰富其潜在功能及表现能力。
+
+但是，Jscex对Task对象上并没有一个类似`cancel`这样的方法，这点可能会出乎某些人的意料。在实现“取消模型”这个问题上，我们首先必须清楚一点的是：**并非所有的异步操作均可撤销**。有的任务一旦发起，就只能等待其安全结束。因此，我们要做的，应该是“要求取消该任务”，至于任务会如何响应，便由其自身来决定了。在Jscex的异步模型中，这个“通知机制”便是由`Jscex.Task.CancellationToken`类型提供的。
 
 ## 将任意异步操作封装为Task对象
 TODO
 
 ## 示例
 
-* [时钟](clock-cn.md)
-* [排序算法动画](sorting-animation-cn.md)
-* [模态对话框](modal-dialog-cn.md)
-* [汉诺塔](hanoi-cn.md)
-* [静态文件服务器](static-server-cn.md)
+* [时钟](clock-cn.md)：演示最基础的使用方式。
+* [排序算法动画](sorting-animation-cn.md)：各类排序算法（冒泡，选择，快速）的演示动画。
+* [模态对话框](modal-dialog-cn.md)：演示Jscex对于前端用户交互编写方式的改进。
+* [汉诺塔](hanoi-cn.md)：汉诺塔解决方案的动画演示，同时涉及用户前端交互。
+* [静态文件服务器](static-server-cn.md)：演示Node.js环境中最基础的使用方式。
+* [使用Express开发网站](express-server-cn.md)：使用Jscex改善业务逻辑表现方式，并增强程序并发性。
