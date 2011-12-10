@@ -198,7 +198,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 如果抛出的错误，其`isCancellation`为true的话，则该Task对象的`status`字段也会返回字符串`"canceled"`，表明其已被取消。反之亦然：对于一个Jscex异步方法来说，从内部抛出一个`isCancellation`字段为true的异常，则它的状态也会标识为“已取消”。试想，如果我们不用`try…catch`来捕获一个`$await`指令所抛出的异常，则这个异常会继续顺着“调用栈”继续向调用者传递，于是相关路径上所有的Task对象都会成为`canceled`状态。这是一个简单而统一的模型。
 
-有些情况下我们会需要手动操作ct对象，向外抛出一个`isCancellation`为true的异常，以表示当前异步方法已被取消：
+有些情况下我们会需要手动操作CancellationToken对象，向外抛出一个`isCancellation`为true的异常，以表示当前异步方法已被取消：
 
     if (ct.isCancellationRequested) {
         throw new Jscex.Async.CanceledError();
