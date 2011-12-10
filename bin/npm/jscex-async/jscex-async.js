@@ -241,7 +241,7 @@
         async.Builder = Builder;
         
         if (!root.builders) {
-            root.builders = [];
+            root.builders = { };
         }
         
         root.builders["async"] = new Builder();
