@@ -65,7 +65,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
     task.start(); // 输出“Hello World”
 
-关于`Jscex.Async.Task`类型成员及其功能，请参考[相关文档](#)。任何一个Jscex异步方法，都可以使用`start()`方法启动，无需依赖其他异步方法（见下节）。这点经常被人忽略，但对于那些需要在已有项目中逐步引入Jscex的情况来说却十分重要。
+关于`Jscex.Async.Task`类型成员及其功能，请参考后文“Jscex.Async.Task类型详解”部分。任何一个Jscex异步方法，都可以使用`start()`方法启动，无需依赖其他异步方法（见下节）。这点经常被人忽略，但对于那些需要在已有项目中逐步引入Jscex的情况来说却十分重要。
 
 ### 在其他异步方法内使用
 
@@ -172,10 +172,75 @@ Jscex的异步模型经过C#，F#及Scala等多种语言平台的检验，可以
 
 取消操作也是异步编程中十分常见但也十分麻烦的部分。因此，Jscex异步模块在任务模型中融入一个简单的取消功能，丰富其潜在功能及表现能力。
 
-但是，Jscex对Task对象上并没有一个类似`cancel`这样的方法，这点可能会出乎某些人的意料。在实现“取消模型”这个问题上，我们首先必须清楚一点的是：**并非所有的异步操作均可撤销**。有的任务一旦发起，就只能等待其安全结束。因此，我们要做的，应该是“要求取消该任务”，至于任务会如何响应，便由其自身来决定了。在Jscex的异步模型中，这个“通知机制”便是由`Jscex.Async.CancellationToken`类型提供的。
+但是，Jscex对Task对象上并没有一个类似`cancel`这样的方法，这点可能会出乎某些人的意料。在实现“取消模型”这个问题上，我们首先必须清楚一点的是：**并非所有的异步操作均可撤销**。有的任务一旦发起，就只能等待其安全结束。因此，我们要做的，应该是“要求取消该任务”，至于任务会如何响应，便由其自身来决定了。在Jscex的异步模型中，这个“通知机制”便是由`Jscex.Async.CancellationToken`类型（下文也会称作CancellationToken类型或是对象）提供的。
+
+CancellationToken的cancel方法便用于“取消”一个或一系列的异步操作。更准确地说，它是将自己标识为“要求取消”并“通知”相关相关的异步任务。这方面的细节将在后续章节中讲解，目前我们先来了解一下Jscex异步模块中的任务取消模型。如果您要取消一个任务，怎么需要先准备一个CancellationToken对象：
+
+    var ct = new Jscex.Async.CancellationToken();
+
+然后，对于支持取消的异步任务，都会接受一个CancellationToken作为参数，并根据其状态来行动。这里我们还是以异步增强模块中的`sleep`方法进行说明：
+
+    var printEverySecondAsync = eval(Jscex.compile("async", function (ct) {        var i = 0;        while (true) {            $await(Jscex.Async.sleep(1000, ct));            console.log(i++);        }    }));
+
+    printEverySecondAsync(ct).start();
+
+如果您在浏览器或是Node.js的JavaScript交互式控制台上运行上述代码，将会从0开始，每隔一秒打印一个数字，永不停止，直到有人调用`ct.cancel()`为止。
+
+在一个Jscex异步方法中，“取消”的表现形式为“异常”。例如，在`ct.cancel()`调用之后，上述代码的中的`$await(Jscex.Async.sleep(1000, ct))`语句将会抛出一个异常，其`isCancellation`字段为true，我们可以使用`try…catch`进行捕获：
+
+    var task = Jscex.Async.sleep(1000, ct);
+    try {
+        $await(task); // 调用ct.cancel()
+    } catch (ex) {
+        console.log(ex.isCancellation); // true
+        console.log(task.status); // canceled
+    }
+
+如果抛出的错误，其`isCancellation`为true的话，则该Task对象的`status`字段也会返回字符串`"canceled"`，表明其已被取消。反之亦然：对于一个Jscex异步方法来说，从内部抛出一个`isCancellation`字段为true的异常，则它的状态也会标识为“已取消”。试想，如果我们不用`try…catch`来捕获一个`$await`指令所抛出的异常，则这个异常会继续顺着“调用栈”继续向调用者传递，于是相关路径上所有的Task对象都会成为`canceled`状态。这是一个简单而统一的模型。
+
+有些情况下我们会需要手动操作ct对象，向外抛出一个`isCancellation`为true的异常，以表示当前异步方法已被取消：
+
+    if (ct.isCancellationRequested) {
+        throw new Jscex.Async.CanceledError();
+    }
+
+或直接：
+
+    ct.throwIfCancellationRequested();
+
+`throwIfCancellationRequested`是`CancellationToken`对象上的辅助方法，其实就是简单地检查`isCancellationRequested`字段是否为true，并抛出一个`Jscex.Async.CanceledError`对象。`CanceledError`是Jscex异步模块中内置类型，其`isCancellation`字段为true，仅仅是为了方便开发者而已。
+
+手动判断`isCancellationRequested`的情况也是存在的，因为某些时候我们需要在取消的时候做一些“收尾工作”，于是便可以：
+
+    if (ct.isCancellationRequested) {
+
+        // 做些收尾工作
+
+        throw new Jscex.Async.CanceledError();
+    }
+
+或是：
+
+    try {
+        $await(…); // 当任务被取消时
+    } catch (ex) {
+        if (ex.isCancellation) { // 取消引发的异常
+            // 做些收尾工作
+        }
+
+        throw ex; // 重新抛出异常
+    }
+
+值得注意的是，由于JavaScript的单线程特性，一般只需在异步方法刚进入的时候，或是某个`$await`指令之后才会使用`isCancellationRequested`或是`throwIfCancellationRequested`。我们没有必要在其他时刻，例如两个`$await`指令之间反复访问这些成员，因为它们的行为不会发生任何改变。
 
 ## 将任意异步操作封装为Task对象
 TODO
+
+## 相关类型详解
+
+### Jscex.Async.Task
+
+### Jscex.Async.CancellationToken
 
 ## 示例
 
