@@ -7,7 +7,7 @@
         }
 
         while (result.length < requiredArgs) {
-            result.push(null);
+            result.push(undefined);
         }
 
         return result;
@@ -21,10 +21,10 @@
         var Task = root.Async.Task;
 
         // for the methods return error or result
-        var fromStandard = function (fn, requiredArgs) {
+        var fromStandard = function (fn) {
             return function () {
                 var _this = this;
-                var args = collectArgs(arguments, requiredArgs || 0);
+                var args = collectArgs(arguments, fn.length - 1);
 
 				return Task.create(function (t) {
 					args.push(function (error, result) {
@@ -41,10 +41,10 @@
         };
         
         // for the methods always success
-        var fromCallback = function (fn, requiredArgs) {
+        var fromCallback = function (fn) {
             return function () {
                 var _this = this;
-                var args = collectArgs(arguments, requiredArgs || 0);
+                var args = collectArgs(arguments, fn.length - 1);
 
 				return Task.create(function (t) {
 					args.push(function (result) {
