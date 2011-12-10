@@ -179,8 +179,8 @@
 			return new Task(delegate);
 		}
         
-        var Builder = function () { }
-        Builder.prototype = {
+        var AsyncBuilder = function () { }
+        AsyncBuilder.prototype = {
             Start: function (_this, task) {
 				return Task.create(function (t) {
 					task.next(_this, function (type, value, target) {
@@ -228,7 +228,9 @@
             }
         }
         
-        root.standardizeBuilder(Builder.prototype);
+        for (var m in root.BuilderBase.prototype) {
+            AsyncBuilder.prototype[m] = root.BuilderBase.prototype[m];
+        }
     
         if (!root.Async) {
             root.Async = { };
@@ -238,13 +240,13 @@
         async.CancellationToken = CancellationToken;
         async.CanceledError = CanceledError;
         async.Task = Task;
-        async.Builder = Builder;
+        async.AsyncBuilder = AsyncBuilder;
         
         if (!root.builders) {
             root.builders = { };
         }
         
-        root.builders["async"] = new Builder();
+        root.builders["async"] = new AsyncBuilder();
         
         root.modules["async"] = true;
     }
