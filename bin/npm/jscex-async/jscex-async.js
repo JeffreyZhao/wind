@@ -1,7 +1,10 @@
 (function () {
 
     var CanceledError = function () { }
-    CanceledError.prototype.isCancellation = true;
+    CanceledError.prototype = {
+        isCancellation: true,
+        message: "The task has been cancelled."
+    }
 
     // seed defined in global
     if (typeof __jscex__taskIdSeed === "undefined") {
