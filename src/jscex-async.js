@@ -120,7 +120,7 @@
                     if (value.isCancellation) {
                         this.status = "canceled";
                     } else {
-                        this.status = "failed";
+                        this.status = "faulted";
                     }
                     
                     this._notify("failure");
