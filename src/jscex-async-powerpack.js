@@ -45,8 +45,8 @@
         
         Async.onEvent = function (target, eventName, /* CancellationToken*/ ct) {
 			return Task.create(function (t) {
-				if (ct) {
-                    ct.throwIfCancellationRequested();
+				if (ct && ct.isCancellationRequested) {
+                    t.complete("failure", new CanceledError());
                 }
 
                 var eventHandler;
