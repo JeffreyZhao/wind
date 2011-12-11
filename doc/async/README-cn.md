@@ -90,7 +90,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 而在Jscex异步方法中，这一切都不是问题。`$await`将为您保证异步操作的执行顺序，您可以使用最传统的编程方式来表达算法，由Jscex来帮您搞定异步操作的各种问题。
 
-## $await指令的语义
+### $await指令的语义
 
 Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：条件判断就用`if…else`或`switch`，错误捕获就用`try…catch…finally`，循环就用`while`、`for`、`do`，其他包括`break`，`continue`，`return`等等，都是最普通的JavaScript写法，而在Jscex异步方法中，唯一新增的便是`$await`指令。
 
@@ -137,7 +137,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
 在`$await(queryUserTask)`时，如果该任务已经完成，则会立即返回结果，否则便会等待其完成。因此，当这两个互不依赖的查询操作并发执行的情况下，总耗时将会减少到300毫秒。
 
-## 任务模型
+### 任务模型
 
 `$await`指令的参数是`Jscex.Async.Task`类型的对象，这个对象这个对象可以是一个异步方法的返回结果，或是由其他任何方式得到。在Jscex异步模块眼中，一个异步任务便是指“**能在未来某个时刻返回的操作**”，它可以是一个`setTimeout`的封装（如之前演示过的`sleep`方法），甚至是一个用户事件：
 
@@ -172,7 +172,7 @@ Jscex的异步模型经过C#，F#及Scala等多种语言平台的检验，可以
 
 取消操作也是异步编程中十分常见但也十分麻烦的部分。因此，Jscex异步模块在任务模型中融入一个简单的取消功能，丰富其潜在功能及表现能力。
 
-但是，Jscex对Task对象上并没有一个类似`cancel`这样的方法，这点可能会出乎某些人的意料。在实现“取消模型”这个问题上，我们首先必须清楚一点的是：**并非所有的异步操作均可撤销**。有的任务一旦发起，就只能等待其安全结束。因此，我们要做的，应该是“要求取消该任务”，至于任务会如何响应，便由其自身来决定了。在Jscex的异步模型中，这个“通知机制”便是由`Jscex.Async.CancellationToken`类型（下文也会称作CancellationToken类型或是对象）提供的。
+但是，Jscex对Task对象上并没有一个类似`cancel`这样的方法，这点可能会出乎某些人的意料。在实现“取消模型”这个问题上，我们首先必须清楚一点的是：**并非所有的异步操作均可撤销**。有的任务一旦发起，就只能等待其安全结束。因此，我们要做的，应该是“要求取消该任务”，至于任务会如何响应，便由其自身来决定了。在Jscex的异步模型中，这个“通知机制”便是由`Jscex.Async.CancellationToken`类型（下文也会称作CancellationToken）提供的。
 
 CancellationToken的cancel方法便用于“取消”一个或一系列的异步操作。更准确地说，它是将自己标识为“要求取消”并“通知”相关相关的异步任务。这方面的细节将在后续章节中讲解，目前我们先来了解一下Jscex异步模块中的任务取消模型。如果您要取消一个任务，怎么需要先准备一个CancellationToken对象：
 
@@ -196,9 +196,9 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
         console.log(task.status); // canceled
     }
 
-如果抛出的错误，其`isCancellation`为true的话，则该Task对象的`status`字段也会返回字符串`"canceled"`，表明其已被取消。反之亦然：对于一个Jscex异步方法来说，从内部抛出一个`isCancellation`字段为true的异常，则它的状态也会标识为“已取消”。试想，如果我们不用`try…catch`来捕获一个`$await`指令所抛出的异常，则这个异常会继续顺着“调用栈”继续向调用者传递，于是相关路径上所有的Task对象都会成为`canceled`状态。这是一个简单而统一的模型。
+如果抛出的错误，其`isCancellation`为true的话，则该Task对象的`status`字段也会返回字符串`"canceled"`，表明其已被取消。反之亦然：对于一个Jscex异步方法来说，从内部抛出一个`isCancellation`字段为true的异常，则它的状态也会标识为“已取消”。试想，在相当数量的情况下，我们不会用`try…catch`来捕获一个`$await`指令所抛出的异常，于是这个异常会继续顺着“调用栈”继续向调用者传递，于是相关路径上所有的Task对象都会成为`canceled`状态。这是一个**简单而统一**的模型。
 
-有些情况下我们会需要手动操作CancellationToken对象，向外抛出一个`isCancellation`为true的异常，以表示当前异步方法已被取消：
+有些情况下我们也需要手动操作CancellationToken对象，向外抛出一个`isCancellation`为true的异常，以表示当前异步方法已被取消：
 
     if (ct.isCancellationRequested) {
         throw new Jscex.Async.CanceledError();
@@ -208,7 +208,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
     ct.throwIfCancellationRequested();
 
-`throwIfCancellationRequested`是`CancellationToken`对象上的辅助方法，其实就是简单地检查`isCancellationRequested`字段是否为true，并抛出一个`Jscex.Async.CanceledError`对象。`CanceledError`是Jscex异步模块中内置类型，其`isCancellation`字段为true，仅仅是为了方便开发者而已。
+`throwIfCancellationRequested`是CancellationToken对象上的辅助方法，其实就是简单地检查`isCancellationRequested`字段是否为true，并抛出一个`Jscex.Async.CanceledError`对象（下文也会称作CanceledError）。CanceledError是Jscex异步模块中内置类型，其`isCancellation`字段为true，仅仅是为了方便开发者而已。
 
 手动判断`isCancellationRequested`的情况也是存在的，因为某些时候我们需要在取消的时候做一些“收尾工作”，于是便可以：
 
@@ -234,7 +234,117 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 值得注意的是，由于JavaScript的单线程特性，一般只需在异步方法刚进入的时候，或是某个`$await`指令之后才会使用`isCancellationRequested`或是`throwIfCancellationRequested`。我们没有必要在其他时刻，例如两个`$await`指令之间反复访问这些成员，因为它们的行为不会发生任何改变。
 
 ## 将任意异步操作封装为Task对象
-TODO
+
+世界上有无数种异步模型，从最简单的回调函数传递结果，用户行为引发的事件，到相对复杂的Promise模型。而在Jscex的异步模块种，能够被`$await`指令识别的，便是用`Jscex.Async.Task`类型来表达的异步任务。任何的异步方法，在执行后都能得到一个Task对象，但如果是其他平台或是环境所提供异步模型，便需要经过封装才能被`$await`使用。
+
+### 封装简单操作
+
+将任何一个异步操作Task对象，会需要用到`Jscex.Async.Task`类型的`create`静态方法。方便起见，通常我们可以使用`Task`来指向这个全命名：
+
+    var Task = Jscex.Async.Task;
+
+例如在Node.js中[内置的Path模块中的`exists`方法](http://nodejs.org/docs/v0.6.5/api/path.html#path.exists)，便是一个十分简单的异步操作，它会将结果通过回调函数返回：
+
+    path.exists('/etc/passwd', function (exists) {
+        util.debug(exists ? "it's there" : "no passwd!");
+    });
+
+但如果我们要在Jscex异步方法里使用这个函数，则需要将其进行简单封装：
+
+    path.existsAsync = function (p) {
+        return Task.create(function (t) {
+            path.exists(p, function (exists) {
+                t.complete("success", exists);
+            });
+        });
+    }
+
+于是`existsAsync`就会返回一个Task对象，它在`start`以后，便会调用原来的`exists`方法获得结果。我们也可以将其用在某个Jscex异步方法中：
+
+    // 某Jscex异步方法内
+    var exists = $await(path.existsAsync("/etc/passwd"));
+    util.debug(exists ? "it's there" : "no passwd!");
+
+封装一个异步方法的基本方式可以分为以下几点：
+
+1. 边写一个新方法，其中返回`Task.create`的执行结果（一个Task对象）。
+2. `Task.create`方法的参数为一个回调函数（下文称为委托方法），它会在这个Task对象的`start`方法调用时执行，发起被封装的异步操作。
+3. 委托方法的参数是当前的Task对象（也是之前`Task.create`创建的对象），在异步操作完成后，使用其`complete`方法通知Task对象“已完成”。
+4. `complete`方法的第一个参数为字符串`"success"`，表示该异步操作执行成功，并可以通过第二个参数传回该异步操作的结果（亦可空缺）。
+
+### 引发异常
+
+并非所有的异步操作都会成功，在平时“非异步”的编程方式中，我们往往会在出错的情况下抛出异常。如果一个异步操作引发了异常，我们只需要在调用Task对象的`complete`方法时，将第一个参数从`"success"`替换为`"failure"`，并将第二个参数设为错误对象即可。例如Node.js中内置的[File System模块的`readFile`方法](http://nodejs.org/docs/v0.6.5/api/fs.html#fs.readFile)便可能会失败：
+
+    fs.readFile('/etc/passwd', function (err, data) {
+        if (err) {
+            util.debug("Error occurred: " + err);
+        } else {
+            util.debug("File length: " + data.length);
+        }
+    });
+
+而将其封装为Task对象时只需：
+
+    fs.readFileAsync = function (path) {        return Task.create(function (t) {            fs.readFile(path, function (err, data) {                if (err) {                    t.complete("failure", err);                } else {                    t.complete("success", data);                }            });        });    }
+
+于是在一个Jscex异步方法中使用时：
+
+    // 某Jscex异步方法内
+    try {
+        var data = $await(fs.readFileAsync(path));
+        util.debug("File length: " + data.length);
+    } catch (ex) {
+        util.debug("Error occurred: " + ex);
+    }
+
+错误处理也是异步编程的主要麻烦之处之一。在异步环境中，我们往往需要在“每个”异步操作的回调函数里判断是否出现错误，一旦有所遗漏，在出现问题之后就很难排查了。例如：
+
+    fs.readFile(file0, function (err0, data0) {        if (err0) {            // 错误处理        } else {            fs.readFile(file1, function (err1, data1) {                if (err1) {                    // 错误处理                } else {                    fs.readFile(file2, function (err2, data2) {                        if (err2) {                            // 错误处理                        } else {                            // 使用data0，data1和data 2                        }                    });                }            });        }    });
+
+如今Jscex改变了这个窘境，只需要一个`try…catch`便可以捕获到任意多个异步操作的异常，保留了传统编程过程中的实践：
+
+    try {
+        var data0 = $await(fs.readFileAsync(file0));
+        var data1 = $await(fs.readFileAsync(file1));
+        var data2 = $await(fs.readFileAsync(file2));
+        // 使用data0，data1和data2
+    } catch (ex) {
+        // 错误处理
+    }
+
+甚至，在编写绝大多数Jscex异步方法的时候，我们并不需要显式地进行`try…catch`，我们可以让异常直接向方法外抛出，由统一的地方进行处理。
+
+### 取消操作
+
+从上文的“取消模型”中我们得知，所谓“取消”只不过是引发一个`isCancellation`为true的异常而已。因此，要表示当前异常操作被取消，也只需要向`complete`方法传入`"failure"`即可。不过问题的关键是，我们如果要封装一个现有的异步操作，往往还需要在取消时实现一些“清理”工作。这里，我们便以异步增强模块中的`sleep`方法来演示“取消”操作的实现方式。
+
+`sleep`方法封装了JavaScript运行环境中的`setTimeout`及`clearTimeout`函数，它们的基本使用方式为：
+
+* `var seed = setTimeout(fn, delay);`：表示在`delay`毫秒以后执行`fn`方法，并返回`seed`作为这次操作的标识，供`clearTimeout`使用。
+* `clearTimeout(seed);`：在`fn`被执行之前，可以使用`clearTimeout`取消这次操作。这样即便到了时间，也不会执行fn方法了。
+
+基于这两个功能，我们便可以实现`sleep方法`及其取消功能了。实现支持取消的异步操作封装往往分三步进行：
+
+    var Task = Jscex.Async.Task;    var CanceledError = Jscex.Async.CanceledError;    var sleep = function (delay, /* CancellationToken */ ct) {		return Task.create(function (t) {
+            // 第一步			if (ct && ct.isCancellationRequested) {                t.complete("failure", new CanceledError());            }            // 第二步            var seed;            var cancelHandler;                        if (ct) {                cancelHandler = function () {                    clearTimeout(seed);                    t.complete("failure", new CanceledError());                }            }            
+            // 第三步            var seed = setTimeout(function () {                if (ct) {                    ct.unregister(cancelHandler);                }                                t.complete("success");            }, delay);                        if (ct) {                ct.register(cancelHandler);            }		});    }
+
+**第一步：判断CancellationToken状态。**取消操作由CancellationToken类型对象来提供，但由于其往往是可选操作，因此`ct`参数可能为`undefined`。在sleep方法一开始，我们先判断`ct.isCancellationRequested`是否为true，“是”便直接将Task对象传递“取消”信息。这是因为在某些特殊情况下，该CancellationToken已经被标识为取消了，作为支持取消操作的异步封装，这可以算作是一个习惯或是规范。
+
+**第二步：准备取消方法。**在这里我们准备两个变量`seed`和`cancelHandler`，前者将在稍后发起`setTimeout`时赋值。我们只在用户传入`ct`时才创建`cancelHandler`方法，该方法执行时会使用`clearTimeout(seed)`来取消已经发起的`setTimeout`操作，并通过`complete`方法将该Task对象传递“取消”信息。
+
+**第三步：发起异步操作并注册取消方法。**接着便要发起我们封装的异步函数了。我们将`setTimeout`后得到的标识符保留在seed变量里，供之前的`cancelHandler`使用。在`delay`毫秒后会执行的方法中，我们将注册在`ct`上的取消方法去除，并通过`complete`方法将该Task对象标识为`"success"`。发起异步操作之后，再讲取消方法注册到`ct`上。当有人调用`ct`的`cancel`方法时，该取消方法便会被执行。
+
+将一个支持取消的异步操作封装为Task对象是最为麻烦的工作，幸好这样的操作并不多见，并且也有十分规则的模式可以遵循。
+
+### 辅助方法
+
+似乎将已有的异步操作封装为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份封装方法，而是使用[jscex-async-node.js](../../src/jscex-async-node.js)里的辅助方法，例如：
+
+    var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);    var jscexify = require("./jscex-async-node").getJscexify(Jscex);    path.existsAsync = jscexify.fromCallback(path.exists);    fs.readAsync = jscexify.fromStandard(fs.read, "bytesRead", "buffer");    fs.writeAsync = jscexify.fromStandard(fs.write, "written", "buffer");    fs.readFileAsync = jscexify.fromStandard(fs.readFile);    fs.writeFileAsync = jscexify.fromStandard(fs.writeFile);
+
+这便是JavaScript语言的威力。
 
 ## 相关类型详解
 
