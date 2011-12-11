@@ -41,9 +41,6 @@ var Jscex = require("../../src/jscex-jit");
 require("../../src/jscex-async").init(Jscex);
 var jscexify = require("../../src/jscex-async-node").getJscexify(Jscex);
 
-console.log(path.exists.length);
-console.log(fs.readFile.length);
-
 path.existsAsync = jscexify.fromCallback(path.exists);
 fs.readFileAsync = jscexify.fromStandard(fs.readFile);
 
