@@ -14,7 +14,7 @@
     }
 
     exports.getJscexify = function (root) {
-        if (!root.Async || !root.Async.Task) {
+        if (!root.modules || !root.modules["async"]) {
             throw new Error('Missing essential components, please initialize the "jscex-async" module first.');
         }
         
@@ -26,17 +26,17 @@
                 var _this = this;
                 var args = collectArgs(arguments, fn.length - 1);
 
-				return Task.create(function (t) {
-					args.push(function (error, result) {
-					    if (error) {
-					        t.complete("failure", error);
-					    } else {
-					        t.complete("success", result);
-					    }
-					});
-					
-					fn.apply(_this, args);
-				});
+                return Task.create(function (t) {
+                    args.push(function (error, result) {
+                        if (error) {
+                            t.complete("failure", error);
+                        } else {
+                            t.complete("success", result);
+                        }
+                    });
+                    
+                    fn.apply(_this, args);
+                });
             };
         };
         
@@ -46,13 +46,13 @@
                 var _this = this;
                 var args = collectArgs(arguments, fn.length - 1);
 
-				return Task.create(function (t) {
-					args.push(function (result) {
-					    t.complete("success", result);
-					});
-					
-					fn.apply(_this, args);
-				});
+                return Task.create(function (t) {
+                    args.push(function (result) {
+                        t.complete("success", result);
+                    });
+                    
+                    fn.apply(_this, args);
+                });
             };
         };
 
