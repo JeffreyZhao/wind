@@ -342,15 +342,60 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 似乎将已有的异步操作封装为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份封装方法，而是使用[jscex-async-node.js](../../src/jscex-async-node.js)里的辅助方法，例如：
 
-    var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);    var jscexify = require("./jscex-async-node").getJscexify(Jscex);    path.existsAsync = jscexify.fromCallback(path.exists);    fs.readAsync = jscexify.fromStandard(fs.read, "bytesRead", "buffer");    fs.writeAsync = jscexify.fromStandard(fs.write, "written", "buffer");    fs.readFileAsync = jscexify.fromStandard(fs.readFile);    fs.writeFileAsync = jscexify.fromStandard(fs.writeFile);
+    var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);    var jscexify = require("./jscex-async-node").getJscexify(Jscex);
+
+    var path = require("path"), fs = require("fs");    path.existsAsync = jscexify.fromCallback(path.exists);    fs.readAsync = jscexify.fromStandard(fs.read, "bytesRead", "buffer");    fs.writeAsync = jscexify.fromStandard(fs.write, "written", "buffer");    fs.readFileAsync = jscexify.fromStandard(fs.readFile);    fs.writeFileAsync = jscexify.fromStandard(fs.writeFile);
 
 这便是JavaScript语言的威力。
 
 ## 相关类型详解
 
+Jscex异步类库的类型并不多，但还是有必要详细讲解下Task和CancellationToken的各个成员。
+
 ### Jscex.Async.Task
 
+以下为`Jscex.Async.Task`类型的成员。
+
+#### 静态方法 create(delegate)
+
+该方法是Task类型上的静态方法，用于创建一个Task对象，多用于讲普通异步操作封装为Task时使用。其中delegate会在Task启动时（即`start`方法被调用时）执行，签名为`function (t)`，其中`t`即为此次`create`调用所返回的Task对象。
+
+使用示例：
+
+    Task.create(function (t) {
+        console.log(t.status); // running
+    });
+
+#### start()
+
+启动任务，该方法只可调用一次。
+
+使用示例：
+
+    var task = someAsyncMethod();
+    task.start();
+
+#### addEventListener(ev, listener)
+
+#### removeEventListener(ev, listener)
+
+#### complete(type, value)
+
+#### status
+    
 ### Jscex.Async.CancellationToken
+
+以下为`Jscex.Async.CancellationToken`类型的成员。
+
+#### register(handler)
+
+#### unregister(handler)
+
+#### cancel()
+
+#### isCancellationRequested
+
+#### throwIfCancellationRequested()
 
 ## 示例
 
