@@ -96,8 +96,11 @@
                 $await($("#dialog-cancelled").dialogAsync({ modal: true }));
             } else {
                 // simulate a delete ajax call
-                var response = $await($.ajaxAsync({ url: "modal-dialog.html" }));
-
+                var response = $await($.ajaxAsync({
+                    url: "modal-dialog.html",
+                    dataType: "text"
+                }));
+                
                 $("#emptyLength").text(response.data.length);
                 $await($("#dialog-emptied").dialogAsync({ modal: true }));
             }
@@ -108,6 +111,20 @@
 </head>
 <body>
     <input type="button" value="Empty" onclick="deleteAsync().start();" />
+
+    <ol>
+        <li>Click "Empty".</li>
+        <li>Choose "OK" or "Cancel".<ul>
+                <li>OK -
+                    <ol>
+                        <li>Send an AJAX request, when finished,</li>
+                        <li>Show a message dialog.</li>
+                    </ol>
+                </li>
+                <li>Cancel - Show a message dialog</li>
+            </ul>
+        </li>
+    </ol>
 
     <div style="display:none;">
 
