@@ -391,7 +391,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### removeEventListener(ev, listener)
 
-该方法用于去除一个事件处理器，提供与`addEventListener`相对应的功能。值得注意的是，在`complete`方法调用之后，Task对象会自动释放对事件处理器，不会继续保持对它们的引用。
+该方法用于去除一个事件处理器，提供与`addEventListener`功能相反的操作。值得注意的是，在`complete`方法调用之后，Task对象会自动释放对事件处理器，不会继续保持对它们的引用。
 
 ### complete(type, value)
 
@@ -429,15 +429,31 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
     
 ## Jscex.Async.CancellationToken
 
+实现任务取消功能时离不开`Jscex.Async.CancellationToken`对象，它有以下成员：
+
 ### register(handler)
+
+该方法用于注册一个取消时的回调方法`handler`，它会在`cancel`方法调用时执行。如果`cancel`已经调用过，则`handler`会立即执行。
 
 ### unregister(handler)
 
+该方法用于去除取消时的回调方法`handler`，它是`register`方法的相反操作。
+
 ### cancel()
+
+该方法用于发出取消请求，调用后会将`isCancellationRequested`字段设为true，并执行所有已注册的取消回调方法。取消后，所有的回调方法会被释放，CancellationToken对象不会保留对取消回调方法的引用。
 
 ### isCancellationRequested
 
+该字段表示是否已经提出取消请求。
+
 ### throwIfCancellationRequested()
+
+该方法用于在取消请求已经提出的情况下抛出一个`isCancellation`为true的错误对象。它是一个方便开发者使用的辅助方法，简单等价为：
+
+    if (this.isCancellationRequested) {
+        throw new Jscex.Async.CancelledError();
+    }
 
 ## 示例
 
