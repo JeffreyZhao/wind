@@ -354,7 +354,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### 静态 create(delegate)
 
-该方法是Task类型上的静态方法，用于创建一个Task对象。该方法多用于讲普通异步操作封装为Task时使用。
+该方法是Task类型上的静态方法，用于创建一个Task对象，多在将普通异步操作封装为Task的时候使用。
 
 参数`delegate`方法会在Task启动时（即`start`方法被调用时）执行，签名为`function (t)`，其中`t`即为此次`create`调用所返回的Task对象。
 
@@ -385,17 +385,47 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 参数`listener`为事件处理方法，签名为`function (t)`，其中`t`为事件所在Task对象。
 
+使用示例：
+
+    var task = someAsyncMethod();    task.addEventListener("success", function (t) {        console.log("Task " + t.id + " is succeeded with result: " + t.result);    });    task.addEventListener("failure", function (t) {        console.log("Task " + t.id + " is failed with error: " + t.error);    });    task.addEventListener("complete", function (t) {        console.log("Task " + t.id + " is completed with status: " + t.status);    });
+
 ### removeEventListener(ev, listener)
 
 该方法用于去除一个事件处理器，提供与`addEventListener`相对应的功能。值得注意的是，在`complete`方法调用之后，Task对象会自动释放对事件处理器，不会继续保持对它们的引用。
 
 ### complete(type, value)
 
+该方法用于通知该Task对象已“完成”（无论结果如何），多在将普通异步操作封装为Task的时候使用。根据不同情况，参数的值应分别为：
+
+* **成功**：参数`type`为`"success"`，`value`为任务的执行结果。 
+* **出错**：参数`type`为`"failure"`，`value`为错误对象，其`isCancellation`字段为false。
+* **取消**：参数`type`为`"failure"`，`value`为错误对象，其`isCancellation`字段为true。
+
+使用示例：
+
+    fs.readFileAsync = function (path) {        return Task.create(function (t) {            fs.readFile(path, function (err, data) {                if (err) {                    t.complete("failure", err); // 出错                } else {                    t.complete("success", data); // 成功                }            });        });    }
+
+### id
+
+该字段为Task对象的标识符，为全局唯一的自增整型。
+
 ### status
+
+该字段标识Task对象的状态，可分为以下几种情况：
+
+* **ready**：创建完成，等待启动。
+* **running**：正在执行。
+* **succeeded**：执行成功。
+* **faulted**：执行出错。
+* **canceled**：执行已取消。
 
 ### result
 
+该字段保存了Task对象执行**成功**后得到的结果，在异步方法内将作为`$await`指令的返回值。
+
 ### error
+
+该字段保存了Task对象执行失败（**出错**或**取消**）后的错误对象，在异步方法内将作为异常抛出。
     
 ## Jscex.Async.CancellationToken
 

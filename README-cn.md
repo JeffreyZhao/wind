@@ -68,7 +68,7 @@ Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex�
 
 ### 执行
 
-请使用Chrome，Firefox，Safari或IE8及以上版本浏览器打开quick-start.html页面（Jscex支持IE 6及以上浏览器，但当前示例并不支持，详细信息请参考“[Jscex JIT编译器使用指南](doc/jit-cn.md)”），或使用Node.js执行quick-start.js文件：
+请使用Chrome，Firefox，Safari或IE8及以上版本浏览器打开quick-start.html页面（Jscex支持IE 6及以上浏览器，但当前示例并不支持，详细信息请参考“[Jscex JIT编译器](doc/jit-cn.md)”），或使用Node.js执行quick-start.js文件：
 
     node quick-start.js
 
@@ -84,7 +84,7 @@ JavaScript的异步及非阻塞特性，让程序员无法使用传统方式表�
 
 使用Jscex，让程序员可以在异步的、非阻塞的JavaScript执行环境里使用传统的“阻塞”表达方式编写代码。并让异步任务的协作，取消以及错误处理等常见需求变得前所未有的简单。
 
-更多内容请参考[Jscex异步模块](doc/async/README-cn.md)。
+更多内容请参考“[Jscex异步模块](doc/async/README-cn.md)”。
 
 ## 模块
 
