@@ -24,22 +24,23 @@
     <script src="jquery-bindings.js" type="text/javascript"></script>
 
     <script type="text/javascript">
-        var deleteAsync = eval(Jscex.compile("async", function () {
-
-            var result = $await($("#dialog-confirm").dialogAsync({
+        var emptyAsync = eval(Jscex.compile("async", function () {
+        
+            var ok = false;            
+            $await($("#dialog-confirm").dialogAsync({
                 modal: true,
-                buttons: [
-                    { text: "OK", value: "ok", click: function () { $(this).dialog("close"); } },
-                    { text: "Cancel", value: "cancel", click: function () { $(this).dialog("close"); } }
-                ]
+                buttons: {
+                    "OK": function () {
+                        ok = true;
+                        $(this).dialog("close");
+                    },
+                    "Cancel": function () {
+                        $(this).dialog("close");
+                    }
+                }
             }));
 
-            if (result != "ok") {
-
-                $await($("#dialog-cancelled").dialogAsync({ modal: true }));
-
-            } else {
-
+            if (ok) {
                 // simulate a delete ajax call
                 var response = $await($.ajaxAsync({
                     url: "modal-dialog.html",
@@ -48,7 +49,8 @@
                 
                 $("#emptyLength").text(response.data.length);
                 $await($("#dialog-emptied").dialogAsync({ modal: true }));
-
+            } else {
+                $await($("#dialog-cancelled").dialogAsync({ modal: true }));
             }
 
             console.log("done");
@@ -56,7 +58,7 @@
     </script>
 </head>
 <body>
-    <input type="button" value="Empty" onclick="deleteAsync().start();" />
+    <input type="button" value="Empty" onclick="emptyAsync().start();" />
 
     <ol>
         <li>Click "Empty", then popup a confirmation dialog.</li>

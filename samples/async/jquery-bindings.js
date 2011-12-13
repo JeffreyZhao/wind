@@ -1,4 +1,4 @@
-(function () {
+(function ($) {
 
     var Task = Jscex.Async.Task;
 
@@ -28,28 +28,13 @@
     if ($.fn.dialog) {
         $.fn.dialogAsync = function (options) {
             var _this = this;
-            var result = null;
 
             return Task.create(function (t) {
 
                 var close = options.close;
                 options.close = function () {
-                    t.complete("success", result)
                     if (close) close.call(this);
-                }
-
-                var buttons = options.buttons;
-                if (buttons) {
-                    for (var i = 0; i < buttons.length; i++) {
-                        buttons[i].click = (function (value, click) {
-
-                            return function() {
-                                result = value;
-                                if (click) click.call(this);
-                            };
-
-                        })(buttons[i].value, buttons[i].click);
-                    }
+                    t.complete("success");
                 }
 
                 _this.dialog(options);
@@ -57,4 +42,4 @@
         }
     }
 
-}($))(jQuery);
+})(jQuery);
