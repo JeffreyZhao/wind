@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Modal Dialog - Jscex Sample</title>
+
+    <script language="javascript" type="text/javascript" src="../../src/uglifyjs-parser.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex-jit.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex-builderbase.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex-async.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
+
+    <!--[if IE]>
+    <script language="javascript" type="text/javascript" src="../../lib/json2.js"></script>
+	<script language="javascript">
+		Jscex.config.codeGenerator = function (code) { return "false || " + code; }
+	</script>
+    <![endif]-->
+
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.16/jquery-ui.min.js"></script>
+
+    <link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.16/themes/black-tie/jquery-ui.css" type="text/css" rel="stylesheet" />
+
+    <script type="text/javascript">
+        var Task = Jscex.Async.Task;
+
+        $.fn.dialogAsync = function (options) {
+            var _this = this;
+            var result = null;
+
+            return Task.create(function (t) {
+
+                var close = options.close;
+                options.close = function () {
+                    t.complete("success", result)
+                    if (close) close.call(this);
+                }
+
+                var buttons = options.buttons;
+                if (buttons) {
+                    for (var i = 0; i < buttons.length; i++) {
+                        buttons[i].click = (function (value, click) {
+
+                            return function() {
+                                result = value;
+                                if (click) click.call(this);
+                            };
+
+                        })(buttons[i].value, buttons[i].click);
+                    }
+                }
+
+                _this.dialog(options);
+            });
+        }
+
+        $.ajaxAsync = function (options) {
+            return Task.create(function (t) {
+
+                options.success = function (data, textStatus, jqXHR) {
+                    t.complete("success", {
+                        data: data,
+                        textStatus: textStatus,
+                        jqXHR: jqXHR
+                    });
+                }
+
+                options.error = function (jqXHR, textStatus, errorThrow) {
+                    t.complete("failure", {
+                        jqXHR: jqXHR,
+                        textStatus: textStatus,
+                        errorThrow: errorThrow
+                    });
+                };
+
+                $.ajax(options);
+            });
+        }
+
+        var deleteAsync = eval(Jscex.compile("async", function () {
+
+            var result = $await($("#dialog-confirm").dialogAsync({
+                modal: true,
+                buttons: [ {
+                    text: "OK",
+                    value: "ok",
+                    click: function () { $(this).dialog("close"); }
+                }, {
+                    text: "Cancel",
+                    value: "cancel",
+                    click: function () { $(this).dialog("close"); }
+                }]
+            }));
+
+            if (result != "ok") {
+                $await($("#dialog-cancelled").dialogAsync({ modal: true }));
+            } else {
+                // simulate a delete ajax call
+                var response = $await($.ajaxAsync({ url: "modal-dialog.html" }));
+
+                $("#emptyLength").text(response.data.length);
+                $await($("#dialog-emptied").dialogAsync({ modal: true }));
+            }
+
+            console.log("done");
+        }))
+    </script>
+</head>
+<body>
+    <input type="button" value="Empty" onclick="deleteAsync().start();" />
+
+    <div style="display:none;">
+
+        <div id="dialog-confirm" title="Empty the recycle bin?">
+            <p>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+        </div>
+
+        <div id="dialog-cancelled" title="Canceled.">
+            <p>You can still empty the recycle bin anytime you want.</p>
+        </div>
+
+        <div id="dialog-emptied" title="Emptied">
+            <p>You've emptied your recycle bin (<span id="emptyLength"></span> bytes received).</p>
+        </div>
+
+    </div>
+</body>
+</html>
+
