@@ -348,17 +348,15 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 这便是JavaScript语言的威力。
 
-## 相关类型详解
+## Jscex.Async.Task 类型详解
 
-Jscex异步类库的类型并不多，但还是有必要详细讲解下Task和CancellationToken的各个成员。
+`Jscex.Async.Task`是Jscex异步模块内的标准异步模型。异步方法产生的Task对象，除了可以交给`$await`指令使用之外，也可以直接使用这个对象。这种做法在某些场合十分重要，例如要在系统中逐步引入Jscex的情况。
 
-### Jscex.Async.Task
+### 静态 create(delegate)
 
-以下为`Jscex.Async.Task`类型的成员。
+该方法是Task类型上的静态方法，用于创建一个Task对象。该方法多用于讲普通异步操作封装为Task时使用。
 
-#### 静态方法 create(delegate)
-
-该方法是Task类型上的静态方法，用于创建一个Task对象，多用于讲普通异步操作封装为Task时使用。其中delegate会在Task启动时（即`start`方法被调用时）执行，签名为`function (t)`，其中`t`即为此次`create`调用所返回的Task对象。
+参数`delegate`方法会在Task启动时（即`start`方法被调用时）执行，签名为`function (t)`，其中`t`即为此次`create`调用所返回的Task对象。
 
 使用示例：
 
@@ -366,36 +364,50 @@ Jscex异步类库的类型并不多，但还是有必要详细讲解下Task和Ca
         console.log(t.status); // running
     });
 
-#### start()
+### start()
 
-启动任务，该方法只可调用一次。
+该方法用于启动任务，只可调用一次。
 
 使用示例：
 
     var task = someAsyncMethod();
     task.start();
 
-#### addEventListener(ev, listener)
+### addEventListener(ev, listener)
 
-#### removeEventListener(ev, listener)
+该方法用于添加一个事件处理器，只能在Task对象状态为`ready`或`running`的时候添加。
 
-#### complete(type, value)
+参数`ev`为是以字符串表示的事件名，可以为：
 
-#### status
+* **success**：任务执行成功时触发，此时该任务的`status`字段为`succeeded`，且`result`字段为执行结果。
+* **failure**：任务执行失败时触发，此时该任务的`status`字段为`faulted`或`canceled`（视错误对象的`isCancallation`字段而定），且`error`字段为错误对象。
+* **complete**：无论任务成功还是失败，都会触发该事件。
+
+参数`listener`为事件处理方法，签名为`function (t)`，其中`t`为事件所在Task对象。
+
+### removeEventListener(ev, listener)
+
+该方法用于去除一个事件处理器，提供与`addEventListener`相对应的功能。值得注意的是，在`complete`方法调用之后，Task对象会自动释放对事件处理器，不会继续保持对它们的引用。
+
+### complete(type, value)
+
+### status
+
+### result
+
+### error
     
-### Jscex.Async.CancellationToken
+## Jscex.Async.CancellationToken
 
-以下为`Jscex.Async.CancellationToken`类型的成员。
+### register(handler)
 
-#### register(handler)
+### unregister(handler)
 
-#### unregister(handler)
+### cancel()
 
-#### cancel()
+### isCancellationRequested
 
-#### isCancellationRequested
-
-#### throwIfCancellationRequested()
+### throwIfCancellationRequested()
 
 ## 示例
 
