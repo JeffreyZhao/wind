@@ -1,12 +1,12 @@
 # 模态对话框 - Jscex异步示例
 
-## 示例描述
+## 描述
 
 如今前端应用的交互特性越来越多，而模态对话框是其中最常见的使用案例。由于JavaScript和HTML的限制，各种用户交互的参与都必须以回调函数（或是事件，而事件其实也可以认为是回调函数的一种）。但实际上，这种做法在很多情况下不能说是最直接且最易用的表达方式。
 
-本文将通过一个模态对话框与AJAX操作交互相结合的示例，演示如何使用Jscex异步模块来轻松直接地表达结合紧密的一系列异步逻辑。
+本文将通过一个模态对话框与AJAX操作交互相结合的示例，演示如何使用[Jscex异步模块](../README-cn.md)来轻松直接地表达结合紧密的一系列异步逻辑。
 
-## 需求定义
+## 需求
 
 “删除”是前端应用中常见的操作。由于包含一定危险性，在进行删除之前，我们经常会向用户进行确认，然后再向服务器端发送一个AJAX请求删除数据。这个示例的需求便由此而来，如下：
 
@@ -19,42 +19,27 @@
 
 为了保证用户体验，无论是“确定/取消”对话框，还是提示给用户看的信息，都不允许使用浏览器内置的`alert`和`confim`方法。也正是这点，增加了实现这一功能的复杂度。
 
-## jQuery的AJAX操作及对话框
+## 实现
 
-[jQuery](http://jquery.com/)提供了丰富的AJAX方法及界面组件。为了方便开发，我们将直接使用jQuery提供的AJAX功能以及jQuery UI提供的模态对话框。
+方便期间，我们使用jQuery来实现模态对话框及AJAX操作，相关绑定请参考“[jQuery绑定](jquery-bindings-cn.md)”。
 
-### AJAX操作
+由于逻辑从按钮点击开始，我们便在按钮的`onclick`事件里调用一个异步方法：
 
-[jQuery的AJAX操作](http://api.jquery.com/jQuery.ajax/)提供了丰富的功能选项，在此我们只关注其最简单的使用形式：
+    <input type="button" value="Empty" onclick="emptyAsync().start();" />
 
-    $.ajax({        url: "./getSomething",        dataType: "text",        success: function (data, textStatus, jqXHR) {            ...        },        error: function (jqXHR, textStatus, errorThrow) {            ...        }    });
+`emptyAsync`的实现是：
 
-以上代码会向地址`./getSomething`发起一个AJAX请求（`url: "./getSomething"`），用于获取文本内容（`dataType: "text"`），如果成功则执行`success`回调函数，其中`data`参数便是获得的文本内容，在出错时则执行`error`回调函数。
+    var emptyAsync = eval(Jscex.compile("async", function () {        // 弹出“确定/取消”对话框        var ok = false;                    $await($("#dialog-confirm").dialogAsync({            modal: true,            buttons: {                "OK": function () {                    ok = true;                    $(this).dialog("close");                },                "Cancel": function () {                    $(this).dialog("close");                }            }        }));        if (ok) {            // 用户选择“确定”，则发出AJAX请求            var response = $await($.ajaxAsync({                url: "modal-dialog.html",                dataType: "text"            }));            
+            // 给用户以信息提示            $("#emptyLength").text(response.data.length);            $await($("#dialog-emptied").dialogAsync({ modal: true }        } else {
+            // 用户选择“取消”，则给用户以提示信息            $await($("#dialog-canceled").dialogAsync({ modal: true         }        console.log("done");    }))
 
-### 对话框组件
+首先，我们使用`dialogAsync`函数弹出一个对话框，这是一个异步方法，将在对话框关闭时完成。在用户点击“确认”按钮时，我们将`ok`变量设为true。对话框关闭之后，如果`ok`变量的值为true，发起一个AJAX请求，将返回结果显示在页面上，再显示下一个模态对话框。如果`ok`为false，这意味着用户没有点击“确认”按钮，则用另一个模态对话框提示用户。
 
-同样，[jQuery UI](http://jqueryui.com/)也提供了现成的[模态对话框组件](http://jqueryui.com/demos/dialog/)，我们同样只关心其最简单的使用方式：
+使用Jscex之后，程序员只需使用最传统的方式编写逻辑，而不会由于异步函数所需要的各式回调将逻辑打散，使程序既易写，又易读。
 
-    <div id="dialog-demo" title="Dialog title">        <p>Dialog messages.</p>    </div>        <script>        $("#dialog-demo").dialog({
-            modal: true,
-            close: function () { … }
-        });    </script>
+## 相关链接
 
-`$(`#some-id`).dialog(…)`方法用于将某一个页面上的元素显示为对话框。我们设置`modal`参数为true，则它会成为一个模态窗口。`close`是一个回调函数，它会在窗体关闭的时候执行。
-
-如果我们要为对话框添加按钮，则可以这么实现：
-
-    <script>        $("#dialog-demo").dialog({
-            modal: true,
-            close: function () { … },
-            buttons: {
-                "OK": function () {
-                    $(this).dialog("close");
-                },
-                "Cancel": function () {
-                    $(this).dialog("close");
-                }
-            }
-        });    </script>
-
-在上面的代码中我们为对话框添加了两个按钮，分别是OK和Cancel，以及他们点击时调用的方法。我们可以在方法里加入任意的逻辑，而这里的代码则会关闭当前对话框。
+* [在线演示](http://files.zhaojie.me/jscex/samples/async/modal-dialog.html)
+* [完整代码](../../../samples/async/modal-dialog.html)
+* [jQuery绑定](jquery-bindings-cn.md)
+* [Jscex异步模块](../README-cn.md)

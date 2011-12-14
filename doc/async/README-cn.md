@@ -139,7 +139,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
 ### 任务模型
 
-`$await`指令的参数是`Jscex.Async.Task`类型的对象，这个对象这个对象可以是一个异步方法的返回结果，或是由其他任何方式得到。在Jscex异步模块眼中，一个异步任务便是指“**能在未来某个时刻返回的操作**”，它可以是一个`setTimeout`的封装（如之前演示过的`sleep`方法），甚至是一个用户事件：
+`$await`指令的参数是`Jscex.Async.Task`类型的对象，这个对象这个对象可以是一个异步方法的返回结果，或是由其他任何方式得到。在Jscex异步模块眼中，一个异步任务便是指“**能在未来某个时刻返回的操作**”，它可以是一个`setTimeout`的绑定（如之前演示过的`sleep`方法），甚至是一个用户事件：
 
     var btnNext = document.getElementById("btnNext");
     var ev = $await(Jscex.Async.onEvent(btnNext, "click"));
@@ -164,7 +164,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
         };
     });
 
-`whenAll`辅助方法会将输入的多个任务封装为一个整体，并同样以Task对象的形式返回。新的Task对象只有在所有输入任务都结束的情况下才会完成，并使用数组返回其结果。
+`whenAll`辅助方法会将输入的多个任务包装为一个整体，并同样以Task对象的形式返回。新的Task对象只有在所有输入任务都结束的情况下才会完成，并使用数组返回其结果。
 
 Jscex的异步模型经过C#，F#及Scala等多种语言平台的检验，可以说拥有非常灵活而丰富的使用模式。
 
@@ -233,11 +233,11 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 值得注意的是，由于JavaScript的单线程特性，一般只需在异步方法刚进入的时候，或是某个`$await`指令之后才会使用`isCancellationRequested`或是`throwIfCancellationRequested`。我们没有必要在其他时刻，例如两个`$await`指令之间反复访问这些成员，因为它们的行为不会发生任何改变。
 
-## 将任意异步操作封装为Task对象
+## 将任意异步操作绑定为Task对象
 
-世界上有无数种异步模型，从最简单的回调函数传递结果，用户行为引发的事件，到相对复杂的Promise模型。而在Jscex的异步模块种，能够被`$await`指令识别的，便是用`Jscex.Async.Task`类型来表达的异步任务。任何的异步方法，在执行后都能得到一个Task对象，但如果是其他平台或是环境所提供异步模型，便需要经过封装才能被`$await`使用。
+世界上有无数种异步模型，从最简单的回调函数传递结果，用户行为引发的事件，到相对复杂的Promise模型。而在Jscex的异步模块种，能够被`$await`指令识别的，便是用`Jscex.Async.Task`类型来表达的异步任务。任何的异步方法，在执行后都能得到一个Task对象，但如果是其他平台或是环境所提供异步模型，便需要经过绑定才能被`$await`使用。
 
-### 封装简单操作
+### 绑定简单操作
 
 将任何一个异步操作Task对象，会需要用到`Jscex.Async.Task`类型的`create`静态方法。方便起见，通常我们可以使用`Task`来指向这个全命名：
 
@@ -249,7 +249,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
         util.debug(exists ? "it's there" : "no passwd!");
     });
 
-但如果我们要在Jscex异步方法里使用这个函数，则需要将其进行简单封装：
+但如果我们要在Jscex异步方法里使用这个函数，则需要将其进行简单绑定：
 
     path.existsAsync = function (p) {
         return Task.create(function (t) {
@@ -265,10 +265,10 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
     var exists = $await(path.existsAsync("/etc/passwd"));
     util.debug(exists ? "it's there" : "no passwd!");
 
-封装一个异步方法的基本方式可以分为以下几点：
+绑定一个异步方法的基本方式可以分为以下几点：
 
 1. 边写一个新方法，其中返回`Task.create`的执行结果（一个Task对象）。
-2. `Task.create`方法的参数为一个回调函数（下文称为委托方法），它会在这个Task对象的`start`方法调用时执行，发起被封装的异步操作。
+2. `Task.create`方法的参数为一个回调函数（下文称为委托方法），它会在这个Task对象的`start`方法调用时执行，发起被绑定的异步操作。
 3. 委托方法的参数是当前的Task对象（也是之前`Task.create`创建的对象），在异步操作完成后，使用其`complete`方法通知Task对象“已完成”。
 4. `complete`方法的第一个参数为字符串`"success"`，表示该异步操作执行成功，并可以通过第二个参数传回该异步操作的结果（亦可空缺）。
 
@@ -284,7 +284,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
         }
     });
 
-而将其封装为Task对象时只需：
+而将其绑定为Task对象时只需：
 
     fs.readFileAsync = function (path) {        return Task.create(function (t) {            fs.readFile(path, function (err, data) {                if (err) {                    t.complete("failure", err);                } else {                    t.complete("success", data);                }            });        });    }
 
@@ -317,30 +317,30 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### 取消操作
 
-从上文的“取消模型”中我们得知，所谓“取消”只不过是引发一个`isCancellation`为true的异常而已。因此，要表示当前异常操作被取消，也只需要向`complete`方法传入`"failure"`即可。不过问题的关键是，我们如果要封装一个现有的异步操作，往往还需要在取消时实现一些“清理”工作。这里，我们便以异步增强模块中的`sleep`方法来演示“取消”操作的实现方式。
+从上文的“取消模型”中我们得知，所谓“取消”只不过是引发一个`isCancellation`为true的异常而已。因此，要表示当前异常操作被取消，也只需要向`complete`方法传入`"failure"`即可。不过问题的关键是，我们如果要绑定一个现有的异步操作，往往还需要在取消时实现一些“清理”工作。这里，我们便以异步增强模块中的`sleep`方法来演示“取消”操作的实现方式。
 
-`sleep`方法封装了JavaScript运行环境中的`setTimeout`及`clearTimeout`函数，它们的基本使用方式为：
+`sleep`方法绑定了JavaScript运行环境中的`setTimeout`及`clearTimeout`函数，它们的基本使用方式为：
 
 * `var seed = setTimeout(fn, delay);`：表示在`delay`毫秒以后执行`fn`方法，并返回`seed`作为这次操作的标识，供`clearTimeout`使用。
 * `clearTimeout(seed);`：在`fn`被执行之前，可以使用`clearTimeout`取消这次操作。这样即便到了时间，也不会执行fn方法了。
 
-基于这两个功能，我们便可以实现`sleep方法`及其取消功能了。实现支持取消的异步操作封装往往分三步进行：
+基于这两个功能，我们便可以实现`sleep方法`及其取消功能了。实现支持取消的异步操作绑定往往分三步进行：
 
     var Task = Jscex.Async.Task;    var CanceledError = Jscex.Async.CanceledError;    var sleep = function (delay, /* CancellationToken */ ct) {		return Task.create(function (t) {
             // 第一步			if (ct && ct.isCancellationRequested) {                t.complete("failure", new CanceledError());            }            // 第二步            var seed;            var cancelHandler;                        if (ct) {                cancelHandler = function () {                    clearTimeout(seed);                    t.complete("failure", new CanceledError());                }            }            
             // 第三步            var seed = setTimeout(function () {                if (ct) {                    ct.unregister(cancelHandler);                }                                t.complete("success");            }, delay);                        if (ct) {                ct.register(cancelHandler);            }		});    }
 
-**第一步：判断CancellationToken状态。**取消操作由CancellationToken类型对象来提供，但由于其往往是可选操作，因此`ct`参数可能为`undefined`。在sleep方法一开始，我们先判断`ct.isCancellationRequested`是否为true，“是”便直接将Task对象传递“取消”信息。这是因为在某些特殊情况下，该CancellationToken已经被标识为取消了，作为支持取消操作的异步封装，这可以算作是一个习惯或是规范。
+**第一步：判断CancellationToken状态。**取消操作由CancellationToken类型对象来提供，但由于其往往是可选操作，因此`ct`参数可能为`undefined`。在sleep方法一开始，我们先判断`ct.isCancellationRequested`是否为true，“是”便直接将Task对象传递“取消”信息。这是因为在某些特殊情况下，该CancellationToken已经被标识为取消了，作为支持取消操作的异步绑定，这可以算作是一个习惯或是规范。
 
 **第二步：准备取消方法。**在这里我们准备两个变量`seed`和`cancelHandler`，前者将在稍后发起`setTimeout`时赋值。我们只在用户传入`ct`时才创建`cancelHandler`方法，该方法执行时会使用`clearTimeout(seed)`来取消已经发起的`setTimeout`操作，并通过`complete`方法将该Task对象传递“取消”信息。
 
-**第三步：发起异步操作并注册取消方法。**接着便要发起我们封装的异步函数了。我们将`setTimeout`后得到的标识符保留在seed变量里，供之前的`cancelHandler`使用。在`delay`毫秒后会执行的方法中，我们将注册在`ct`上的取消方法去除，并通过`complete`方法将该Task对象标识为`"success"`。发起异步操作之后，再讲取消方法注册到`ct`上。当有人调用`ct`的`cancel`方法时，该取消方法便会被执行。
+**第三步：发起异步操作并注册取消方法。**接着便要发起我们绑定的异步函数了。我们将`setTimeout`后得到的标识符保留在seed变量里，供之前的`cancelHandler`使用。在`delay`毫秒后会执行的方法中，我们将注册在`ct`上的取消方法去除，并通过`complete`方法将该Task对象标识为`"success"`。发起异步操作之后，再讲取消方法注册到`ct`上。当有人调用`ct`的`cancel`方法时，该取消方法便会被执行。
 
-将一个支持取消的异步操作封装为Task对象是最为麻烦的工作，幸好这样的操作并不多见，并且也有十分规则的模式可以遵循。
+将一个支持取消的异步操作绑定为Task对象是最为麻烦的工作，幸好这样的操作并不多见，并且也有十分规则的模式可以遵循。
 
 ### 辅助方法
 
-似乎将已有的异步操作封装为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份封装方法，而是使用[jscex-async-node.js](../../src/jscex-async-node.js)里的辅助方法，例如：
+似乎将已有的异步操作绑定为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份绑定方法，而是使用[jscex-async-node.js](../../src/jscex-async-node.js)里的辅助方法，例如：
 
     var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);    var jscexify = require("./jscex-async-node").getJscexify(Jscex);
 
@@ -354,7 +354,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### 静态 create(delegate)
 
-该方法是Task类型上的静态方法，用于创建一个Task对象，多在将普通异步操作封装为Task的时候使用。
+该方法是Task类型上的静态方法，用于创建一个Task对象，多在将普通异步操作绑定为Task的时候使用。
 
 参数`delegate`方法会在Task启动时（即`start`方法被调用时）执行，签名为`function (t)`，其中`t`即为此次`create`调用所返回的Task对象。
 
@@ -395,7 +395,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### complete(type, value)
 
-该方法用于通知该Task对象已“完成”（无论结果如何），多在将普通异步操作封装为Task的时候使用。根据不同情况，参数的值应分别为：
+该方法用于通知该Task对象已“完成”（无论结果如何），多在将普通异步操作绑定为Task的时候使用。根据不同情况，参数的值应分别为：
 
 * **成功**：参数`type`为`"success"`，`value`为任务的执行结果。 
 * **出错**：参数`type`为`"failure"`，`value`为错误对象，其`isCancellation`字段为false。
