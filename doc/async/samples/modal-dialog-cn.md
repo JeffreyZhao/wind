@@ -27,7 +27,7 @@
 
     <input type="button" value="Empty" onclick="emptyAsync().start();" />
 
-`emptyAsync`的实现是：
+其中`emptyAsync`的实现是：
 
     var emptyAsync = eval(Jscex.compile("async", function () {        // 弹出“确定/取消”对话框        var ok = false;                    $await($("#dialog-confirm").dialogAsync({            modal: true,            buttons: {                "OK": function () {                    ok = true;                    $(this).dialog("close");                },                "Cancel": function () {                    $(this).dialog("close");                }            }        }));        if (ok) {            // 用户选择“确定”，则发出AJAX请求            var response = $await($.ajaxAsync({                url: "modal-dialog.html",                dataType: "text"            }));            
             // 给用户以信息提示            $("#emptyLength").text(response.data.length);            $await($("#dialog-emptied").dialogAsync({ modal: true }));        } else {
