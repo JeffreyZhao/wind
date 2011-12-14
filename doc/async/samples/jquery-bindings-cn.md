@@ -49,5 +49,5 @@ jQuery UI提供了现成的[模态对话框组件](http://jqueryui.com/demos/dia
 
 ## 相关链接
 
-* [完整代码](../../../samples/async/jquery-bindings.html)
+* [完整代码](../../../samples/async/jquery-bindings.js)
 * [Jscex异步模块](../README-cn.md)
