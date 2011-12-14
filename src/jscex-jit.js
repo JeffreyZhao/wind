@@ -7,6 +7,10 @@
         Jscex = { };
     }
     
+    var codeGenerator = (typeof eval("(function () {})") == "function") ?
+        function (code) { return code; } :
+        function (code) { return "false || " + code; };
+    
     var compiler = isCommonJS ? module.exports : Jscex;
 
     // seed defined in global
@@ -1407,8 +1411,7 @@
 
         compiler.log(funcCode + "\n\n>>>\n\n" + newCode);
         
-        var cg = compiler.config.codeGenerator;
-        return cg ? cg(newCode) : newCode;
+        return codeGenerator(newCode);
     };
 
     compiler.config = { };
