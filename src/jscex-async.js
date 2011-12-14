@@ -74,7 +74,7 @@
                     try {
                         handlers[i]();
                     } catch (ex) {
-                        root.log("WARNING: Cancellation handler threw an error: " + ex);
+                        root.log("[WARNING] Cancellation handler threw an error: " + ex);
                     }
                 }
             },
@@ -130,6 +130,11 @@
                 }
                 
                 this._notify("complete");
+                
+                if (this.error && !this._listeners["failure"] && !this._listeners["complete"]) {
+                    root.log("[WARNING] An unhandled error occurred: " + this.error);
+                }
+                
                 delete this._listeners;
 			},
 
@@ -143,7 +148,7 @@
                     try {
                         listeners[i](this);
                     } catch (ex) {
-                        root.log("WARNING: the task's " + ev + " listener threw an error: " + ex);
+                        root.log("[WARNING] The task's " + ev + " listener threw an error: " + ex);
                     }
                 }
             },
