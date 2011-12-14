@@ -50,7 +50,7 @@
                 $("#emptyLength").text(response.data.length);
                 $await($("#dialog-emptied").dialogAsync({ modal: true }));
             } else {
-                $await($("#dialog-cancelled").dialogAsync({ modal: true }));
+                $await($("#dialog-canceled").dialogAsync({ modal: true }));
             }
 
             console.log("done");
@@ -81,7 +81,7 @@
             <p>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
         </div>
 
-        <div id="dialog-cancelled" title="Canceled">
+        <div id="dialog-canceled" title="Canceled">
             <p>You can still empty the recycle bin anytime you want.</p>
         </div>
 
