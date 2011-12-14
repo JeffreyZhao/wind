@@ -30,8 +30,8 @@
 `emptyAsync`的实现是：
 
     var emptyAsync = eval(Jscex.compile("async", function () {        // 弹出“确定/取消”对话框        var ok = false;                    $await($("#dialog-confirm").dialogAsync({            modal: true,            buttons: {                "OK": function () {                    ok = true;                    $(this).dialog("close");                },                "Cancel": function () {                    $(this).dialog("close");                }            }        }));        if (ok) {            // 用户选择“确定”，则发出AJAX请求            var response = $await($.ajaxAsync({                url: "modal-dialog.html",                dataType: "text"            }));            
-            // 给用户以信息提示            $("#emptyLength").text(response.data.length);            $await($("#dialog-emptied").dialogAsync({ modal: true }        } else {
-            // 用户选择“取消”，则给用户以提示信息            $await($("#dialog-canceled").dialogAsync({ modal: true         }        console.log("done");    }))
+            // 给用户以信息提示            $("#emptyLength").text(response.data.length);            $await($("#dialog-emptied").dialogAsync({ modal: true }));        } else {
+            // 用户选择“取消”，则给用户以提示信息            $await($("#dialog-canceled").dialogAsync({ modal: true }));        }        console.log("done");    }))
 
 首先，我们使用`dialogAsync`函数弹出一个对话框，这是一个异步方法，将在对话框关闭时完成。在用户点击“确认”按钮时，我们将`ok`变量设为true。对话框关闭之后，如果`ok`变量的值为true，发起一个AJAX请求，将返回结果显示在页面上，再显示下一个模态对话框。如果`ok`为false，这意味着用户没有点击“确认”按钮，则用另一个模态对话框提示用户。
 
