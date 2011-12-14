@@ -31,9 +31,7 @@
 
             return Task.create(function (t) {
 
-                var close = options.close;
                 options.close = function () {
-                    if (close) close.call(this);
                     t.complete("success");
                 }
 

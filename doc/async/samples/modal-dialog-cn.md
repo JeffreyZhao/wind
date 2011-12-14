@@ -19,5 +19,42 @@
 
 为了保证用户体验，无论是“确定/取消”对话框，还是提示给用户看的信息，都不允许使用浏览器内置的`alert`和`confim`方法。也正是这点，增加了实现这一功能的复杂度。
 
-## jQuery的AJAX操作及对话框组件
+## jQuery的AJAX操作及对话框
 
+[jQuery](http://jquery.com/)提供了丰富的AJAX方法及界面组件。为了方便开发，我们将直接使用jQuery提供的AJAX功能以及jQuery UI提供的模态对话框。
+
+### AJAX操作
+
+[jQuery的AJAX操作](http://api.jquery.com/jQuery.ajax/)提供了丰富的功能选项，在此我们只关注其最简单的使用形式：
+
+    $.ajax({        url: "./getSomething",        dataType: "text",        success: function (data, textStatus, jqXHR) {            ...        },        error: function (jqXHR, textStatus, errorThrow) {            ...        }    });
+
+以上代码会向地址`./getSomething`发起一个AJAX请求（`url: "./getSomething"`），用于获取文本内容（`dataType: "text"`），如果成功则执行`success`回调函数，其中`data`参数便是获得的文本内容，在出错时则执行`error`回调函数。
+
+### 对话框组件
+
+同样，[jQuery UI](http://jqueryui.com/)也提供了现成的[模态对话框组件](http://jqueryui.com/demos/dialog/)，我们同样只关心其最简单的使用方式：
+
+    <div id="dialog-demo" title="Dialog title">        <p>Dialog messages.</p>    </div>        <script>        $("#dialog-demo").dialog({
+            modal: true,
+            close: function () { … }
+        });    </script>
+
+`$(`#some-id`).dialog(…)`方法用于将某一个页面上的元素显示为对话框。我们设置`modal`参数为true，则它会成为一个模态窗口。`close`是一个回调函数，它会在窗体关闭的时候执行。
+
+如果我们要为对话框添加按钮，则可以这么实现：
+
+    <script>        $("#dialog-demo").dialog({
+            modal: true,
+            close: function () { … },
+            buttons: {
+                "OK": function () {
+                    $(this).dialog("close");
+                },
+                "Cancel": function () {
+                    $(this).dialog("close");
+                }
+            }
+        });    </script>
+
+在上面的代码中我们为对话框添加了两个按钮，分别是OK和Cancel，以及他们点击时调用的方法。我们可以在方法里加入任意的逻辑，而这里的代码则会关闭当前对话框。
