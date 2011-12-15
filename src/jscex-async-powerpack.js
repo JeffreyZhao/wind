@@ -1,5 +1,9 @@
 (function () {
 
+    var isArray = function (array) {
+        return Object.prototype.toString.call(array) === '[object Array]';
+    };
+
     var init = function (root) {
         if (root.modules && root.modules["async-powerpack"]) {
             return;
@@ -86,15 +90,15 @@
         
         Task.whenAll = function (tasks) {
             
-			if (Object.prototype.toString.call(tasks) !== '[object Array]') {
+			if (!isArray(tasks)) {
 				tasks = arguments;
 			}
 			
 			return Task.create(function (taskWhenAll) {
-				var taskIds = { };
+				var taskIndexes = { };
                 var runningTasks = [];
                 for (var i = 0; i < tasks.length; i++) {
-                    taskIds[tasks[i].id] = i;
+                    taskIndexes[tasks[i].id] = i;
                     runningTasks.push(t);
                 }
 
@@ -102,13 +106,13 @@
 
                 var taskCompleted = function (t) {
                     if (t.error) {
-                        for (var i = 0; i < tasksClone.length; i++) {
-                            runningTasks[i].removeListener(taskCompleted);
+                        for (var i = 0; i < runningTasks.length; i++) {
+                            runningTasks[i].removeEventListener("complete", taskCompleted);
                         }
 
                         taskWhenAll.complete("failure", t.error);
                     } else {
-                        results[taskIds[t.id]] = t.result;
+                        results[taskIndexes[t.id]] = t.result;
 
                         var index = runningTasks.indexOf(t);
                         runningTasks.splice(index, 1);
@@ -136,6 +140,66 @@
                     }
                 }
 			});
+        }
+        
+        Task.whenAny = function () {
+        
+            var tasks;
+            var isTaskArray = false;
+
+            if (arguments.length == 1) {
+                var arg = arguments[0];
+                if (Task.isTask(arg)) {
+                    return arg;
+                } else {
+                    tasks = arg;
+                    isTaskArray = isArray(tasks);
+                }
+            } else {
+                tasks = arguments;
+                isTaskArray = true;
+            }
+            
+            return Task.create(function (taskWhenAny) {
+                var taskKeys = {};
+                if (isTaskArray) {
+                    for (var i = 0; i < tasks.length; i++) {
+                        taskKeys[tasks[i].id] = i;
+                    }
+                } else {
+                    for (var key in tasks) {
+                        taskKeys[tasks[key].id] = key;
+                    }
+                }
+                
+                var onComplete = function (t) {
+                    for (var id in taskKeys) {
+                        tasks[taskKeys[id]].removeEventListener("complete", onComplete);
+                    }
+                
+                    if (isTaskArray) {
+                        taskWhenAny.complete("success", { index: taskKeys[t.id], task: t });
+                    } else {
+                        taskWhenAny.complete("success", { name: taskKeys[t.id], task: t });
+                    }
+                }
+                
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
+                    switch (t.status) {
+                        case "ready":
+                            t.addEventListener("complete", onComplete);
+                            t.start();
+                            break;
+                        case "running":
+                            t.addEventListener("complete", onComplete);
+                            break;
+                        default:
+                            onComplete(t);
+                            break;
+                    }
+                }
+            });
         }
         
         root.modules["async-powerpack"] = true;

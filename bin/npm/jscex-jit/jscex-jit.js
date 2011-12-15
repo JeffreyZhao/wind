@@ -7,6 +7,43 @@
         Jscex = { };
     }
     
+    var codeGenerator = (typeof eval("(function () {})") == "function") ?
+        function (code) { return code; } :
+        function (code) { return "false || " + code; };
+        
+    // support string type only.
+    var stringify = (typeof JSON !== "undefined" && JSON.stringify) ?
+        function (s) { return JSON.stringify(s); } :
+        (function () {
+            // Implementation comes from JSON2 (http://www.json.org/js.html)
+        
+            var escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
+            
+            var meta = {    // table of character substitutions
+                '\b': '\\b',
+                '\t': '\\t',
+                '\n': '\\n',
+                '\f': '\\f',
+                '\r': '\\r',
+                '"' : '\\"',
+                '\\': '\\\\'
+            }
+            
+            return function (s) {
+                // If the string contains no control characters, no quote characters, and no
+                // backslash characters, then we can safely slap some quotes around it.
+                // Otherwise we must also replace the offending characters with safe escape
+                // sequences.
+
+                escapable.lastIndex = 0;
+                return escapable.test(s) ? '"' + s.replace(escapable, function (a) {
+                    var c = meta[a];
+                    return typeof c === 's' ? c :
+                        '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+                }) + '"' : '"' + s + '"';
+            };
+        })();
+    
     var compiler = isCommonJS ? module.exports : Jscex;
 
     // seed defined in global
@@ -589,7 +626,7 @@
             this._indentLevel++;
 
             this._writeIndents()
-                ._writeLine("var " + this._builderVar + " = Jscex.builders[" + JSON.stringify(this._builderName) + "];");
+                ._writeLine("var " + this._builderVar + " = Jscex.builders[" + stringify(this._builderName) + "];");
 
             this._writeIndents()
                 ._writeLine("return " + this._builderVar + ".Start(this,");
@@ -1093,7 +1130,7 @@
                 
                 var items = ast[1];
                 for (var i = 0; i < items.length; i++) {
-                    this._write(JSON.stringify(items[i][0]) + ": ")._visitRaw(items[i][1]);
+                    this._write(stringify(items[i][0]) + ": ")._visitRaw(items[i][1]);
                     if (i < items.length - 1) this._write(", ");
                 }
 
@@ -1121,7 +1158,7 @@
             },
 
             "string": function (ast) {
-                this._write(JSON.stringify(ast[1]));
+                this._write(stringify(ast[1]));
             },
 
             "function": function (ast) {
@@ -1398,7 +1435,7 @@
     
     function compile(builderName, func) {
         var funcCode = func.toString();
-        var evalCode = "eval(Jscex.compile(" + JSON.stringify(builderName) + ", " + funcCode + "))"
+        var evalCode = "eval(Jscex.compile(" + stringify(builderName) + ", " + funcCode + "))"
         var evalCodeAst = uglifyJS.parse(evalCode);
 
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
@@ -1407,8 +1444,7 @@
 
         compiler.log(funcCode + "\n\n>>>\n\n" + newCode);
         
-        var cg = compiler.config.codeGenerator;
-        return cg ? cg(newCode) : newCode;
+        return codeGenerator(newCode);
     };
 
     compiler.config = { };

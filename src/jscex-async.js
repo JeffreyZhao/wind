@@ -11,8 +11,12 @@
         __jscex__taskIdSeed = 0;
     }
     
-    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
 
+    var isTask = function (t) {
+        return (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
+    }
+    
     var init = function (root, compiler) {
     
         if (!compiler) {
@@ -107,11 +111,14 @@
                     throw new Error('The "complete" method can only be called in "running" status.');
                 }
 
+                var listeners = this._listeners;
+                delete this._listeners;
+                
                 if (type == "success") {
 
                     this.result = value;
                     this.status = "succeeded";
-                    this._notify("success");
+                    this._notify(listeners["success"]);
 
                 } else if (type == "failure") {
 
@@ -123,23 +130,20 @@
                         this.status = "faulted";
                     }
                     
-                    this._notify("failure");
+                    this._notify(listeners["failure"]);
 
                 } else {
                     throw new Error("Unsupported type: " + type);
                 }
                 
-                this._notify("complete");
+                this._notify(listeners["complete"]);
                 
-                if (this.error && !this._listeners["failure"] && !this._listeners["complete"]) {
+                if (this.error && !listeners["failure"] && !listeners["complete"]) {
                     root.log("[WARNING] An unhandled error occurred: " + this.error);
                 }
-                
-                delete this._listeners;
 			},
 
-            _notify: function (ev) {
-                var listeners = this._listeners[ev];
+            _notify: function (listeners) {
                 if (!listeners) {
                     return;
                 }
@@ -155,7 +159,7 @@
 
             addEventListener: function (ev, listener) {
                 if (!this._listeners) {
-                    throw new Error('Listeners can only be added in "ready" or "running" status.');
+                    return;
                 }
 
                 if (!this._listeners[ev]) {
@@ -167,7 +171,7 @@
 
             removeEventListener: function (ev, listener) {
                 if (!this._listeners) {
-                    throw new Error('Listeners can only be removed in "ready" or "running" status.');
+                    return;
                 }
 
                 var evListeners = this._listeners[ev];
@@ -183,6 +187,8 @@
 		Task.create = function (delegate) {
 			return new Task(delegate);
 		}
+        
+        Task.isTask = isTask;
         
         var AsyncBuilder = function () { }
         AsyncBuilder.prototype = {
