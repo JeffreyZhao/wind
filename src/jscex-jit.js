@@ -36,11 +36,11 @@
                 // sequences.
 
                 escapable.lastIndex = 0;
-                return escapable.test(string) ? '"' + string.replace(escapable, function (a) {
+                return escapable.test(s) ? '"' + s.replace(escapable, function (a) {
                     var c = meta[a];
-                    return typeof c === 'string' ? c :
+                    return typeof c === 's' ? c :
                         '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-                }) + '"' : '"' + string + '"';
+                }) + '"' : '"' + s + '"';
             };
         })();
     
