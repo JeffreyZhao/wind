@@ -51,6 +51,8 @@ Jscex对Node.js提供了直接的支持。本文将通过实现一个目录复�
 
 向屏幕打印文字：
 
+    process.stdout("Hello World");
+
 读取用户操作：
 
     var rl = require("readline").createInterface(process.stdin, process.stdout);
