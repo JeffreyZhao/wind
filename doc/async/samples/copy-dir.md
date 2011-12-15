@@ -43,7 +43,7 @@ Jscex对Node.js提供了直接的支持。本文将通过实现一个目录复�
 
 或是使用数据流传输的方式，打开两个Stream并使用[pipe](http://nodejs.org/docs/latest/api/streams.html#stream.pipe)方法传输数据。数据传输完成之后，会触发目标数据流的`close`事件：
 
-    var fs = require("fs");        var streamIn = fs.createReadStream("./input.txt");    var streamOut = fs.createOutStream("./output.txt");        streamIn.pipe(streamOut);        streamOut.on("close" function () {        // 数据传输完毕    });
+    var fs = require("fs");        var streamIn = fs.createReadStream("./input.txt");    var streamOut = fs.createWriteStream("./output.txt");        streamIn.pipe(streamOut);        streamOut.on("close" function () {        // 数据传输完毕    });
 
 通常来说，第二种方法的性能相对更高一些。
 
