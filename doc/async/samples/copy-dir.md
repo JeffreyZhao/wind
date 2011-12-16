@@ -19,7 +19,8 @@ Jscex对Node.js提供了直接的支持。本文将通过实现一个目录复�
     File "./world/skip.txt" exists, overwrite? > no
     Copying "./hello/abc.txt" to "./world/abc.txt" ... done.
     File "./world/error.txt" exists, overwrite? > yes
-    Copying "./hello/error.txt" to "./world/error.txt" ... ERROR!!!    Copying "./hello/large-files/1.zip" to "./world/large-files/1.zip" ...
+    Copying "./hello/error.txt" to "./world/error.txt" ... ERROR!!!
+    Copying "./hello/large-files/1.zip" to "./world/large-files/1.zip" ...
 
 规则如下：
 
@@ -38,12 +39,48 @@ Jscex对Node.js提供了直接的支持。本文将通过实现一个目录复�
 
 在Node.js中复制一个文件有两种方式，一种是使用File System模块的[open](http://nodejs.org/docs/latest/api/fs.html#fs.open)方法打开文件，[read](http://nodejs.org/docs/latest/api/fs.html#fs.read)和[write](http://nodejs.org/docs/latest/api/fs.html#fs.write)方法读写文件，并使用[close](http://nodejs.org/docs/latest/api/fs.html#fs.close)方法关闭文件，如下：
 
-    var fs = require("fs");    // 打开一个文件，得到文件标识符fd
-    fs.open(path, flags, function (err, fd) {            });        // 读文件    fs.read(fd, buffer, offset, length, position, function (err, bytesRead, buffer) {            });        // 写文件    fs.write(fd, buffer, offset, length, position, function (err, written, buffer) {        });        // 关闭文件    fs.close(fd, function () {        })
+    var fs = require("fs");
 
-或是使用数据流传输的方式，打开两个Stream并使用[pipe](http://nodejs.org/docs/latest/api/streams.html#stream.pipe)方法传输数据。数据传输完成之后，会触发目标数据流的`close`事件：
+    // 打开一个文件，得到文件标识符fd
+    fs.open(path, flags, function (err, fd) {
+        
+    });
+    
+    // 读文件
+    fs.read(fd, buffer, offset, length, position, function (err, bytesRead, buffer) {
+        
+    });
+    
+    // 写文件
+    fs.write(fd, buffer, offset, length, position, function (err, written, buffer) {
+    
+    });
+    
+    // 关闭文件
+    fs.close(fd, function () {
 
-    var fs = require("fs");        var streamIn = fs.createReadStream("./input.txt");    var streamOut = fs.createWriteStream("./output.txt");        streamIn.pipe(streamOut);        streamOut.on("close" function () {        // 数据传输完毕    });
+    })
+
+或是使用数据流传输的方式，打开两个Stream并使用[pipe](http://nodejs.org/docs/latest/api/streams.html#stream.pipe)方法传输数据。数据传输完成之后，会触发目标数据流的`close`事件，在出错时则会在两个Stream对象上引发error事件：
+
+    var fs = require("fs");
+    
+    var streamIn = fs.createReadStream("./input.txt");
+    var streamOut = fs.createWriteStream("./output.txt");
+    
+    streamIn.pipe(streamOut);
+    
+    streamIn.on("error", function (error) {
+        // 输入流异常
+    });
+    
+    streamOut.on("error", function (error) {
+        // 输出流异常
+    });
+    
+    streamOut.on("close", function () {
+        // 数据传输完毕
+    });
 
 通常来说，第二种方法的性能相对更高一些。
 
