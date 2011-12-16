@@ -7,6 +7,8 @@
         Jscex = { };
     }
     
+    var uglifyJS = isCommonJS ? require("./uglifyjs-parser") : UglifyJS;
+    
     var codeGenerator = (typeof eval("(function () {})") == "function") ?
         function (code) { return code; } :
         function (code) { return "false || " + code; };
@@ -284,111 +286,44 @@
 
             "for-in": function (ast) {
 
+                var body = ast[4];
+                
+                var bodyStmts = [];
+                this._visitBody(body, bodyStmts);
+
+                if (this._noBinding(bodyStmts)) {
+                    return { type: "raw", stmt: ast };
+                }
+            
                 var id = (__jscex__tempVarSeed++);
                 var membersVar = "$$_members_$$_" + id;
                 var indexVar = "$$_index_$$_" + id;
                 var memVar = "$$_mem_$$_" + id;
 
-                var obj = ast[3];
-    
                 var delayStmt = { type: "delay", stmts: [] };
 
                 // var members = [];
-                delayStmt.stmts.push({ type: "raw", stmt: [
-                    "var",
-                    [
-                        [
-                            membersVar,
-                            [
-                                "array",
-                                []
-                            ]
-                        ]
-                    ]
-                ] });
-
+                delayStmt.stmts.push({
+                    type: "raw",
+                    stmt: uglifyJS.parse("var " + membersVar + " = [];")[1][0]
+                });
+                
                 // for (var mem in obj) members.push(mem);
-                delayStmt.stmts.push({ type: "raw", stmt: [
-                    "for-in",
-                    [
-                        "var",
-                        [
-                            [
-                                memVar
-                            ]
-                        ]
-                    ],
-                    [
-                        "name",
-                        [
-                            memVar
-                        ]
-                    ],
-                    obj,
-                    [
-                        "stat",
-                        [
-                            "call",
-                            [
-                                "dot",
-                                [
-                                    "name",
-                                    membersVar
-                                ],
-                                "push"
-                            ],
-                            [
-                                [
-                                    "name",
-                                    memVar
-                                ]
-                            ]
-                        ]
-                    ]
-                ] });
-
+                var keysAst = uglifyJS.parse("for (var " + memVar +" in obj) " + membersVar + ".push(" + memVar + ");")[1][0];
+                keysAst[3] = ast[3]; // replace the "obj" with real AST.
+                delayStmt.stmts.push({ type : "raw", stmt: keysAst});
                 
                 // var index = 0;
-                delayStmt.stmts.push({ type: "raw", stmt: [
-                    "var",
-                    [
-                        [
-                            indexVar,
-                            [
-                                "num",
-                                0
-                            ]
-                        ]
-                    ]
-                ] });
+                delayStmt.stmts.push({
+                    type: "raw",
+                    stmt: uglifyJS.parse("var " + indexVar + " = 0;")[1][0]
+                });
 
                 // index < members.length
-                var condition = [
-                    "binary",
-                    "<",
-                    [
-                        "name",
-                        indexVar
-                    ],
-                    [
-                        "dot",
-                        [
-                            "name",
-                            membersVar
-                        ],
-                        "length"
-                    ]
-                ];
+                var condition = uglifyJS.parse(indexVar + " < " + membersVar + ".length")[1][0][1];
 
                 // index++
-                var update = [
-                    "unary-postfix",
-                    "++",
-                    [
-                        "name",
-                        indexVar
-                    ]
-                ]
+                var update = uglifyJS.parse(indexVar + "++")[1][0][1];
 
                 var loopStmt = {
                     type: "loop",
@@ -401,51 +336,17 @@
 
                 var varName = ast[2][1]; // ast[2] == ["name", m]
                 if (ast[1][0] == "var") {
-                    loopStmt.bodyStmt.stmts.push({ type: "raw", stmt: [
-                        "var",
-                        [
-                            [
-                                varName,
-                                [
-                                    "sub",
-                                    [
-                                        "name",
-                                        membersVar
-                                    ],
-                                    [
-                                        "name",
-                                        indexVar
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ] });
+                    loopStmt.bodyStmt.stmts.push({
+                        type: "raw",
+                        stmt: uglifyJS.parse("var " + varName + " = " + membersVar + "[" + indexVar + "];")[1][0]
+                    });
                 } else {
-                    loopStmt.bodyStmt.stmts.push({ type: "raw", stmt: [
-                        "stat",
-                        [
-                            "assign",
-                            true,
-                            [
-                                "name",
-                                varName
-                            ],
-                            [
-                                "sub",
-                                [
-                                    "name",
-                                    membersVar
-                                ],
-                                [
-                                    "name",
-                                    indexVar
-                                ]
-                            ]
-                        ]
-                    ] });
+                    loopStmt.bodyStmt.stmts.push({
+                        type: "raw",
+                        stmt: uglifyJS.parse(varName + " = " + membersVar + "[" + indexVar + "];")[1][0]
+                    });
                 }
 
-                var body = ast[4];
                 this._visitBody(body, loopStmt.bodyStmt.stmts);
 
                 return delayStmt;
@@ -1430,8 +1331,6 @@
 
         return newCode;
     }
-
-    var uglifyJS = isCommonJS ? require("./uglifyjs-parser") : UglifyJS;
     
     function compile(builderName, func) {
         var funcCode = func.toString();
