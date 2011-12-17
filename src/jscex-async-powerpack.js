@@ -60,6 +60,8 @@
                     cancelHandler = function () {
                         if (target.removeEventListener) {
                             target.removeEventListener(eventName, eventHandler);
+                        } else if (target.removeListener) {
+                            target.removeListener(eventName, eventHandler);
                         } else {
                             target.detachEvent(eventName, eventHandler);
                         }
@@ -78,6 +80,8 @@
                 
                 if (target.addEventListener) {
                     target.addEventListener(eventName, eventHandler);
+                } else if (target.addListener) {
+                    target.addListener(eventName, eventHandler);
                 } else {
                     target.attachEvent(eventName, eventHandler);
                 }
