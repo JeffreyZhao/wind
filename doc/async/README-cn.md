@@ -474,6 +474,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ## 相关链接
 
+* [源代码](../../src/jscex-async.js)
 * [异步增强模块](powerpack-cn.md)
 * [JIT编译器](../jit-cn.md)
 * [AOT编译器](../aot-cn.md)
