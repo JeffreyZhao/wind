@@ -31,7 +31,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
     <script src="jscex-builderbase.js"></script>
     <script src="jscex-async.js"></script>
 
-这两个文件会自动为根上的Jscex添加异步模块相关的成员，而这种方式也适合各类**没有**实现CommonJS规范的JavaScript运行环境。
+这两个文件会自动为根上的Jscex对象添加异步模块相关的成员，而这种方式也适合各类**没有**实现CommonJS规范的JavaScript运行环境。
 
 ## 定义异步方法
 
@@ -153,10 +153,10 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
     var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
 
-        return $await(Task.whenAll(
+        return $await(Task.whenAll({
             user: queryUserAsync(userId),
             items: queryItemsAsync(userId)
-        ));
+        }));
     });
 
 `whenAll`辅助方法会将输入的多个任务包装为一个整体，并同样以Task对象的形式返回。新的Task对象只有在所有输入任务都结束的情况下才会完成，并使用相同的结构（“键值”或“数组”）返回其结果。
