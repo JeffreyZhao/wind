@@ -468,6 +468,10 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 * [静态文件服务器](samples/static-server-cn.md)：演示Node.js环境中最基础的使用方式。
 * [使用Express开发网站](samples/express-server-cn.md)：使用Jscex改善业务逻辑表现方式，并增强程序并发性。
 
+### 其他
+
+* [jQuery异步操作绑定](samples/jquery-bindings-cn.md)：提供部分jQuery及其相关插件中异步操作的绑定。
+
 ## 相关链接
 
 * [异步增强模块](powerpack-cn.md)
