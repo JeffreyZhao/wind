@@ -6,28 +6,30 @@ var rl = require("readline").createInterface(process.stdin, process.stdout);
 var Jscex = require("../../src/jscex-jit");
 require("../../src/jscex-async").init(Jscex);
 require("../../src/jscex-async-powerpack").init(Jscex);
-var jscexify = require("../../src/jscex-async-node").getJscexify(Jscex);
+
 var Async = Jscex.Async;
 var Task = Async.Task;
+var Jscexify = Async.Jscexify;
+
 Jscex.log = function () { }
 
 // path bindings
-path.existsAsync = jscexify.fromCallback(path.exists);
+path.existsAsync = Jscexify.fromCallback(path.exists);
 
 // util bindings
-util.pumpAsync = jscexify.fromStandard(util.pump);
+util.pumpAsync = Jscexify.fromStandard(util.pump);
 
 // rl bindings
-rl.questionAsync = jscexify.fromCallback(rl.question);
+rl.questionAsync = Jscexify.fromCallback(rl.question);
 
 // fs bindings
-fs.mkdirAsync = jscexify.fromStandard(fs.mkdir);
-fs.readdirAsync = jscexify.fromStandard(fs.readdir);
-fs.statAsync = jscexify.fromStandard(fs.stat);
-fs.closeAsync = jscexify.fromStandard(fs.close);
-fs.openAsync = jscexify.fromStandard(fs.open);
-fs.readAsync = jscexify.fromStandard(fs.read);
-fs.writeAsync = jscexify.fromStandard(fs.write);
+fs.mkdirAsync = Jscexify.fromStandard(fs.mkdir);
+fs.readdirAsync = Jscexify.fromStandard(fs.readdir);
+fs.statAsync = Jscexify.fromStandard(fs.stat);
+fs.closeAsync = Jscexify.fromStandard(fs.close);
+fs.openAsync = Jscexify.fromStandard(fs.open);
+fs.readAsync = Jscexify.fromStandard(fs.read);
+fs.writeAsync = Jscexify.fromStandard(fs.write);
 
 var copyFileByLoopAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
     var fdIn = $await(fs.openAsync(srcFile, "r"));

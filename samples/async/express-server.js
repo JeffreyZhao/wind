@@ -2,7 +2,6 @@ var Jscex = require("../../src/jscex-jit");
 require("../../src/jscex-async").init(Jscex);
 require("../../src/jscex-async-powerpack").init(Jscex);
 
-var jscexify = require("../../src/jscex-async-node").getJscexify(Jscex);
 var app = require('express').createServer();
 
 app.getAsync = function (path, handler) {
@@ -37,9 +36,9 @@ var cache = {
     }
 }
 
-db.getKeysAsync = jscexify.fromCallback(db.getKeys);
-db.getItemAsync = jscexify.fromCallback(db.getItem);
-cache.getAsync = jscexify.fromCallback(cache.get);
+db.getKeysAsync = Jscex.Async.Jscexify.fromCallback(db.getKeys);
+db.getItemAsync = Jscex.Async.Jscexify.fromCallback(db.getItem);
+cache.getAsync = Jscex.Async.Jscexify.fromCallback(cache.get);
 
 app.get("/:n", function (req, res) {
     var time = new Date();

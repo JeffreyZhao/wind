@@ -335,11 +335,14 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### 辅助方法
 
-似乎将已有的异步操作绑定为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份绑定方法，而是使用[jscex-async-node.js](../../src/jscex-async-node.js)里的辅助方法，例如：
+似乎将已有的异步操作绑定为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份绑定方法，而是使用[异步增强模块](powerpack-cn.md)里的辅助方法，例如：
 
-    var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);    var jscexify = require("./jscex-async-node").getJscexify(Jscex);
+    var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);
+    require("./jscex-async-powerpack").init(Jscex);
 
-    var path = require("path"), fs = require("fs");    path.existsAsync = jscexify.fromCallback(path.exists);    fs.readAsync = jscexify.fromStandard(fs.read, "bytesRead", "buffer");    fs.writeAsync = jscexify.fromStandard(fs.write, "written", "buffer");    fs.readFileAsync = jscexify.fromStandard(fs.readFile);    fs.writeFileAsync = jscexify.fromStandard(fs.writeFile);
+    var path = require("path"),
+        fs = require("fs");
+    Jscexify = Jscex.Async.Jscexify;    path.existsAsync = Jscexify.fromCallback(path.exists);    fs.readAsync = Jscexify.fromStandard(fs.read, "bytesRead", "buffer");    fs.writeAsync = Jscexify.fromStandard(fs.write, "written", "buffer");    fs.readFileAsync = Jscexify.fromStandard(fs.readFile);    fs.writeFileAsync = Jscexify.fromStandard(fs.writeFile);
 
 这便是JavaScript语言的威力。
 
