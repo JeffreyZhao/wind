@@ -153,18 +153,13 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
     var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
 
-        var results = $await(Task.whenAll(
-            queryUserAsync(userId),
-            queryItemsAsync(userId)
+        return $await(Task.whenAll(
+            user: queryUserAsync(userId),
+            items: queryItemsAsync(userId)
         ));
-
-        return {
-            user: results[0],
-            items: results[1]
-        };
     });
 
-`whenAll`辅助方法会将输入的多个任务包装为一个整体，并同样以Task对象的形式返回。新的Task对象只有在所有输入任务都结束的情况下才会完成，并使用数组返回其结果。
+`whenAll`辅助方法会将输入的多个任务包装为一个整体，并同样以Task对象的形式返回。新的Task对象只有在所有输入任务都结束的情况下才会完成，并使用相同的结构（“键值”或“数组”）返回其结果。
 
 Jscex的异步模型经过C#，F#及Scala等多种语言平台的检验，可以说拥有非常灵活而丰富的使用模式。
 

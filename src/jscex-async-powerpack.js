@@ -88,56 +88,89 @@
             });
         }
         
-        Task.whenAll = function (tasks) {
+        Task.whenAll = function () {
             
-            if (!isArray(tasks)) {
-                tasks = arguments;
+            var tasks;
+            var isTaskArray = false;
+
+            if (arguments.length == 1) {
+                var arg = arguments[0];
+                if (Task.isTask(arg)) {
+                    return arg;
+                } else {
+                    tasks = arg;
+                    isTaskArray = isArray(tasks);
+                }
+            } else {
+                tasks = [];
+                for (var i = 0; i < arguments.length; i++)
+                    tasks.push(arguments[i]);
+                isTaskArray = true;
             }
             
             return Task.create(function (taskWhenAll) {
-                var taskIndexes = { };
-                var runningTasks = [];
-                for (var i = 0; i < tasks.length; i++) {
-                    taskIndexes[tasks[i].id] = i;
-                    runningTasks.push(t);
+                var taskKeys = {};
+                if (isTaskArray) {
+                    for (var i = 0; i < tasks.length; i++) {
+                        taskKeys[tasks[i].id] = i;
+                    }
+                } else {
+                    for (var key in tasks) {
+                        taskKeys[tasks[key].id] = key;
+                    }
+                }
+                
+                // if there's a task already failed
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
+                    if (t.error) {
+                        taskWhenAll.complete("failure", t.error);
+                        return;
+                    }
                 }
 
-                var results = [];
+                var results = isTaskArray ? [] : {};
+                var runningNumber = 1; // set the original as 1
 
-                var taskCompleted = function (t) {
+                var onComplete = function (t) {
                     if (t.error) {
-                        for (var i = 0; i < runningTasks.length; i++) {
-                            runningTasks[i].removeEventListener("complete", taskCompleted);
+                        for (var id in taskKeys) {
+                            tasks[taskKeys[id]].removeEventListener("complete", onComplete);
                         }
 
                         taskWhenAll.complete("failure", t.error);
                     } else {
-                        results[taskIndexes[t.id]] = t.result;
+                        results[taskKeys[t.id]] = t.result;
+                        runningNumber--;
 
-                        var index = runningTasks.indexOf(t);
-                        runningTasks.splice(index, 1);
-
-                        if (runningTasks.length == 0) {
-                            finished = true;
+                        if (runningNumber == 0) {
                             taskWhenAll.complete("success", results);
                         }
                     }
                 }
 
-                for (var i = 0; i < tasks.length; i++) {
-                    var t = tasks[i];
+                for (var id in taskKeys) {
+                    runningNumber++;
+                    var t = tasks[taskKeys[id]];
                     switch (t.status) {
                         case "ready":
-                            t.addEventListener("complete", taskCompleted);
+                            t.addEventListener("complete", onComplete);
                             t.start();
                             break;
                         case "running":
-                            t.addEventListener("complete", taskCompleted);
+                            t.addEventListener("complete", onComplete);
                             break;
                         default:
-                            taskCompleted(t);
+                            onComplete(t);
                             break;
                     }
+                }
+                
+                // all completed
+                if (runningNumber == 1) {
+                    taskWhenAll.complete("success", results);
+                } else {
+                    runningNumber--;
                 }
             });
         }
@@ -156,7 +189,9 @@
                     isTaskArray = isArray(tasks);
                 }
             } else {
-                tasks = arguments;
+                tasks = [];
+                for (var i = 0; i < arguments.length; i++)
+                    tasks.push(arguments[i]);
                 isTaskArray = true;
             }
             
