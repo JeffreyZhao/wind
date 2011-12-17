@@ -1,6 +1,14 @@
 # Jscex异步增强模块
 
-[Jscex异步模块](README-cn.md)中提供了Jscex支持异步编程的核心类库，例如Task类型或是异步构造器。有了异步模块，我们就可以编写异步方法，或是将某种异步操作封装为Task对象等等。但是，异步模块除了提供了核心功能以外，并没有对日常异步开发中的常见任务给与足够的支持。而Jscex异步模块便对常见的异步开发模式，或是异步操作的绑定模式提供了支持。
+[Jscex异步模块](README-cn.md)中提供了Jscex支持异步编程的核心类库，例如Task类型或是异步构造器。有了异步模块，我们就可以编写异步方法，或是将某种异步操作封装为Task对象等等。但是，异步模块除了提供了核心功能以外，并没有对日常异步开发中的常见任务给与足够的支持。而[Jscex异步增强模块](../../src/jscex-async-powerpack.js)便对常见的异步开发模式，或是异步操作的绑定模式提供了支持。
+
+## 引入Jscex异步模块
+
+如果您要使用Jscex异步增强模块，首先必须[引入Jscex异步模块](README-cn.md)，此时您会得到了一个Jscex根对象，之后再基于这个对象初始化异步增强模块。
+
+### Node.js
+
+### 浏览器
 
 ## 异步方法
 
@@ -33,7 +41,8 @@
 
 示例：
 
-    var Async = Jscex.Async;    var ct = new Async.CancellationToken();    var drawLinesAsync = eval(Jscex.compile("async", function (board, ct) {        var currPoint = $await(Async.onEvent(board, "click", ct));        while (true) {            var nextPoint = $await(Async.onEvent(board, "click", ct));                        drawLine(                { x: currPoint.clientX, y: currPoint.clientY },                { x: nextPoint.clientX, y: nextPoint.clientY });                            currPoint = nextPoint;        }    }));
+    var Async = Jscex.Async;    var ct = new Async.CancellationToken();    var drawLinesAsync = eval(Jscex.compile("async", function (board, ct) {        var currPoint = $await(Async.onEvent(board, "click", ct));
+        while (true) {            var nextPoint = $await(Async.onEvent(board, "click", ct));                        drawLine(                { x: currPoint.clientX, y: currPoint.clientY },                { x: nextPoint.clientX, y: nextPoint.clientY });                            currPoint = nextPoint;        }    }));
 
 ## 任务协作 
 
@@ -41,7 +50,7 @@
 
 ## 相关链接
 
-* [源代码](../../src/src/jscex-async-powerpack.js)
+* [源代码](../../src/jscex-async-powerpack.js)
 * [异步模块](README-cn.md)
 * [Node.js异步增强模块](node-cn.md)
 * [浏览器异步增强模块](browser-cn.md)
