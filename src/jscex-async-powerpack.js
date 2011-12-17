@@ -18,8 +18,8 @@
         var CanceledError = Async.CanceledError;
         
         Async.sleep = function (delay, /* CancellationToken */ ct) {
-			return Task.create(function (t) {
-				if (ct && ct.isCancellationRequested) {
+            return Task.create(function (t) {
+                if (ct && ct.isCancellationRequested) {
                     t.complete("failure", new CanceledError());
                 }
 
@@ -44,12 +44,12 @@
                 if (ct) {
                     ct.register(cancelHandler);
                 }
-			});
+            });
         }
         
         Async.onEvent = function (target, eventName, /* CancellationToken*/ ct) {
-			return Task.create(function (t) {
-				if (ct && ct.isCancellationRequested) {
+            return Task.create(function (t) {
+                if (ct && ct.isCancellationRequested) {
                     t.complete("failure", new CanceledError());
                 }
 
@@ -85,17 +85,17 @@
                 if (ct) {
                     ct.register(cancelHandler);
                 }
-			});
+            });
         }
         
         Task.whenAll = function (tasks) {
             
-			if (!isArray(tasks)) {
-				tasks = arguments;
-			}
-			
-			return Task.create(function (taskWhenAll) {
-				var taskIndexes = { };
+            if (!isArray(tasks)) {
+                tasks = arguments;
+            }
+            
+            return Task.create(function (taskWhenAll) {
+                var taskIndexes = { };
                 var runningTasks = [];
                 for (var i = 0; i < tasks.length; i++) {
                     taskIndexes[tasks[i].id] = i;
@@ -139,7 +139,7 @@
                             break;
                     }
                 }
-			});
+            });
         }
         
         Task.whenAny = function () {
