@@ -455,9 +455,21 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ## 示例
 
+### 浏览器示例
+
 * [时钟](samples/clock-cn.md)：演示最基础的使用方式。
 * [排序算法动画](samples/sorting-animation-cn.md)：各类排序算法（冒泡，选择，快速）的演示动画。
 * [模态对话框](samples/modal-dialog-cn.md)：演示Jscex对于前端用户交互编写方式的改进。
 * [汉诺塔](samples/hanoi-cn.md)：汉诺塔解决方案的动画演示，同时涉及用户前端交互。
+
+### Node.js示例
+
+* [复制完整目录](samples/copy-dir-cn.md)：使用Node.js编写复制完整目录的功能
 * [静态文件服务器](samples/static-server-cn.md)：演示Node.js环境中最基础的使用方式。
 * [使用Express开发网站](samples/express-server-cn.md)：使用Jscex改善业务逻辑表现方式，并增强程序并发性。
+
+## 相关链接
+
+* [异步增强模块](powerpack-cn.md)
+* [JIT编译器](../jit-cn.md)
+* [AOT编译器](../aot-cn.md)
