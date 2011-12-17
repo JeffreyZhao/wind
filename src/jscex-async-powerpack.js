@@ -150,7 +150,15 @@
                     }
                 }
                 
-                // if there's a task already failed
+                // start all the tasks
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
+                    if (t.status == "ready") {
+                        t.start();
+                    }
+                }
+                
+                // if there's a task already failed, then failed
                 for (var id in taskKeys) {
                     var t = tasks[taskKeys[id]];
                     if (t.error) {
@@ -158,9 +166,8 @@
                         return;
                     }
                 }
-
+                
                 var results = isTaskArray ? [] : {};
-                var runningNumber = 1; // set the original as 1
 
                 var onComplete = function (t) {
                     if (t.error) {
@@ -171,6 +178,8 @@
                         taskWhenAll.complete("failure", t.error);
                     } else {
                         results[taskKeys[t.id]] = t.result;
+                        delete taskKeys[t.id];
+                        
                         runningNumber--;
 
                         if (runningNumber == 0) {
@@ -178,29 +187,23 @@
                         }
                     }
                 }
-
+                
+                var runningNumber = 0;
+                
+                // now all the tasks should be "succeeded" or "running"
                 for (var id in taskKeys) {
-                    runningNumber++;
                     var t = tasks[taskKeys[id]];
-                    switch (t.status) {
-                        case "ready":
-                            t.addEventListener("complete", onComplete);
-                            t.start();
-                            break;
-                        case "running":
-                            t.addEventListener("complete", onComplete);
-                            break;
-                        default:
-                            onComplete(t);
-                            break;
+                    if (t.status == "succeeded") {
+                        results[taskKeys[id]] = t.result;
+                        delete taskKeys[id];
+                    } else { // running
+                        runningNumber++;
+                        t.addEventListener("complete", onComplete);
                     }
                 }
                 
-                // all completed
-                if (runningNumber == 1) {
+                if (runningNumber == 0) {
                     taskWhenAll.complete("success", results);
-                } else {
-                    runningNumber--;
                 }
             });
         }
