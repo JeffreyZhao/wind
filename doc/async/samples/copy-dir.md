@@ -84,7 +84,7 @@ Jscex对Node.js提供了直接的支持。本文将通过实现一个目录复�
 
 通常来说，第二种方法的性能相对更高一些。此外，在Node.js的util模块中也提供了`pump`辅助方法来实现两个数据流的传输：
 
-    var util = require("until");
+    var util = require("util");
     util.pump(streamIn, streamOut, function (err) {
         if (err) {
             // error occurred
