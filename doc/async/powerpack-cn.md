@@ -116,7 +116,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 ### whenAny(t0[, t1[, t2[, …]]])
 
-`whenAny`方法可以接受一系列的Task对象，并返回一个新的Task对象，该新对象会在输入的Task中任意一个完成时（无论成功失败）结束。该方法的返回值为一个对象，其`index`字段为任务在输入时的下标，其`task`对象即为第一个完成的任务。
+`whenAny`方法可以接受一系列的Task对象，并返回一个新的Task对象，该新对象会在输入的Task中任意一个完成时（无论成功失败）结束。该方法的返回值为一个对象，其`key`字段为任务在输入时的下标，其`task`对象即为第一个完成的任务。
 
 例如，我们可以在Node.js中使用`pipe`方法传递数据流内的数据：
 
@@ -132,7 +132,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 理论上来说，三种情况每次只会发生一种，因此我们可以编写这样的代码：
 
-    var fs = require("fs");    var Async = Jscex.Async;    var Task = Async.Task;        var copyFileAsync = eval(Jscex.compile("async", function (src, target) {        var streamIn = fs.createReadStream("input.txt");        var streamOut = fs.createWriteStream("output.txt");        streamIn.pipe(streamOut);                var any = $await(Task.whenAny(            Async.onEvent(streamOut, "close"),            Async.onEvent(streamOut, "error"),            Async.onEvent(streamIn, "error")        ));                // 如果不是第一个输入完成，则意味着出错了        if (any.index != 0) {            throw any.task.result;        }    }));
+    var fs = require("fs");    var Async = Jscex.Async;    var Task = Async.Task;        var copyFileAsync = eval(Jscex.compile("async", function (src, target) {        var streamIn = fs.createReadStream("input.txt");        var streamOut = fs.createWriteStream("output.txt");        streamIn.pipe(streamOut);                var any = $await(Task.whenAny(            Async.onEvent(streamOut, "close"),            Async.onEvent(streamOut, "error"),            Async.onEvent(streamIn, "error")        ));                // 如果不是第一个输入完成，则意味着出错了        if (any.key != 0) {            throw any.task.result;        }    }));
 在启动`whenAny`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。由于“完成”不分成功失败，因此`whenAny`返回的新对象永远不会抛出异常。
 
 ### whenAny(taskArray)
@@ -143,11 +143,11 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
     var fs = require("fs");    var Async = Jscex.Async;    var Task = Async.Task;        var copyFileAsync = eval(Jscex.compile("async", function (src, target) {        var streamIn = fs.createReadStream("input.txt");        var streamOut = fs.createWriteStream("output.txt");        streamIn.pipe(streamOut);        
         var tasks = [            Async.onEvent(streamOut, "close"),            Async.onEvent(streamOut, "error"),            Async.onEvent(streamIn, "error")];
-        var any = $await(Task.whenAny(tasks));                // 如果不是第一个输入完成，则意味着出错了        if (any.index != 0) {            throw any.task.result;        }    }));
+        var any = $await(Task.whenAny(tasks));                // 如果不是第一个输入完成，则意味着出错了        if (any.key != 0) {            throw any.task.result;        }    }));
 
 ### whenAny(taskMap)
 
-`whenAny`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。与之前的两个重载相比，新Task对象的返回值中的`index`字段变成了`key`，保存了完成的那个对象的键值。该方法的其他表现与之前的两个重载完全相同。
+`whenAny`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。与之前的两个重载相比，新Task对象的返回值中的`key`字段保存了完成的那个Task对象所对应的键值。该方法的其他表现与之前的两个重载完全相同。
 
 使用示例：
 

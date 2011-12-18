@@ -223,18 +223,16 @@
                     return arg;
                 } else {
                     tasks = arg;
-                    isTaskArray = isArray(tasks);
                 }
             } else {
                 tasks = [];
                 for (var i = 0; i < arguments.length; i++)
                     tasks.push(arguments[i]);
-                isTaskArray = true;
             }
             
             return Task.create(function (taskWhenAny) {
                 var taskKeys = {};
-                if (isTaskArray) {
+                if (isArray(tasks)) {
                     for (var i = 0; i < tasks.length; i++) {
                         taskKeys[tasks[i].id] = i;
                     }
@@ -244,32 +242,35 @@
                     }
                 }
                 
+                // start all the tasks
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
+                    if (t.status == "ready") {
+                        t.start();
+                    }
+                }
+                
+                // if there's a task already failed/succeeded, then return
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
+                    if (t.error || t.status == "succeeded") {
+                        taskWhenAny.complete("success", { key: taskKeys[id], task: t });
+                        return;
+                    }
+                }
+                
                 var onComplete = function (t) {
                     for (var id in taskKeys) {
                         tasks[taskKeys[id]].removeEventListener("complete", onComplete);
                     }
                 
-                    if (isTaskArray) {
-                        taskWhenAny.complete("success", { index: taskKeys[t.id], task: t });
-                    } else {
-                        taskWhenAny.complete("success", { key: taskKeys[t.id], task: t });
-                    }
+                    taskWhenAny.complete("success", { key: taskKeys[t.id], task: t });
                 }
                 
+                // now all the tasks are in "running" status.
                 for (var id in taskKeys) {
                     var t = tasks[taskKeys[id]];
-                    switch (t.status) {
-                        case "ready":
-                            t.addEventListener("complete", onComplete);
-                            t.start();
-                            break;
-                        case "running":
-                            t.addEventListener("complete", onComplete);
-                            break;
-                        default:
-                            onComplete(t);
-                            break;
-                    }
+                    t.addEventListener("complete", onComplete);
                 }
             });
         }
