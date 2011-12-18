@@ -67,7 +67,7 @@ var copyFileByPipeAsync = eval(Jscex.compile("async", function (srcFile, targetF
         end: Async.onEvent(streamOut, "close")
     }))
 
-    if (any.name != "end") {
+    if (any.key != "end") {
         throw any.task.result;
     }
 }));

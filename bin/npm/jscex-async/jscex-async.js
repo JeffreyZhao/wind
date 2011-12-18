@@ -105,9 +105,9 @@
                 this.status = "running";
                 this._delegate(this);
             },
-			
-			complete: function (type, value) {
-				if (this.status != "running") {
+            
+            complete: function (type, value) {
+                if (this.status != "running") {
                     throw new Error('The "complete" method can only be called in "running" status.');
                 }
 
@@ -141,7 +141,7 @@
                 if (this.error && !listeners["failure"] && !listeners["complete"]) {
                     root.log("[WARNING] An unhandled error occurred: " + this.error);
                 }
-			},
+            },
 
             _notify: function (listeners) {
                 if (!listeners) {
@@ -183,18 +183,18 @@
                 }
             }
         };
-		
-		Task.create = function (delegate) {
-			return new Task(delegate);
-		}
+        
+        Task.create = function (delegate) {
+            return new Task(delegate);
+        }
         
         Task.isTask = isTask;
         
         var AsyncBuilder = function () { }
         AsyncBuilder.prototype = {
             Start: function (_this, task) {
-				return Task.create(function (t) {
-					task.next(_this, function (type, value, target) {
+                return Task.create(function (t) {
+                    task.next(_this, function (type, value, target) {
                         if (type == "normal" || type == "return") {
                             t.complete("success", value);
                         } else if (type == "throw") {
@@ -203,7 +203,7 @@
                             throw new Error("Unsupported type: " + type);
                         }
                     });
-				});
+                });
             },
 
             Bind: function (task, generator) {

@@ -81,15 +81,13 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
         };
     });
 
-在启动`whenAll`返回的新Task对象时，会立即启动所有尚未开始执行的输入Task对象。当任意一个输入Task对象发生错误时，新Task对象也会立即地直接抛出该异常，而其余正在运行的Task不受任何影响，无论成功还是失败都会执行完毕。
+在启动`whenAll`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。当任意一个输入Task对象发生错误时，新Task对象也会立即地直接抛出该异常，而其余正在运行的Task不受任何影响，无论成功还是失败都会执行完毕。
 
 ### whenAll(taskArray)
 
 `whenAll`方法亦可接受一个Task对象数组`taskArray`作为参数，其余表现与上述重载完全相同。
 
 使用示例：
-
-    var Task = Jscex.Task;
 
     var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
 
@@ -104,11 +102,9 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 ### whenAll(taskMap)
 
-`whenAll`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。该异步对象的返回值也是一个对象，包含所有Task对象的运行结果，并与输入对象的字段一一对应。该方法的其他表现与之前的两个重载完全相同。
+`whenAll`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。新Task对象的返回值也是一个对象，包含所有Task对象的运行结果，并与输入对象的字段一一对应。该方法的其他表现与之前的两个重载完全相同。
 
 使用示例：
-
-    var Task = Jscex.Task;
 
     var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
 
@@ -120,9 +116,45 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 ### whenAny(t0[, t1[, t2[, …]]])
 
+`whenAny`方法可以接受一系列的Task对象，并返回一个新的Task对象，该新对象会在输入的Task中任意一个完成时（无论成功失败）结束。该方法的返回值为一个对象，其`index`字段为任务在输入时的下标，其`task`对象即为第一个完成的任务。
+
+例如，我们可以在Node.js中使用`pipe`方法传递数据流内的数据：
+
+    var fs = require("fs");
+
+    var streamIn = fs.createReadStream("input.txt");    var streamOut = fs.createWriteStream("output.txt");    streamIn.pipe(streamOut);
+
+此时可能会有三种情况发生：
+
+1. `streamOut`的`close`事件触发，表示正常结束。
+2. `streamOut`的`error`事件触发，表示输出流异常。
+3. `streamIn`的`error`事件触发，表示输入流异常。
+
+理论上来说，三种情况每次只会发生一种，因此我们可以编写这样的代码：
+
+    var fs = require("fs");    var Async = Jscex.Async;    var Task = Async.Task;        var copyFileAsync = eval(Jscex.compile("async", function (src, target) {        var streamIn = fs.createReadStream("input.txt");        var streamOut = fs.createWriteStream("output.txt");        streamIn.pipe(streamOut);                var any = $await(Task.whenAny(            Async.onEvent(streamOut, "close"),            Async.onEvent(streamOut, "error"),            Async.onEvent(streamIn, "error")        ));                // 如果不是第一个输入完成，则意味着出错了        if (any.index != 0) {            throw any.task.result;        }    }));
+在启动`whenAny`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。由于“完成”不分成功失败，因此`whenAny`返回的新对象永远不会抛出异常。
+
 ### whenAny(taskArray)
 
+`whenAny`方法亦可接受一个Task对象数组`taskArray`作为参数，其余表现与上述重载完全相同。
+
+使用示例：
+
+    var fs = require("fs");    var Async = Jscex.Async;    var Task = Async.Task;        var copyFileAsync = eval(Jscex.compile("async", function (src, target) {        var streamIn = fs.createReadStream("input.txt");        var streamOut = fs.createWriteStream("output.txt");        streamIn.pipe(streamOut);        
+        var tasks = [            Async.onEvent(streamOut, "close"),            Async.onEvent(streamOut, "error"),            Async.onEvent(streamIn, "error")];
+        var any = $await(Task.whenAny(tasks));                // 如果不是第一个输入完成，则意味着出错了        if (any.index != 0) {            throw any.task.result;        }    }));
+
 ### whenAny(taskMap)
+
+`whenAny`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。与之前的两个重载相比，新Task对象的返回值中的`index`字段变成了`key`，保存了完成的那个对象的键值。该方法的其他表现与之前的两个重载完全相同。
+
+使用示例：
+
+    var fs = require("fs");    var Async = Jscex.Async;    var Task = Async.Task;        var copyFileAsync = eval(Jscex.compile("async", function (src, target) {        var streamIn = fs.createReadStream("input.txt");        var streamOut = fs.createWriteStream("output.txt");        streamIn.pipe(streamOut);
+        var any = $await(Task.whenAny({
+            end: Async.onEvent(streamOut, "close"),            errorOut: Async.onEvent(streamOut, "error"),            errorIn: Async.onEvent(streamIn, "error")
+        }));                // 如果完成的任务不是end，则意味着出错了        if (any.key != "end") {            throw any.task.result;        }    }));
 
 ## 异步操作绑定
 

@@ -248,7 +248,7 @@
                     if (isTaskArray) {
                         taskWhenAny.complete("success", { index: taskKeys[t.id], task: t });
                     } else {
-                        taskWhenAny.complete("success", { name: taskKeys[t.id], task: t });
+                        taskWhenAny.complete("success", { key: taskKeys[t.id], task: t });
                     }
                 }
                 
