@@ -158,6 +158,37 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 ## 异步操作绑定
 
+如果要在Jscex异步方法中使用现有的异步操作，则需要将其绑定为Jscex中标准的Task对象。一般来说，绑定一个异步操作是一件简单直观的事情，但是像Node.js中提供了大量的异步操作，将其一一绑定也是一件不小的工作量。幸运的是，同一平台内的异步操作都基本具有相同的模式，我们可以通过编写一些的简单的辅助方法，来统一完成绑定操作。
+
+Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法，它们都定义在`Jscex.Async.Jscexify`模块下面。
+
+### fromCallback(fn)
+
+某些异步操作会直接使用回调函数返回结果，例如Node.js中Path模块的`exists`方法：
+
+    var path = require("path");
+    path.exists("/etc/passwd", function (exists) {
+        // exists参数表示是否存在
+    });
+
+此时，便可以使用`fromCallback`将此类异步操作绑定为一个返回Task对象的异步方法：
+
+    var Jscexify = Jscex.Async.Jscexify;
+    path.existsAsync = Jscexify.fromCallback(path.exists);
+
+    // 某Jscex异步方法内部
+    var exists = $await(path.existsAsync("/etc/passwd"));
+
+某些异步操作会为回调函数传入多个参数，例如：
+
+    var split = function (numbers, n, callback) {        var smaller = 0, larger = 0, equals = 0;        for (var i = 0; i < numbers.length; i++) {            var num = numbers[i];            if (num == n) equals ++;            else if (num > n) larger ++;            else smaller ++;        }                callback(equals, larger, smaller);    }
+
+此时，也可以在`fromCallback`内逐个指定参数名称，这样最后Task对象的结果将会是一个包含这些字段的对象：
+
+    var splitAsync = Jscexify.fromCallback(split, "equals", "larger", "smaller");        // 某Jscex异步方法内部    var result = $await(splitAsync([1, 2, 3, 4, 5, 6], 3));    console.log(result.equals); // 1    console.log(result.smaller); // 2    console.log(result.larger); // 3
+
+当然，如果您只关注回调函数的第一个参数，甚至一个都不关注，也可以在使用`fromCallback`时不列出参数名称。
+
 ## 相关链接
 
 * [源代码](../../src/jscex-async-powerpack.js)
