@@ -187,7 +187,51 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
     var splitAsync = Jscexify.fromCallback(split, "equals", "larger", "smaller");        // 某Jscex异步方法内部    var result = $await(splitAsync([1, 2, 3, 4, 5, 6], 3));    console.log(result.equals); // 1    console.log(result.smaller); // 2    console.log(result.larger); // 3
 
-当然，如果您只关注回调函数的第一个参数，甚至一个都不关注，也可以在使用`fromCallback`时不列出参数名称。
+当然，如果您只关注回调函数的第一个参数，甚至一个都不关注，自然也可以在使用`fromCallback`的时候不列出参数名称。
+
+### fromStandard(fn)
+
+`fromCallback`支持的是以回调形式返回结果的异步操作，而`fromStandard`返回的便是“可能会失败”的“标准接口”，它会将回调函数的第一个参数作为错误对象，如果存在这个对象，则意味着该异步操作出现了错误，于是将其当作异常对象抛出。而真正的“返回值”，则是回调函数收到的第二个参数。
+
+例如在Node.js中，绝大部分接口都遵守了这样的模式，例如File System模块下的许多方法：
+
+    var fs = require("fs");
+
+    fs.readdir(path, function (err, files) { … });
+    fs.stat(path, function (err, stats) { … });
+    fs.mkdir("./world", function (err) { … });
+
+此时我们便可以使用`fromStandard`创建这些异步操作的绑定：
+
+    fs.readdirAsync = Jscexify.fromStandard(fs.readdir);
+    fs.statAsync = Jscexify.fromStandard(fs.stat);
+    fs.mkdirAsync = Jscexify.fromStandard(fs.mkdir);
+
+绑定后的异步方法在使用时可能会抛出异常：
+
+    try {
+        $await(fs.mkdir("./hello-world"));
+    } catch (ex) {
+        // 出错了
+    }
+
+与`fromCallback`一样，如果回调函数拥有多个返回值（即除了第一个表示错误的参数以外，还拥有两个或以上的参数），也可以在`fromStandard`后列出参数名，例如Node.js中的Child Processes模块有个`exec`方法：
+
+    var exec = require('child_process').exec;    exec('ls -l', function (error, stdout, stderr) {        if (error) {            console.log('exec error: ' + error);        } else {            console.log('stdout: ' + stdout);            console.log('stderr: ' + stderr);        }    });
+
+我们可以将其绑定为：
+
+    var execAsync = Jscexify.fromStandard(exec, "stdout", "stderr");
+
+    // 某Jscex异步方法内
+    try {
+        var result = $await(execAsync("ls -l"));
+        console.log("stdout: " + result.stdout);
+        console.log("stderr: " + result.stderr);
+    } catch (ex) {        console.log('exec error: ' + exec);
+    }
+
+当然，如果您只关注回调函数除了错误外的第一个参数，甚至一个都不关注，自然也可以在使用`fromStandard`的时候不列出参数名称。
 
 ## 相关链接
 
