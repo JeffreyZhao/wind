@@ -41,11 +41,11 @@
 
     var printEverySecondAsync = eval(Jscex.compile("async", function (texts, ct) {        for (var i = 0; i < texts.length; i++) {            $await(Jscex.Async.sleep(1000, ct));            console.log(texts[i]);        }    }));
 
-### onEvent(obj, eventName, [ct])
+### onEvent(target, eventName, [ct])
 
 `onEvent`方法用于监听某个对象上某个事件的“下一次”触发。该方法接受三个参数：
 
-1. `obj`：目标对象。
+1. `target`：目标对象。
 2. `eventName`：事件名。
 3. `ct`：可选参数，用于取消监听操作的CancellationToken对象。
 

@@ -1,7 +1,7 @@
 (function ($) {
 
     var Task = Jscex.Async.Task;
-
+    
     $.ajaxAsync = function (options) {
         return Task.create(function (t) {
 
@@ -24,6 +24,15 @@
             $.ajax(options);
         });
     };
+    
+    $.fn.readyAsync = function () {
+        var _this = this;
+        return Task.create(function (t) {
+            _this.ready(function () {
+                t.complete("success");
+            });
+        });
+    }
     
     if ($.fn.dialog) {
         $.fn.dialogAsync = function (options) {

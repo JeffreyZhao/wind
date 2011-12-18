@@ -78,19 +78,22 @@
                     t.complete("failure", new CanceledError());
                 }
 
+                var cleanUp = function () {
+                    if (target.removeEventListener) {
+                        target.removeEventListener(eventName, eventHandler);
+                    } else if (target.removeListener) {
+                        target.removeListener(eventName, eventHandler);
+                    } else {
+                        target.detachEvent(eventName, eventHandler);
+                    }
+                }
+                
                 var eventHandler;
                 var cancelHandler;
 
                 if (ct) {
                     cancelHandler = function () {
-                        if (target.removeEventListener) {
-                            target.removeEventListener(eventName, eventHandler);
-                        } else if (target.removeListener) {
-                            target.removeListener(eventName, eventHandler);
-                        } else {
-                            target.detachEvent(eventName, eventHandler);
-                        }
-
+                        cleanUp();
                         t.complete("failure", new CanceledError());
                     }
                 }
@@ -99,7 +102,8 @@
                     if (ct) {
                         ct.unregister(cancelHandler);
                     }
-
+                    
+                    cleanUp();
                     t.complete("success", ev);
                 }
                 
