@@ -19,9 +19,11 @@
 
 为了保证用户体验，无论是“确定/取消”对话框，还是提示给用户看的信息，都不允许使用浏览器内置的`alert`和`confim`方法。也正是这点，增加了实现这一功能的复杂度。
 
-## 实现
+## 相关API
 
-方便期间，我们使用jQuery来实现模态对话框及AJAX操作，相关绑定请参考“[jQuery绑定](jquery-bindings-cn.md)”。
+方便起见，我们使用jQuery来实现模态对话框及AJAX操作，相关用法及绑定方式请参考“[jQuery绑定](jquery-bindings-cn.md)”。
+
+## 实现
 
 由于逻辑从按钮点击开始，我们便在按钮的`onclick`事件里调用一个异步方法：
 
@@ -43,3 +45,9 @@
 * [完整代码](../../../samples/async/modal-dialog.html)
 * [jQuery绑定](jquery-bindings-cn.md)
 * [Jscex异步模块](../README-cn.md)
+
+## 附：非Jscex实现
+
+对比所需，在此附上相同功能的非Jscex的实现：
+
+    // 弹出“确定/取消”对话框              $("#dialog-confirm").dialog({        modal: true,        buttons: {            "OK": function () {                // 用户选择“确定”，则发出AJAX请求                $(this).dialog("close");                $.ajax({                    url: "modal-dialog.html",                    dataType: "text",                    success: function (data) {                        // 给用户以信息提示                        $("#emptyLength").text(data.length);                        $("#dialog-emptied").dialog({                            modal: true,                            close: function () {                                console.log("done");                            }                        });                    }                });            },            "Cancel": function () {                // 用户选择“取消”，则给用户以提示信息                $(this).dialog("close");                $("#dialog-canceled").dialog({                    modal: true,                    close: function () {                        console.log("done");                    }                });            }        }    });
