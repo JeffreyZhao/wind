@@ -458,7 +458,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 ### 浏览器示例
 
 * [时钟](samples/clock-cn.md)：演示最基础的使用方式。
-* [排序算法动画](samples/sorting-animation-cn.md)：各类排序算法（冒泡，选择，快速）的演示动画。
+* [排序算法动画](samples/sorting-algorithms-cn.md)：各类排序算法（冒泡，选择，快速）的演示动画。
 * [模态对话框](samples/modal-dialog-cn.md)：演示Jscex对于前端用户交互编写方式的改进。
 * [汉诺塔](samples/hanoi-cn.md)：汉诺塔解决方案的动画演示，同时涉及用户前端交互。
 
