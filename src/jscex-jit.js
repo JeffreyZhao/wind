@@ -1027,15 +1027,28 @@
             },
 
             "object": function (ast) {
-                this._write("{");
-                
                 var items = ast[1];
-                for (var i = 0; i < items.length; i++) {
-                    this._write(stringify(items[i][0]) + ": ")._visitRaw(items[i][1]);
-                    if (i < items.length - 1) this._write(", ");
+                if (items.length <= 0) {
+                    this._write("{ }");
+                } else {
+                    this._writeLine("{");
+                    this._indentLevel++;
+                    
+                    for (var i = 0; i < items.length; i++) {
+                        this._writeIndents()
+                            ._write(stringify(items[i][0]) + ": ")
+                            ._visitRaw(items[i][1]);
+                        
+                        if (i < items.length - 1) {
+                            this._writeLine(",");
+                        } else {
+                            this._writeLine("");
+                        }
+                    }
+                    
+                    this._indentLevel--;
+                    this._writeIndents()._write("}");
                 }
-
-                this._write("}");
             },
 
             "array": function (ast) {
