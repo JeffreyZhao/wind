@@ -1,14 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-    <title>Agent</title>
+    <title>Agent - Jscex Sample</title>
     
     <script language="javascript" type="text/javascript" src="../../src/uglifyjs-parser.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex-jit.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex-builderbase.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex-async.js"></script>
     <script language="javascript" type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
-    <script language="javascript" type="text/javascript" src="../../src/jscex.async.agent.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/jscex-async-agent.js"></script>
 </head>
 <body>
 
@@ -44,12 +44,16 @@
             $await(moveAsync(createBlock(), {x: 10, y: top}, {x: 500, y: top}, duration));
         }));
 
-        var agent = new Jscex.Async.Agent(eval(Jscex.compile("async", function (mailbox) {
+        var agent = new Jscex.Async.Agent();
+        
+        var process = eval(Jscex.compile("async", function () {
             while (true) {
-                var n = $await(mailbox.receive());
+                var n = $await(agent.receive());
                 $await(moveOneAsync(n));
             }
-        })));
+        }));
+        
+        process().start();
     </script> 
 
     <input type="button" value="Event based" onclick="moveOneAsync(number++).start();" />
