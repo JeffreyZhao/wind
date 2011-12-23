@@ -29,13 +29,17 @@
                 });
             },
 
-            send: function (msg) {
+            post: function (msg) {
                 if (this._tasks.length > 0) {
                     var t = this._tasks.shift();
                     t.complete("success", msg);
                 } else {
                     this._messages.push(msg);
                 }
+            },
+            
+            currentQueueLength: function () {
+                return this._messages.length;
             }
         };
         
