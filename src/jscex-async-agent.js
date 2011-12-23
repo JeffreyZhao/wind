@@ -12,29 +12,29 @@
         var Task = root.Async.Task;
         
         var Agent = function () {
-            this._queue = [];
+            this._messages = [];
+            this._tasks = [];
         }
         Agent.prototype = {
             receive: function () {
                 var _this = this;
 
                 return Task.create(function (t) {
-                    if (_this._queue.length > 0) {
-                        var message = _this._queue.shift();
-                        t.complete("success", message);
+                    if (_this._messages.length > 0) {
+                        var msg = _this._messages.shift();
+                        t.complete("success", msg);
                     } else {
-                        _this._task = t;
+                        _this._tasks.push(t);
                     }
                 });
             },
 
-            send: function (message) {
-                if (this._task) {
-                    var t = this._task;
-                    delete this._task;
-                    t.complete("success", message);
+            send: function (msg) {
+                if (this._tasks.length > 0) {
+                    var t = this._tasks.shift();
+                    t.complete("success", msg);
                 } else {
-                    this._queue.push(message);
+                    this._messages.push(msg);
                 }
             }
         };
