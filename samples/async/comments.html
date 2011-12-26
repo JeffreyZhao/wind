@@ -20,9 +20,17 @@
             font-size: 10pt;
         }
 
-        .comment, #commentText {
+        .comment {
             border: solid 1px black;
             width: 400px;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        #commentText {
+            border: solid 1px grey;
+            width: 400px;
+            height: 30px;
             margin-bottom: 10px;
             padding: 5px;
         }
@@ -132,7 +140,7 @@
             { id: commentIdSeed++, text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
             { id: commentIdSeed++, text: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." },
             { id: commentIdSeed++, text: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." },
-            { id: commentIdSeed++, text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum" }
+            { id: commentIdSeed++, text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." }
         ];
 
         for (var i = 0; i < comments.length; i++) {
