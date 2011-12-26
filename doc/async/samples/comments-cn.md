@@ -36,11 +36,32 @@
 
 还有一些额外的要求：
 
-1. 发起AJAX请求时，需要显示“Loading”字样，AJAX操作完毕后（无论成功失败）隐藏。
+1. 发起AJAX请求时，需要显示“Loading”提示信息，AJAX操作完毕后（无论成功失败）隐藏。
 2. 在AJAX请求过程中，用户其他任何操作都无效，直至AJAX操作完毕。
 3. 只要不是在AJAX请求过程中，用户可以随时点击某条评论项的“Edit”按钮进入“编辑模式”，即使已经在编辑某条评论了。
 
 ## 相关页面元素及操作
+
+页面上已经准备了一系列DOM元素及内置的方法，您可以直接用其进行开发。
+
+### AJAX模拟操作
+
+页面上定义了一系列模拟AJAX的异步操作，它们均有一定几率失败。
+
+    // 向服务器端提交评论，text为评论内容    addServerComment(text, function (error, id, text) {        if (error) {            // 失败，error为错误信息        } else {            // 成功，id为服务器端生成的评论标识，text为内容        }    });    // 删除服务器端评论，id为评论标识    removeServerComment(id, function (error) {        if (error) {            // 失败，error为错误信息        } else {            // 成功        }    });        var updateServerComment(id, function (error) {        if (error) {            // 失败，error为错误信息        } else {            // 成功        }    });    var loadServerComment(id, function (error, text) {        if (error) {            // 失败，error为错误信息        } else {            // 成功，text为评论内容        }    });### DOM操作
+
+页面上同样定义了一系列操作DOM的方法。
+
+    // 在页面上添加评论，id为标识，text为内容    addClientComment(id, text);    // 从页面上删除评论，id为标识    removeClientComment(id);    // 更新页面上的评论，id为标识，text为内容    updateClientComment(id, text);
+
+### 辅助操作
+
+页面上还定义了一些其他辅助方法。
+
+    // 显示Loading提示信息
+    showLoadingMessage();
+
+    // 隐藏Loading提示信息    hideLoadingMessage();
 
 ## 相关链接
 
