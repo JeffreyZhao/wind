@@ -87,6 +87,17 @@
             }, Math.random() * 3000);
         }
 
+        var loadServerComment = function (id, callback) {
+            setTimeout(function () {
+                
+                if (Math.random() > 0.8) {
+                    callback("Error occurred.");
+                } else {
+                    callback(null, $("#comment-" + id + "-text").text());
+                }
+
+            }, Math.random() * 3000);
+        }
 
         var addClientComment = function (id, text) {
             $("#commentTemplate").tmpl({id: id, text: text}).appendTo("#commentList");
