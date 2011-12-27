@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>OYE Loader - Jscex Sample</title>
+    
+    <!-- Load OYE module loader -->
+    <script type="text/javascript" src="http://www.w3cgroup.com/oye/resource/js/oye/oye.js"></script>
+
+    <!-- Reverse order is acceptable -->
+    <script type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
+    <script type="text/javascript" src="../../src/jscex-async.js"></script>
+    <script type="text/javascript" src="../../src/jscex-builderbase.js"></script>
+    <script type="text/javascript" src="../../src/jscex-jit.js"></script>
+    <script type="text/javascript" src="../../src/uglifyjs-parser.js"></script>
+    
+    <script type="text/javascript">
+        define("my-jscex", ["jscex-jit", "jscex-async", "jscex-async-powerpack"], function (Jscex, async, asyncPowerPack) {
+            async.init(Jscex);
+            asyncPowerPack.init(Jscex);
+
+            return Jscex;
+        });
+    
+        require("my-jscex", function (Jscex) {
+        
+            var printEverySecond = eval(Jscex.compile("async", function (texts) {
+                for (var i = 0; i < texts.length; i++) {
+                    $await(Jscex.Async.sleep(1000));
+                    console.log(texts[i]);
+                }
+            }));
+            
+            printEverySecond([1, 2, 3, 4, 5]).start();
+        })
+    </script>
+</head>
+<body>
+</body>
+</html>
+
