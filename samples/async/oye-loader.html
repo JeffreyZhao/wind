@@ -4,16 +4,17 @@
     <title>OYE Loader - Jscex Sample</title>
     
     <!-- Load OYE module loader -->
-    <script type="text/javascript" src="http://www.w3cgroup.com/oye/resource/js/oye/oye.js"></script>
-
-    <!-- Reverse order is acceptable -->
-    <script type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async.js"></script>
-    <script type="text/javascript" src="../../src/jscex-builderbase.js"></script>
-    <script type="text/javascript" src="../../src/jscex-jit.js"></script>
-    <script type="text/javascript" src="../../src/uglifyjs-parser.js"></script>
+    <script type="text/javascript" src="oye.js"></script>
     
     <script type="text/javascript">
+        require.config({
+            "jscex-async-powerpack": "../../src/jscex-async-powerpack.js",
+            "jscex-async": "../../src/jscex-async.js",
+            "jscex-builderbase": "../../src/jscex-builderbase.js",
+            "jscex-jit": "../../src/jscex-jit.js",
+            "uglifyjs-parser": "../../src/uglifyjs-parser.js"
+        });
+    
         define("my-jscex", ["jscex-jit", "jscex-async", "jscex-async-powerpack"], function (Jscex, async, asyncPowerPack) {
             async.init(Jscex);
             asyncPowerPack.init(Jscex);
