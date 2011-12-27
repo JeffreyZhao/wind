@@ -325,10 +325,15 @@
         root.modules["async-powerpack"] = true;
     }
     
-    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
+    var isAmd = (typeof define !== "undefined" && define.amd);
     
     if (isCommonJS) {
         module.exports.init = init;
+    } else if (isAmd) {
+        define("jscex-async-powerpack", ["jscex-async"], function () {
+            return { init: init };
+        });
     } else {
         init(Jscex);
     }

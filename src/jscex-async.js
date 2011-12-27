@@ -10,9 +10,6 @@
     if (typeof __jscex__taskIdSeed === "undefined") {
         __jscex__taskIdSeed = 0;
     }
-    
-    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
-    var isAmd = (typeof define !== "undefined" && define.amd);
 
     var isTask = function (t) {
         return (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
@@ -254,6 +251,9 @@
         
         root.modules["async"] = true;
     }
+    
+    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
+    var isAmd = (typeof define !== "undefined" && define.amd);
     
     if (isCommonJS) {
         module.exports.init = function (root, compiler) {
