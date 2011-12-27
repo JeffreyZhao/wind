@@ -12,6 +12,7 @@
     }
     
     var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
+    var isAmd = (typeof define !== "undefined" && define.amd);
 
     var isTask = function (t) {
         return (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
@@ -21,14 +22,6 @@
     
         if (!compiler) {
             compiler = root;
-        }
-        
-        if (!root.modules || !root.modules["builderbase"]) {
-            if (isCommonJS) {
-                require("./jscex-builderbase").init(root);
-            } else {
-                throw new Error('Missing essential component, please initialize "builderbase" module first.');
-            }
         }
         
         if (compiler.binders) {
@@ -263,8 +256,30 @@
     }
     
     if (isCommonJS) {
-        module.exports.init = init;
+        module.exports.init = function (root, compiler) {
+            if (!root.modules || !root.modules["builderbase"]) {
+                require("./jscex-builderbase").init(root);
+            }
+            
+            init(root, compiler);
+        };
+    } else if (isAmd) {
+        define("jscex-async", ["jscex-builderbase"], function (builderBase) {
+            return {
+                init: function (root, compiler) {
+                    if (!root.modules || !root.modules["builderbase"]) {
+                        builderBase.init(root);
+                    }
+                    
+                    init(root, compiler);
+                }
+            };
+        });
     } else {
+        if (!Jscex.modules || !Jscex.modules["builderbase"]) {
+            throw new Error('Missing essential component, please initialize "builderbase" module first.');
+        }
+    
         init(Jscex);
     }
 
