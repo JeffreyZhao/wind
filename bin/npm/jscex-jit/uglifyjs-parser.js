@@ -1304,12 +1304,18 @@ var warn = function() {};
 /* -----[ Exports ]----- */
 
 var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+var isAmd = (typeof define !== "undefined" && define.amd);
 
-if (!isCommonJS) {
-    UglifyJS = { };
+var scope;
+
+if (isCommonJS) {
+    scope = module.exports;
+} else if (isAmd) {
+    scope = { };
+} else {
+    // define UglifyJS in global
+    scope = UglifyJS = { };
 }
-
-var scope = isCommonJS ? module.exports : UglifyJS;
 
 scope.tokenizer = tokenizer;
 scope.parse = parse;
@@ -1327,5 +1333,11 @@ scope.is_alphanumeric_char = is_alphanumeric_char;
 scope.set_logger = function (logger) {
     warn = logger;
 };
+
+if (isAmd) {
+    define("uglifyjs-parser", function () {
+        return scope;
+    })
+}
 
 })();

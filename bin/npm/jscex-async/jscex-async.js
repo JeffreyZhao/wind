@@ -7,11 +7,9 @@
     }
 
     // seed defined in global
-    if (typeof __jscex__taskIdSeed === "undefined") {
-        __jscex__taskIdSeed = 0;
+    if (typeof __jscex__async__taskIdSeed === "undefined") {
+        __jscex__async__taskIdSeed = 0;
     }
-    
-    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
 
     var isTask = function (t) {
         return (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
@@ -21,14 +19,6 @@
     
         if (!compiler) {
             compiler = root;
-        }
-        
-        if (!root.modules || !root.modules["builderbase"]) {
-            if (isCommonJS) {
-                require("./jscex-builderbase").init(root);
-            } else {
-                throw new Error('Missing essential component, please initialize "builderbase" module first.');
-            }
         }
         
         if (compiler.binders) {
@@ -91,7 +81,7 @@
         };
     
         var Task = function (delegate) {
-            this.id = (++__jscex__taskIdSeed);
+            this.id = (++__jscex__async__taskIdSeed);
             this._delegate = delegate;
             this._listeners = { };
             this.status = "ready";
@@ -262,9 +252,34 @@
         root.modules["async"] = true;
     }
     
+    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
+    var isAmd = (typeof define !== "undefined" && define.amd);
+    
     if (isCommonJS) {
-        module.exports.init = init;
+        module.exports.init = function (root, compiler) {
+            if (!root.modules || !root.modules["builderbase"]) {
+                require("./jscex-builderbase").init(root);
+            }
+            
+            init(root, compiler);
+        };
+    } else if (isAmd) {
+        define("jscex-async", ["jscex-builderbase"], function (builderBase) {
+            return {
+                init: function (root, compiler) {
+                    if (!root.modules || !root.modules["builderbase"]) {
+                        builderBase.init(root);
+                    }
+                    
+                    init(root, compiler);
+                }
+            };
+        });
     } else {
+        if (!Jscex.modules || !Jscex.modules["builderbase"]) {
+            throw new Error('Missing essential component, please initialize "builderbase" module first.');
+        }
+    
         init(Jscex);
     }
 

@@ -7,8 +7,8 @@
     }
 
     // seed defined in global
-    if (typeof __jscex__taskIdSeed === "undefined") {
-        __jscex__taskIdSeed = 0;
+    if (typeof __jscex__async__taskIdSeed === "undefined") {
+        __jscex__async__taskIdSeed = 0;
     }
 
     var isTask = function (t) {
@@ -81,7 +81,7 @@
         };
     
         var Task = function (delegate) {
-            this.id = (++__jscex__taskIdSeed);
+            this.id = (++__jscex__async__taskIdSeed);
             this._delegate = delegate;
             this._listeners = { };
             this.status = "ready";

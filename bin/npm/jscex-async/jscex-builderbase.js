@@ -213,12 +213,17 @@
     }
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
+    var isAmd = (typeof define !== "undefined" && define.amd);
     
     if (isCommonJS) {
         module.exports.init = init;
+    } else if (isAmd) {
+        define("jscex-builderbase", function () {
+            return { init: init };
+        });
     } else {
         if (typeof Jscex == "undefined") {
-            /* Defined in global */
+            /* defined Jscex in global */
             Jscex = { };
         }
         
