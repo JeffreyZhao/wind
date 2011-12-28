@@ -3,7 +3,8 @@ var path = require("path");
 var util = require("util");
 var rl = require("readline").createInterface(process.stdin, process.stdout);
 
-var Jscex = require("../../src/jscex-jit");
+var Jscex = require("../../src/jscex-essential");
+require("../../src/jscex-jit").init(Jscex);
 require("../../src/jscex-async").init(Jscex);
 require("../../src/jscex-async-powerpack").init(Jscex);
 

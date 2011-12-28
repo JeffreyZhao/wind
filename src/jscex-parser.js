@@ -1303,20 +1303,34 @@ var warn = function() {};
 
 /* -----[ Exports ]----- */
 
+var init = function (root) {
+    if (root.modules["parser"]) {
+        return;
+    }
+    
+    root.parse = parse;
+    
+    root.modules["parser"] = true;
+}
+
 var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
 var isAmd = (typeof define !== "undefined" && define.amd);
 
-var scope;
-
 if (isCommonJS) {
-    scope = module.exports;
+    module.exports.init = init;
 } else if (isAmd) {
-    scope = { };
+    define("jscex-parser", function () {
+        return { init: init };
+    });
 } else {
-    // define UglifyJS in global
-    scope = UglifyJS = { };
+    if (typeof Jscex === "undefined") {
+        throw new Error('Missing root object, please load "essential" module first.');
+    }
+    
+    init(Jscex);
 }
 
+/*
 scope.tokenizer = tokenizer;
 scope.parse = parse;
 scope.slice = slice;
@@ -1333,11 +1347,6 @@ scope.is_alphanumeric_char = is_alphanumeric_char;
 scope.set_logger = function (logger) {
     warn = logger;
 };
-
-if (isAmd) {
-    define("uglifyjs-parser", function () {
-        return scope;
-    })
-}
+*/
 
 })();

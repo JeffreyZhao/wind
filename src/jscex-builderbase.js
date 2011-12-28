@@ -222,11 +222,10 @@
             return { init: init };
         });
     } else {
-        if (typeof Jscex == "undefined") {
-            /* defined Jscex in global */
-            Jscex = { };
+        if (typeof Jscex === "undefined") {
+            throw new Error('Missing root object, please load "essential" module first.');
         }
-        
+    
         init(Jscex);
     }
 

@@ -42,7 +42,11 @@
         __jscex__tempVarSeed = 0;
     }
 
-    var init = function (compiler, parser) {
+    var init = function (root) {
+    
+        if (root.modules["jit"]) {
+            return;
+        }
     
         function JscexTreeGenerator(binder) {
             this._binder = binder;
@@ -1326,7 +1330,7 @@
 
             var builderName = ast[2][0][2][0][1];
             var funcAst = ast[2][0][2][1];
-            var binder = compiler.binders[builderName];
+            var binder = root.binders[builderName];
 
             var jscexTreeGenerator = new JscexTreeGenerator(binder);
             var jscexAst = jscexTreeGenerator.generate(funcAst);
@@ -1341,42 +1345,55 @@
 
             var funcCode = func.toString();
             var evalCode = "eval(Jscex.compile(" + stringify(builderName) + ", " + funcCode + "))"
-            var evalCodeAst = parser.parse(evalCode);
+            var evalCodeAst = root.parse(evalCode);
 
             // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
             var evalAst = evalCodeAst[1][0][1];
             var newCode = _compileJscexPattern(evalAst, 0);
 
-            compiler.log(funcCode + "\n\n>>>\n\n" + newCode);
+            root.log(funcCode + "\n\n>>>\n\n" + newCode);
             
             return codeGenerator(newCode);
         };
 
-        compiler.config = { };
-        compiler.compile = compile;
-        compiler.binders = { };
-        compiler.log = function (text) {
-            try { console.log(text); }
-            catch (ex) { }
-        };
+        root.compile = compile;
+        
+        root.modules["jit"] = true;
     }
     
     var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
     var isAmd = (typeof define !== "undefined" && define.amd);
     
     if (isCommonJS) {
-        var parser = require("./uglifyjs-parser");
-        init(module.exports, parser);
+        module.exports.init = function (root) {
+            if (!root.modules["parser"]) {
+                require("./jscex-parser").init(root);
+            };
+            
+            init(root);
+        }
     } else if (isAmd) {
-        define("jscex-jit", ["uglifyjs-parser"], function (parser) {
-            var compiler = { };
-            init(compiler, parser);
-            return compiler;
+        define("jscex-jit", ["jscex-parser"], function (parser) {
+            return {
+                init: function (root) {
+                    if (!root.modules["parser"]) {
+                        parser.init(root);
+                    }
+                    
+                    init(root);
+                }
+            };
         });
     } else {
-        // define Jscex in global
-        Jscex = { };
-        init(Jscex, UglifyJS);
+        if (typeof Jscex === "undefined") {
+            throw new Error('Missing root object, please load "essential" module first.');
+        }
+        
+        if (!Jscex.modules["parser"]) {
+            throw new Error('Missing essential components, please initialize "parser" module first.');
+        }
+
+        init(Jscex);
     }
 
 })();

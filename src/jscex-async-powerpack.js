@@ -29,12 +29,12 @@
     }
 
     var init = function (root) {
-        if (root.modules && root.modules["async-powerpack"]) {
+        if (root.modules["async-powerpack"]) {
             return;
         }
         
-        if (!root.modules || !root.modules["async"]) {
-            throw new Error('Missing essential component, please initialize "jscex-async" module first.');
+        if (!root.modules["async"]) {
+            throw new Error('Missing essential components, please initialize "jscex-async" module first.');
         }
         
         var Async = root.Async;
