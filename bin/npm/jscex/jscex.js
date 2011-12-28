@@ -27,7 +27,7 @@
     };
     
     if (isAmd) {
-        define("jscex-essential", function () {
+        define("jscex", function () {
             return root;
         });
     }

@@ -1,4 +1,4 @@
-scripts=(jscex-essential jscex-builderbase jscex-async jscex-async-powerpack)
+scripts=(jscex jscex-builderbase jscex-async jscex-async-powerpack)
 
 for s in ${scripts[@]}; do
 

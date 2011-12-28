@@ -1,4 +1,4 @@
-var Jscex = require("../../src/jscex-essential");
+var Jscex = require("../../src/jscex");
 require("../../src/jscex-jit").init(Jscex);
 require("../../src/jscex-async").init(Jscex);
 require("../../src/jscex-async-powerpack").init(Jscex);

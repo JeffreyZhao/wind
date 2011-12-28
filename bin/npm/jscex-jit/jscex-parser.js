@@ -1324,7 +1324,7 @@ if (isCommonJS) {
     });
 } else {
     if (typeof Jscex === "undefined") {
-        throw new Error('Missing root object, please load "essential" module first.');
+        throw new Error('Missing root object, please load "jscex" module first.');
     }
     
     init(Jscex);
