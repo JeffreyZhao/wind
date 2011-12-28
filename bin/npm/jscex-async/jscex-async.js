@@ -15,15 +15,7 @@
         return (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
     }
     
-    var init = function (root, compiler) {
-    
-        if (!compiler) {
-            compiler = root;
-        }
-        
-        if (compiler.binders) {
-            compiler.binders["async"] = "$await";
-        }
+    var init = function (root) {
         
         if (root.modules["async"]) {
             return;
@@ -247,6 +239,7 @@
             root.builders = { };
         }
         
+        root.binders["async"] = "$await";
         root.builders["async"] = new AsyncBuilder();
         
         root.modules["async"] = true;
@@ -256,28 +249,32 @@
     var isAmd = (typeof define !== "undefined" && define.amd);
     
     if (isCommonJS) {
-        module.exports.init = function (root, compiler) {
-            if (!root.modules || !root.modules["builderbase"]) {
+        module.exports.init = function (root) {
+            if (!root.modules["builderbase"]) {
                 require("./jscex-builderbase").init(root);
             }
             
-            init(root, compiler);
+            init(root);
         };
     } else if (isAmd) {
         define("jscex-async", ["jscex-builderbase"], function (builderBase) {
             return {
-                init: function (root, compiler) {
-                    if (!root.modules || !root.modules["builderbase"]) {
+                init: function (root) {
+                    if (!root.modules["builderbase"]) {
                         builderBase.init(root);
                     }
                     
-                    init(root, compiler);
+                    init(root);
                 }
             };
         });
     } else {
-        if (!Jscex.modules || !Jscex.modules["builderbase"]) {
-            throw new Error('Missing essential component, please initialize "builderbase" module first.');
+        if (typeof Jscex === "undefined") {
+            throw new Error('Missing root object, please load "essential" module first.');
+        }
+    
+        if (!Jscex.modules["builderbase"]) {
+            throw new Error('Missing essential components, please initialize "builderbase" module first.');
         }
     
         init(Jscex);

@@ -11,7 +11,7 @@ else
     mkdir -p ${PACKAGE_DIR}
 fi
 
-cp ${PROJECT_DIR}/src/uglifyjs-parser.js ${PACKAGE_DIR}
+cp ${PROJECT_DIR}/src/jscex-parser.js ${PACKAGE_DIR}
 cp ${PROJECT_DIR}/src/${PACKAGE_NAME}.js ${PACKAGE_DIR}
 
 sed \
