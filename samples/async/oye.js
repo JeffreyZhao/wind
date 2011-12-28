@@ -1,4 +1,4 @@
-/*
+﻿/*
 	MIT License
 	author: dh20156(风之石, dh20156@gmail.com)
 	OYE: A module manager implementation of Asynchronous Module Definition
@@ -22,7 +22,7 @@
 			}
 			return ret;
 		}()),
-		_basePath = _path.replace(/\/[^\/]+$/, ''),//oye文件夹所在的父目录
+		_basePath = _path,//oye文件路径
 		_rootPath = _path.replace(/((.*?\/){3}).*$/,'$1'),//oye文件所在的站点根目录
 		_header = document.getElementsByTagName('head')[0],//<head>元素
 		_maps = {},//模块地址对照表
@@ -104,9 +104,15 @@
 		//执行请求队列
 		_queueRequire = function(){
 			if(_requireQueue.length){
-				var module = _requireQueue.shift(), amdModule = module && _modules[module[0]];
-				while(amdModule && amdModule._amdDependencies.join('')!==module[0]){
+				var module = _requireQueue.shift();
+				var amdModule = module && _modules[module[0]];
+				while(module && amdModule && amdModule._amdDependencies.join('')!==module[0]){
 					module = _requireQueue.shift();
+					amdModule = module && _modules[module[0]];
+				}
+				if(!module){alert(_requireQueue.length);
+					_queueRequire();
+					return;
 				}
 				require.apply(null, module);
 			}
@@ -290,7 +296,7 @@
 		var oModule, aDP, sMD = this._amdID;
 		if(typeof fnX !== 'function'){return;}
 		if(this._amdReady){
-			fnX.call(this, this);//执行模块准备好时调用的代码
+			fnX.apply(this, [].concat(this));//执行模块准备好时调用的代码
 		}else{
 			oModule = _modules[sMD];
 			if(oModule && oModule._amdReady){oModule.todo(fnX);return;}//之前定义的模块实例无法同步，只能去找已准备好的模块
@@ -309,7 +315,13 @@
 	*/
 	var	require = function(sModule, fnSuccess, fnFailure){
 		var fnGetPath = _fnGetPath, sURL, fnLoadJS = _fnLoadJS, fnErr = error;
-		if(!sModule || typeof sModule!=='string'){return;}
+		if(!sModule){return;}
+		//如果请求一组模块则转换为对一个临时模块的定义与请求处理
+		if(sModule.constructor===Array){
+			var aModule = sModule;
+			sModule = 'template'+(+new Date());
+			define(sModule, aModule, function(){return [].slice.call(arguments);});
+		}
 		var ret = _modules[sModule]||new _ClassModule(sModule, [sModule], function(){return new String(sModule);});
 		if(fnSuccess && typeof fnSuccess !== 'function'){
 			fnErr({fn:'require', msg:'fnSuccess should be a Function'});
@@ -320,6 +332,7 @@
 			};
 		}
 		var bNamedModule = define.amd.namedModules[sModule];
+		//如果当前模块为require发出，且之前没有定义过
 		if(ret._amdDependencies.constructor===Array && ret._amdDependencies.join('')===sModule){
 			if(_amdAnonymousID && !bNamedModule){
 				//如果有某个模块正在处理中，且当前请求的模块不是已知的具名模块，则将当前请求丢到请求队列
@@ -337,6 +350,8 @@
 				//加载此模块文件
 				fnLoadJS(sURL, sModule, fnFailure);
 			},0);
+		}else if(!ret['_amdReady']){//此模块之前已经定义过，但是其依赖未准备好
+			_loadDependencies(ret['_amdDependencies'], 'require');
 		}
 		//如果模块准备好，则执行它的成功回调
 		if(fnSuccess){ret.todo(fnSuccess);}
@@ -394,8 +409,8 @@
 		//如果该模块已经存在，且当前执行在require周期内，需要深入加载依赖模块
 		bDeep = bDeep ? bDeep._amdFromRequire : false;
 		ret = new _ClassModule(id, dependencies, factory, bDeep);
-		//如果当前模块不是已知的具名模块，则重置正在处理中的模块名
-		if(!define.amd.namedModules[id]){_amdAnonymousID = null;}
+		//如果当前模块不是已知的具名模块，且当前执行在require周期内，则重置正在处理中的模块名
+		if(!define.amd.namedModules[id] && bDeep){_amdAnonymousID = null;}
 		//执行请求队列
 		_queueRequire();
 		return _modules[id];
