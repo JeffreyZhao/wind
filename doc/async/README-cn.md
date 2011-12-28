@@ -4,7 +4,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 ## 引入Jscex异步模块
 
-如果您要使用Jscex异步模块，首先必须[引入Jscex JIT编译器](../jit-cn.md)，此时您会得到了一个Jscex根对象，之后再基于这个对象初始化异步模块。
+如果您要使用Jscex异步模块，首先必须[引入基础模块](../README-cn.md)，之后再基于这个对象初始化异步模块。在开发环境里，可能您还需要[引入Jscex JIT编译器](../jit-cn.md)。
 
 ### Node.js
 
@@ -14,20 +14,24 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 然后便可以在脚本中引入并初始化这个模块：
 
-    var Jscex = require("jscex-jit"); // 引入Jscex JIT编译器
+    var Jscex = require("jscex"); // 引入基础模块
+    require("jscex-jit") // 引入并初始化Jscex JIT编译器
     require("jscex-async").init(Jscex); // 引入并初始化Jscex异步模块
 
 如果您想使用的是正在开发中的版本，请下载[jscex-builderbase.js](../src/jscex-builderbase.js)以及[jscex-async.js](../src/jscex-async.js)文件。前者为[Jscex通用构造器的基础模块](../builderbase-cn.md)，在发布至npm时已经一起和异步模块一起打包在内。将这两个文件放在相同目录下，并使用加载本地文件模块的方式加载jscex-async模块：
 
-    var Jscex = require("./jscex-jit") // 引入本地Jscex JIT编译器
-    require("./jscex-async").init(Jscex); // 引入并初始化本地文件模块
+    var Jscex = require("./jscex"); // 引入基础模块
+    require("./jscex-jit") // 引入并初始化Jscex JIT编译器
+    require("./jscex-async").init(Jscex); // 引入并初始化Jscex异步模块
 
 此类方式也适合非[Node.js](http://nodejs.org/)，但实现[CommonJS规范](http://www.commonjs.org/)的JavaScript运行环境。
 
 ### 浏览器
 
-在浏览器环境中使用Jscex异步模块，您同样需要[加载Jscex JIT编译器](../jit-cn.md)。此时在根（即window对象）上会出现一个Jscex对象，然后在页面上引入[jscex-builderbase.js](../src/jscex-builderbase.js)以及[jscex-async.js](../src/jscex-async.js)文件即可：
+在浏览器环境中使用Jscex异步模块，您同样需要[引入基础模块](../README-cn.md)。此时在根（即window对象）上会出现一个Jscex对象。在开发环境里还需要[加载Jscex JIT编译器](../jit-cn.md)，然后再引入[jscex-builderbase.js](../src/jscex-builderbase.js)以及[jscex-async.js](../src/jscex-async.js)文件即可：
 
+    <script src="jscex.js"></script>
+    <script src="jscex-jit.js"></script>
     <script src="jscex-builderbase.js"></script>
     <script src="jscex-async.js"></script>
 

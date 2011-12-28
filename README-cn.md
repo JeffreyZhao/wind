@@ -38,7 +38,8 @@ Jscex可以在任何JavaScript引擎上执行，我们这里目前最典型的�
 
 请下载[src目录](src)下的所有文件，并在相同目录下创建quick-start.html文件，写入：
 
-    <script src="uglifyjs-parser.js"></script>
+    <script src="jscex.js"></script>
+    <script src="jscex-parser.js"></script>
     <script src="jscex-jit.js"></script>
     <script src="jscex-builderbase.js"></script>
     <script src="jscex-async.js"></script>
@@ -48,13 +49,14 @@ Jscex模块化十分细致，但您暂时无需了解以上脚本的含义。
 
 #### Node.js
 
-Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装jscex-jit及jscex-async两个模块。
+Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装jscex，jscex-jit及jscex-async三个模块。
 
-    npm install jscex-jit jscex-async
+    npm install jscex jscex-jit jscex-async
 
 您暂时还需要下载jscex-async-powerpack.js文件，并在其相同目录下创建quick-start.js，写入：
 
-    var Jscex = require("jscex-jit");
+    var Jscex = require("jscex");
+    require("jscex").init(Jscex);
     require("jscex-async").init(Jscex);
     require("./jscex-async-powerpack").init(Jscex);
 
@@ -90,7 +92,9 @@ JavaScript的异步及非阻塞特性，让程序员无法使用传统方式表�
 
 Jscex以模块化形式分发，目前主要有以下几个模块：
 
-* [JIT编译器](doc/jit-cn.md)
+* [基础模块](doc/README-cn.md)
+* [JIT编译器模块](doc/jit-cn.md)
+* [AOT编译器模块](doc/aot-cn.md)
 * [构造器基础模块](doc/builderbase-cn.md)
 * [异步模块](doc/async/README-cn.md)
 * [异步增强模块](doc/async/powerpack-cn.md)
