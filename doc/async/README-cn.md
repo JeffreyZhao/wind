@@ -30,8 +30,14 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 在浏览器环境中使用Jscex异步模块，您同样需要[引入基础模块](../README-cn.md)。此时在根（即window对象）上会出现一个Jscex对象。在开发环境里还需要[加载Jscex JIT编译器](../jit-cn.md)，然后再引入[jscex-builderbase.js](../src/jscex-builderbase.js)以及[jscex-async.js](../src/jscex-async.js)文件即可：
 
+    <!-- 基础模块 -->
     <script src="jscex.js"></script>
+
+    <!-- 解析器及JIT编译器模块 -->
+    <script src="jscex-parser.js"></script>
     <script src="jscex-jit.js"></script>
+
+    <!-- 构造器基础及异步模块 -->
     <script src="jscex-builderbase.js"></script>
     <script src="jscex-async.js"></script>
 
