@@ -1351,7 +1351,7 @@
             var evalAst = evalCodeAst[1][0][1];
             var newCode = _compileJscexPattern(evalAst, 0);
 
-            root.log(funcCode + "\n\n>>>\n\n" + newCode);
+            root.logger.debug(funcCode + "\n\n>>>\n\n" + newCode);
             
             return codeGenerator(newCode);
         };

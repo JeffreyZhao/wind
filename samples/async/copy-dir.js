@@ -8,11 +8,11 @@ require("../../src/jscex-jit").init(Jscex);
 require("../../src/jscex-async").init(Jscex);
 require("../../src/jscex-async-powerpack").init(Jscex);
 
+Jscex.logger.level = Jscex.Logging.Level.WARN;
+
 var Async = Jscex.Async;
 var Task = Async.Task;
 var Jscexify = Async.Jscexify;
-
-Jscex.log = function () { }
 
 // path bindings
 path.existsAsync = Jscexify.fromCallback(path.exists);
