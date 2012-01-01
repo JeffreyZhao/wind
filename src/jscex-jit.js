@@ -291,12 +291,18 @@
                     }
                 
                     var id = (__jscex__tempVarSeed++);
-                    var membersVar = "$$_members_$$_" + id;
+                    var keysVar = "$$_keys_$$_" + id;
                     var indexVar = "$$_index_$$_" + id;
-                    var memVar = "$$_mem_$$_" + id;
+                    // var memVar = "$$_mem_$$_" + id;
 
                     var delayStmt = { type: "delay", stmts: [] };
 
+                    // var members = Jscex._forInKeys(obj);
+                    var keysAst = root.parse("var " + keysVar + " = Jscex._forInKeys(obj);")[1][0];
+                    keysAst[1][0][1][2][0] = ast[3]; // replace obj with real AST;
+                    delayStmt.stmts.push({ type: "raw", stmt: keysAst });
+
+                    /*
                     // var members = [];
                     delayStmt.stmts.push({
                         type: "raw",
@@ -307,18 +313,19 @@
                     var keysAst = uglifyJS.parse("for (var " + memVar +" in obj) " + membersVar + ".push(" + memVar + ");")[1][0];
                     keysAst[3] = ast[3]; // replace the "obj" with real AST.
                     delayStmt.stmts.push({ type : "raw", stmt: keysAst});
+                    */
                     
                     // var index = 0;
                     delayStmt.stmts.push({
                         type: "raw",
-                        stmt: uglifyJS.parse("var " + indexVar + " = 0;")[1][0]
+                        stmt: root.parse("var " + indexVar + " = 0;")[1][0]
                     });
 
                     // index < members.length
-                    var condition = uglifyJS.parse(indexVar + " < " + membersVar + ".length")[1][0][1];
+                    var condition = root.parse(indexVar + " < " + keysVar + ".length")[1][0][1];
 
                     // index++
-                    var update = uglifyJS.parse(indexVar + "++")[1][0][1];
+                    var update = root.parse(indexVar + "++")[1][0][1];
 
                     var loopStmt = {
                         type: "loop",
@@ -333,12 +340,12 @@
                     if (ast[1][0] == "var") {
                         loopStmt.bodyStmt.stmts.push({
                             type: "raw",
-                            stmt: uglifyJS.parse("var " + varName + " = " + membersVar + "[" + indexVar + "];")[1][0]
+                            stmt: root.parse("var " + varName + " = " + keysVar + "[" + indexVar + "];")[1][0]
                         });
                     } else {
                         loopStmt.bodyStmt.stmts.push({
                             type: "raw",
-                            stmt: uglifyJS.parse(varName + " = " + membersVar + "[" + indexVar + "];")[1][0]
+                            stmt: root.parse(varName + " = " + keysVar + "[" + indexVar + "];")[1][0]
                         });
                     }
 

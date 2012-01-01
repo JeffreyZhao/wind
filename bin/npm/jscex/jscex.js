@@ -58,6 +58,15 @@
         root = Jscex;
     }
 
+    root._forInKeys = function (obj) {
+        var keys = [];
+        for (var k in obj) {
+            keys.push(k);
+        }
+
+        return keys;
+    };
+
     root.Logging = {
         Logger: Logger,
         Level: Level
@@ -66,8 +75,7 @@
     root.logger = new Logger();
     root.modules = { };
     root.binders = { };
-    root.builders = { };
-    
+    root.builders = { };   
         
     if (isAmd) {
         define("jscex", function () {
