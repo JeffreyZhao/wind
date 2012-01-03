@@ -261,15 +261,13 @@
             init(root);
         };
     } else if (isWrapping) {
-        define("jscex-async", ["jscex-builderbase"], function (require) {
-            return {
-                init: function (root) {
-                    if (!root.modules["builderbase"]) {
-                        require("jscex-builderbase").init(root);
-                    }
-                    
-                    init(root);
+        define("jscex-async", ["jscex-builderbase"], function (require, exports, module) {
+            module.exports.init = function (root) {
+                if (!root.modules["builderbase"]) {
+                    require("jscex-builderbase").init(root);
                 }
+                
+                init(root);
             };
         });
     } else if (isAmd) {

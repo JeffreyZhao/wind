@@ -1322,7 +1322,11 @@ var isAmd = (typeof require === "function" && typeof define === "function" && de
 
 if (isCommonJS) {
     module.exports.init = init;
-} else if (isWrapping || isAmd) {
+} else if (isWrapping) {
+    define("jscex-parser", function (require, exports, module) {
+        module.exports.init = init;
+    });
+} else if (isAmd) {
     define("jscex-parser", function () {
         return { init: init };
     });

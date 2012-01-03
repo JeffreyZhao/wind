@@ -221,7 +221,11 @@
     
     if (isCommonJS) {
         module.exports.init = init;
-    } else if (isWrapping || isAmd) {
+    } else if (isWrapping) {
+        define("jscex-builderbase", function (require, exports, module) {
+            module.exports.init = init;
+        });
+    } else if (isAmd) {
         define("jscex-builderbase", function () {
             return { init: init };
         });

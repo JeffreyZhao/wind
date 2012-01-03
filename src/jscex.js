@@ -39,6 +39,29 @@
             }
         }
     };
+    
+    var forInKeys = function (obj) {
+        var keys = [];
+        for (var k in obj) {
+            keys.push(k);
+        }
+
+        return keys;
+    };
+    
+    var init = function (root) {
+        root._forInKeys = forInKeys;
+
+        root.Logging = {
+            Logger: Logger,
+            Level: Level
+        };
+
+        root.logger = new Logger();
+        root.modules = { };
+        root.binders = { };
+        root.builders = { }; 
+    };
 
     // CommonJS
     var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
@@ -47,13 +70,16 @@
     // CommonJS AMD
     var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
-    var root;
-    
     if (isCommonJS) {
-        root = module.exports;
-    } else if (isWrapping || isAmd) {
-        root = { };
-        define("jscex", function (require) {
+        init(module.exports);
+    } else if (isWrapping) {
+        define("jscex", function (require, exports, module) {
+            init(module.exports);
+        });
+    } else if (isAmd) {
+        define("jscex", function () {
+            var root = {};
+            init(root);
             return root;
         });
     } else {
@@ -62,25 +88,6 @@
             Jscex = { };
         }
         
-        root = Jscex;
+        init(Jscex);
     }
-
-    root._forInKeys = function (obj) {
-        var keys = [];
-        for (var k in obj) {
-            keys.push(k);
-        }
-
-        return keys;
-    };
-
-    root.Logging = {
-        Logger: Logger,
-        Level: Level
-    };
-
-    root.logger = new Logger();
-    root.modules = { };
-    root.binders = { };
-    root.builders = { }; 
 })();

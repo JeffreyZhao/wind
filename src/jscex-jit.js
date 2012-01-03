@@ -1384,15 +1384,13 @@
             init(root);
         }
     } else if (isWrapping) {
-        define("jscex-jit", ["jscex-parser"], function (require) {
-            return {
-                init: function (root) {
-                    if (!root.modules["parser"]) {
-                        require("jscex-parser").init(root);
-                    }
-                    
-                    init(root);
+        define("jscex-jit", ["jscex-parser"], function (require, exports, module) {
+            module.exports.init = function (root) {
+                if (!root.modules["parser"]) {
+                    require("jscex-parser").init(root);
                 }
+                
+                init(root);
             };
         });
     } else if (isAmd) {

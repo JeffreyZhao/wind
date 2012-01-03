@@ -57,7 +57,11 @@
 
     if (isCommonJS) {
         module.exports.init = init;
-    } else if (isWrapping || isAmd) {
+    } else if (isWrapping) {
+        define("jscex-async-agent", ["jscex-async"], function (require, exports, module) {
+            module.exports.init = init;
+        });
+    } else if (isAmd) {
         define("jscex-async-agent", ["jscex-async"], function () {
             return { init: init };
         });
