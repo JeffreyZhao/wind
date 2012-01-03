@@ -66,7 +66,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 使用示例：
 
-    var Task = Jscex.Task;
+    var Task = Jscex.Async.Task;
 
     var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
 
