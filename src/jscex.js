@@ -40,15 +40,22 @@
         }
     };
 
-    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
-    var isAmd = (typeof define !== "undefined" && define.amd);
+    // CommonJS
+    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    // CommongJS Wrapping
+    var isWrapping = (typeof define === "function" && !define.amd);
+    // CommonJS AMD
+    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
     var root;
     
     if (isCommonJS) {
         root = module.exports;
-    } else if (isAmd) {
+    } else if (isWrapping || isAmd) {
         root = { };
+        define("jscex", function (require) {
+            return root;
+        });
     } else {
         if (typeof Jscex == "undefined") {
             /* defined Jscex in global */
@@ -75,11 +82,5 @@
     root.logger = new Logger();
     root.modules = { };
     root.binders = { };
-    root.builders = { };   
-        
-    if (isAmd) {
-        define("jscex", function () {
-            return root;
-        });
-    }
+    root.builders = { }; 
 })();

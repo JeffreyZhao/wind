@@ -325,18 +325,22 @@
         root.modules["async-powerpack"] = true;
     }
     
-    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
-    var isAmd = (typeof define !== "undefined" && define.amd);
+    // CommonJS
+    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    // CommongJS Wrapping
+    var isWrapping = (typeof define === "function" && !define.amd);
+    // CommonJS AMD
+    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
     if (isCommonJS) {
         module.exports.init = init;
-    } else if (isAmd) {
+    } else if (isWrapping || isAmd) {
         define("jscex-async-powerpack", ["jscex-async"], function () {
             return { init: init };
         });
     } else {
         if (typeof Jscex === "undefined") {
-            throw new Error('Missing root object, please load "jscex" module first.');
+            throw new Error('Missing the root object, please load "jscex" module first.');
         }
     
         init(Jscex);

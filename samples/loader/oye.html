@@ -14,7 +14,7 @@
 		'jscex-parser':			 '../../src/jscex-parser.js'
 	});
 
-    require(['jscex', 'jscex-jit', 'jscex-async-powerpack', 'jscex-async', 'jscex-builderbase', 'jscex-parser'], function (Jscex, jit, asyncPowerPack, async){
+    require(['jscex', 'jscex-jit', 'jscex-async-powerpack', 'jscex-async'], function (Jscex, jit, asyncPowerPack, async){
 		jit.init(Jscex);
         async.init(Jscex);
         asyncPowerPack.init(Jscex);

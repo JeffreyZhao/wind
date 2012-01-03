@@ -1368,8 +1368,12 @@
         root.modules["jit"] = true;
     }
     
-    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
-    var isAmd = (typeof define !== "undefined" && define.amd);
+    // CommonJS
+    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    // CommongJS Wrapping
+    var isWrapping = (typeof define === "function" && !define.amd);
+    // CommonJS AMD
+    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
     if (isCommonJS) {
         module.exports.init = function (root) {
@@ -1379,6 +1383,18 @@
             
             init(root);
         }
+    } else if (isWrapping) {
+        define("jscex-jit", ["jscex-parser"], function (require) {
+            return {
+                init: function (root) {
+                    if (!root.modules["parser"]) {
+                        require("jscex-parser").init(root);
+                    }
+                    
+                    init(root);
+                }
+            };
+        });
     } else if (isAmd) {
         define("jscex-jit", ["jscex-parser"], function (parser) {
             return {
@@ -1393,7 +1409,7 @@
         });
     } else {
         if (typeof Jscex === "undefined") {
-            throw new Error('Missing root object, please load "jscex" module first.');
+            throw new Error('Missing the root object, please load "jscex" module first.');
         }
         
         if (!Jscex.modules["parser"]) {
