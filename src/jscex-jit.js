@@ -1374,11 +1374,21 @@
     var isWrapping = (typeof define === "function" && !define.amd);
     // CommonJS AMD
     var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
-    
+
     if (isCommonJS) {
         module.exports.init = function (root) {
             if (!root.modules["parser"]) {
-                require("./jscex-parser").init(root);
+                if (typeof __dirname === "string") {
+                    try {
+                        require.paths.unshift(__dirname);
+                    } catch (_) {
+                        try {
+                            module.paths.unshift(__dirname);
+                        } catch (_) {}
+                    }
+                }
+
+                require("jscex-parser").init(root);
             };
             
             init(root);

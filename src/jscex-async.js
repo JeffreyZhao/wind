@@ -255,7 +255,17 @@
     if (isCommonJS) {
         module.exports.init = function (root) {
             if (!root.modules["builderbase"]) {
-                require("./jscex-builderbase").init(root);
+                if (typeof __dirname === "string") {
+                    try {
+                        require.paths.unshift(__dirname);
+                    } catch (_) {
+                        try {
+                            module.paths.unshift(__dirname);
+                        } catch (_) {}
+                    }
+                }
+            
+                require("jscex-builderbase").init(root);
             }
             
             init(root);
