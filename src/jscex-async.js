@@ -100,7 +100,7 @@
 
                     this.result = value;
                     this.status = "succeeded";
-                    this._notify(listeners["success"]);
+                    this._notify("success", listeners["success"]);
 
                 } else if (type == "failure") {
 
@@ -112,20 +112,20 @@
                         this.status = "faulted";
                     }
                     
-                    this._notify(listeners["failure"]);
+                    this._notify("failure", listeners["failure"]);
 
                 } else {
                     throw new Error("Unsupported type: " + type);
                 }
                 
-                this._notify(listeners["complete"]);
+                this._notify("complete", listeners["complete"]);
                 
                 if (this.error && !listeners["failure"] && !listeners["complete"]) {
                     root.logger.warn("[WARNING] An unhandled error occurred: " + this.error);
                 }
             },
 
-            _notify: function (listeners) {
+            _notify: function (ev, listeners) {
                 if (!listeners) {
                     return;
                 }

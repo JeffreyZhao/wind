@@ -144,21 +144,27 @@
             
             return Task.create(function (taskWhenAll) {
                 var taskKeys = {};
+                
                 for (var key in tasks) {
-                    taskKeys[tasks[key].id] = key;
+                    if (tasks.hasOwnProperty(key)) {
+                        var t = tasks[key];
+                        if (Task.isTask(t)) {
+                            taskKeys[t.id] = key;
+                        }
+                    }
                 }
                 
                 // start all the tasks
-                for (var key in tasks) {
-                    var t = tasks[key];
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
                     if (t.status == "ready") {
                         t.start();
                     }
                 }
                 
                 // if there's a task already failed, then failed
-                for (var key in tasks) {
-                    var t = tasks[key];
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
                     if (t.error) {
                         taskWhenAll.complete("failure", t.error);
                         return;
@@ -169,8 +175,8 @@
 
                 var onComplete = function (t) {
                     if (t.error) {
-                        for (var key in tasks) {
-                            tasks[key].removeEventListener("complete", onComplete);
+                        for (var id in taskKeys) {
+                            tasks[taskKeys[id]].removeEventListener("complete", onComplete);
                         }
 
                         taskWhenAll.complete("failure", t.error);
@@ -178,7 +184,6 @@
                         var key = taskKeys[t.id];
                         results[key] = t.result;
                         
-                        delete tasks[key];
                         delete taskKeys[t.id];
                         
                         runningNumber--;
@@ -192,11 +197,11 @@
                 var runningNumber = 0;
                 
                 // now all the tasks should be "succeeded" or "running"
-                for (var key in tasks) {
+                for (var id in taskKeys) {
+                    var key = taskKeys[id]
                     var t = tasks[key];
                     if (t.status == "succeeded") {
                         results[key] = t.result;
-                        delete tasks[key];
                         delete taskKeys[t.id];
                     } else { // running
                         runningNumber++;
@@ -227,16 +232,27 @@
             }
             
             return Task.create(function (taskWhenAny) {
-                // start all the tasks
+                var taskKeys = {};
                 for (var key in tasks) {
-                    var t = tasks[key];
+                    if (tasks.hasOwnProperty(key)) {
+                        var t = tasks[key];
+                        if (Task.isTask(t)) {
+                            taskKeys[t.id] = key;
+                        }
+                    }
+                }
+            
+                // start all the tasks
+                for (var id in taskKeys) {
+                    var t = tasks[taskKeys[id]];
                     if (t.status == "ready") {
                         t.start();
                     }
                 }
                 
                 // if there's a task already failed/succeeded, then return
-                for (var key in tasks) {
+                for (var id in taskKeys) {
+                    var key = taskKeys[id];
                     var t = tasks[key];
                     if (t.error || t.status == "succeeded") {
                         taskWhenAny.complete("success", { key: key, task: t });
@@ -245,16 +261,16 @@
                 }
                 
                 var onComplete = function (t) {
-                    for (var key in tasks) {
-                        tasks[key].removeEventListener("complete", onComplete);
+                    for (var id in taskKeys) {
+                        tasks[taskKeys[id]].removeEventListener("complete", onComplete);
                     }
                 
-                    taskWhenAny.complete("success", { key: key, task: t });
+                    taskWhenAny.complete("success", { key: taskKeys[t.id], task: t });
                 }
                 
                 // now all the tasks are in "running" status.
-                for (var key in tasks) {
-                    tasks[key].addEventListener("complete", onComplete);
+                for (var id in taskKeys) {
+                    tasks[taskKeys[id]].addEventListener("complete", onComplete);
                 }
             });
         }

@@ -100,7 +100,7 @@
 
                     this.result = value;
                     this.status = "succeeded";
-                    this._notify(listeners["success"]);
+                    this._notify("success", listeners["success"]);
 
                 } else if (type == "failure") {
 
@@ -112,20 +112,20 @@
                         this.status = "faulted";
                     }
                     
-                    this._notify(listeners["failure"]);
+                    this._notify("failure", listeners["failure"]);
 
                 } else {
                     throw new Error("Unsupported type: " + type);
                 }
                 
-                this._notify(listeners["complete"]);
+                this._notify("complete", listeners["complete"]);
                 
                 if (this.error && !listeners["failure"] && !listeners["complete"]) {
                     root.logger.warn("[WARNING] An unhandled error occurred: " + this.error);
                 }
             },
 
-            _notify: function (listeners) {
+            _notify: function (ev, listeners) {
                 if (!listeners) {
                     return;
                 }
@@ -245,17 +245,41 @@
         root.modules["async"] = true;
     }
     
-    var isCommonJS = (typeof require !== "undefined") && (typeof module !== "undefined") && module.exports;
-    var isAmd = (typeof define !== "undefined" && define.amd);
+    // CommonJS
+    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    // CommongJS Wrapping
+    var isWrapping = (typeof define === "function" && !define.amd);
+    // CommonJS AMD
+    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
     if (isCommonJS) {
         module.exports.init = function (root) {
             if (!root.modules["builderbase"]) {
-                require("./jscex-builderbase").init(root);
+                if (typeof __dirname === "string") {
+                    try {
+                        require.paths.unshift(__dirname);
+                    } catch (_) {
+                        try {
+                            module.paths.unshift(__dirname);
+                        } catch (_) {}
+                    }
+                }
+            
+                require("jscex-builderbase").init(root);
             }
             
             init(root);
         };
+    } else if (isWrapping) {
+        define("jscex-async", ["jscex-builderbase"], function (require, exports, module) {
+            module.exports.init = function (root) {
+                if (!root.modules["builderbase"]) {
+                    require("jscex-builderbase").init(root);
+                }
+                
+                init(root);
+            };
+        });
     } else if (isAmd) {
         define("jscex-async", ["jscex-builderbase"], function (builderBase) {
             return {
@@ -270,7 +294,7 @@
         });
     } else {
         if (typeof Jscex === "undefined") {
-            throw new Error('Missing root object, please load "jscex" module first.');
+            throw new Error('Missing the root object, please load "jscex" module first.');
         }
     
         if (!Jscex.modules["builderbase"]) {
