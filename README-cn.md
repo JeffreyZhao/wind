@@ -56,7 +56,7 @@ Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex�
 您暂时还需要下载jscex-async-powerpack.js文件，并在其相同目录下创建quick-start.js，写入：
 
     var Jscex = require("jscex");
-    require("jscex").init(Jscex);
+    require("jscex-jit").init(Jscex);
     require("jscex-async").init(Jscex);
     require("./jscex-async-powerpack").init(Jscex);
 
