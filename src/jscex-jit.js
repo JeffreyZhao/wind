@@ -37,6 +37,14 @@
             };
         })();
     
+    function sprintf(format) {
+        var args = arguments;
+        return format.toString().replace(new RegExp("{\\d+}", "g"), function (p) {
+            var n = parseInt(p.substring(1, p.length - 1), 10);
+            return args[n + 1];
+        });
+    }    
+    
     // seed defined in global
     if (typeof __jscex__tempVarSeed === "undefined") {
         __jscex__tempVarSeed = 0;
@@ -44,9 +52,9 @@
 
     var CodeWriter = function (indent) {
         this._indent = indent || "    ";
+        this._indentLevel = 0;
         
         this.lines = [];
-        this.indentLevel = 0;
     }
     CodeWriter.prototype = {
         write: function (format) {
@@ -73,16 +81,60 @@
         },
         
         writeIndents: function () {
-            var indents = new Array(this.indentLevel);
-            for (var i = 0; i < this.indentLevel; i++) {
+            var indents = new Array(this._indentLevel);
+            for (var i = 0; i < this._indentLevel; i++) {
                 indents[i] = this._indent;
             }
             
             this.write(indents.join(""));
             return this;
+        }, 
+        
+        addIndentLevel: function (diff) {
+            this._indentLevel += diff;
+            return this;
         }
     };
+    
+    var MultipleCodeWriter = function (writers) {
+        this._writers = writers;
+    }
+    MultipleCodeWriter.prototype = {
+        write: function () {
+            for (var i = 0; i < this._writers; i++) {
+                var w = this._writers[i];
+                w.write.apply(w, arguments);
+            }
+            
+            return this;
+        },
         
+        writeLine: function () {
+            for (var i = 0; i < this._writers; i++) {
+                var w = this._writers[i];
+                w.writeLine.apply(w, arguments);
+            }
+            
+            return this;
+        },
+        
+        writeIndents: function () {
+            for (var i = 0; i < this._writers; i++) {
+                this._writers[i].writeIndents();
+            }
+            
+            return this;
+        }, 
+        
+        addIndentLevel: function (diff) {
+            for (var i = 0; i < this._writers; i++) {
+                this._writers[i].addIndentLevel(diff);
+            }
+            
+            return this;
+        }
+    }
+    
     function isJscexPattern(ast) {
         if (ast[0] != "call") return false;
         
@@ -112,18 +164,18 @@
         var builderName = ast[2][0][2][0][1];
         var funcAst = ast[2][0][2][1];
 
-        var jscexTreeGenerator = new JscexTreeGenerator2(root, builderName);
+        var jscexTreeGenerator = new JscexTreeGenerator(root, builderName);
         var jscexAst = jscexTreeGenerator.generate(funcAst);
 
-        var codeGenerator = new CodeGenerator2(root, builderName, codeWriter, commentWriter);
+        var codeGenerator = new CodeGenerator(root, builderName, codeWriter, commentWriter);
         codeGenerator.generate(funcAst[2], jscexAst);
     }
         
-    var JscexTreeGenerator2 = function (root, builderName) {
+    var JscexTreeGenerator = function (root, builderName) {
         this._root = root;
         this._binder = root.binders[builderName];
     }
-    JscexTreeGenerator2.prototype = {
+    JscexTreeGenerator.prototype = {
 
         generate: function (ast) {
 
@@ -549,15 +601,17 @@
             }
         }
     }
-        
-    var CodeGenerator2 = function (root, builderName, codeWriter, commentWriter) {
+    
+    var CodeGenerator = function (root, builderName, codeWriter, commentWriter) {
         this._root = root;
         this._builderName = builderName;
         this._binder = root.binders[builderName];
+        
         this._codeWriter = codeWriter;
         this._commentWriter = commentWriter;
+        this._bothWriter = new MultipleCodeWriter([codeWriter, commentWriter]);
     }
-    CodeGenerator2.prototype = {
+    CodeGenerator.prototype = {
     
         _code: function () {
             this._codeWriter.write.apply(this._codeWriter, arguments);
@@ -575,7 +629,63 @@
         },
         
         _codeIndentLevel: function (diff) {
-            this._codeWriter.indentLevel += diff;
+            this._codeWriter.addIndentLevel(diff);
+            return this;
+        },
+        
+        _comment: function () {
+            this._commentWriter.write.apply(this._commentWriter, arguments);
+            return this;
+        },
+        
+        _commentLine: function () {
+            this._commentWriter.writeLine.apply(this._commentWriter, arguments);
+            return this;
+        },
+        
+        _commentIndents: function () {
+            this._commentWriter.writeIndents();
+            return this;
+        },
+        
+        _commentIndentLevel: function (diff) {
+            this._commentWriter.addIndentLevel(diff);
+            return this;
+        },
+        
+        _both: function () {
+            this._codeWriter.write.apply(this._codeWriter, arguments);
+            if (this._pos.inRaw) {
+                this._commentWriter.write.apply(this._commentWriter, arguments);
+            }
+
+            return this;
+        },
+        
+        _bothLine: function () {
+            this._codeWriter.writeLine.apply(this._codeWriter, arguments);
+            this._commentWriter.writeLine.apply(this._commentWriter, arguments);
+            
+            return this;
+        },
+        
+        _bothIndents: function () {
+            this._codeWriter.writeIndents();
+            this._commentWriter.writeIndents();
+            
+            return this;
+        },
+        
+        _bothIndentLevel: function (diff) {
+            this._codeWriter.addIndentLevel(diff);
+            this._commentWriter.addIndentLevel(diff);
+            
+            return this;
+        },
+        
+        _newLine: function () {
+            this._codeWriter.writeLine.apply(this._codeWriter, arguments);
+            this._commentWriter.writeLine(); // To Remove
             return this;
         },
     
@@ -583,29 +693,24 @@
             this._normalMode = false;
             this._builderVar = "$$_builder_$$_" + (__jscex__tempVarSeed++);
             
-            this._codeLine("(function ({0}) {", params.join(", "));
-            this._codeIndentLevel(1);
+            this._code("(function ({0}) {", params.join(", "))._comment("function () {", params.join(", "))._newLine();
+            this._codeIndentLevel(1)._commentIndentLevel(1);
 
-            this._codeIndents()
-                ._codeLine("var {0} = Jscex.builders[{1}];", this._builderVar, stringify(this._builderName));
+            this._codeIndents()._newLine("var {0} = Jscex.builders[{1}];", this._builderVar, stringify(this._builderName));
 
-            this._codeIndents()
-                ._codeLine("return {0}.Start(this,", this._builderVar);
+            this._codeIndents()._newLine("return {0}.Start(this,", this._builderVar);
             this._codeIndentLevel(1);
 
             this._pos = { };
 
-            this._codeIndents()
-                ._visitJscex(jscexAst)
-                ._codeLine();
+            this._codeIndents()._visitJscex(jscexAst)._newLine();
             this._codeIndentLevel(-1);
 
-            this._codeIndents()
-                ._codeLine(");");
-            this._codeIndentLevel(-1);
+            this._codeIndents()._newLine(");");
+            this._codeIndentLevel(-1)._commentIndentLevel(-1);
 
-            this._codeIndents()
-                ._code("})");
+            this._codeIndents()._commentIndents()
+                ._code("})")._comment("}");
         },
 
         _visitJscex: function (ast) {
@@ -613,12 +718,14 @@
             return this;
         },
 
-        _visitRaw: function (ast) {
+        _visitRaw: function (ast, inRaw) {
             var type = ast[0];
 
             var visitor = this._rawVisitors[type];
             if (visitor) {
+                if (inRaw) this._pos.inRaw = true;
                 visitor.call(this, ast);
+                if (inRaw) this._pos.inRaw = false;
             } else {
                 throw new Error('"' + type + '" is not currently supported.');
             }
@@ -631,15 +738,11 @@
                 var stmt = statements[i];
 
                 if (stmt.type == "raw" || stmt.type == "if" || stmt.type == "switch") {
-                    this._codeIndents()
-                        ._visitJscex(stmt)
-                        ._codeLine();
+                    this._codeIndents()._visitJscex(stmt)._newLine();
                 } else if (stmt.type == "delay") {
                     this._visitJscexStatements(stmt.stmts);
                 } else {
-                    this._codeIndents()
-                        ._code("return ")._visitJscex(stmt)
-                        ._codeLine(";");
+                    this._codeIndents()._code("return ")._visitJscex(stmt)._newLine(";");
                 }
             }
         },
@@ -648,8 +751,7 @@
             for (var i = 0; i < statements.length; i++) {
                 var s = statements[i];
 
-                this._codeIndents()
-                    ._visitRaw(s)._codeLine();
+                this._bothIndents()._visitRaw(s)._bothLine();
 
                 switch (s[0]) {
                     case "break":
@@ -665,12 +767,11 @@
             if (body[0] == "block") {
                 this._visitRaw(body);
             } else {
-                this._codeLine();
-                this._codeIndentLevel(1);
+                this._bothLine();
+                this._bothIndentLevel(1);
 
-                this._codeIndents()
-                    ._visitRaw(body);
-                this._codeIndentLevel(-1);
+                this._bothIndents()._visitRaw(body);
+                this._bothIndentLevel(-1);
             }
 
             return this;
@@ -681,21 +782,20 @@
             var args = ast[2];
             var statements = ast[3];
             
-            this._codeLine("function " + funcName + "(" + args.join(", ") + ") {")
-            this._codeIndentLevel(1);
+            this._bothLine("function " + funcName + "(" + args.join(", ") + ") {")
+            this._bothIndentLevel(1);
 
             var currInFunction = this._pos.inFunction;
             this._pos.inFunction = true;
 
             this._visitRawStatements(statements);
-            this._codeIndentLevel(-1);
+            this._bothIndentLevel(-1);
 
             this._pos.inFunction = currInFunction;
 
-            this._codeIndents()
-                ._code("}");
+            this._bothIndents()._both("}");
         },
-
+        
         _jscexVisitors: {
             "delay": function (ast) {
                 if (ast.stmts.length == 1) {
@@ -718,69 +818,65 @@
                     }
                 }
 
-                this._codeLine(this._builderVar + ".Delay(function () {");
+                this._newLine(this._builderVar + ".Delay(function () {");
                 this._codeIndentLevel(1);
 
                 this._visitJscexStatements(ast.stmts);
                 this._codeIndentLevel(-1);
 
-                this._codeIndents()
-                    ._code("})");
+                this._codeIndents()._code("})");
             },
 
             "combine": function (ast) {
-                this._codeLine(this._builderVar + ".Combine(");
+                this._newLine(this._builderVar + ".Combine(");
                 this._codeIndentLevel(1);
 
-                this._codeIndents()
-                    ._visitJscex(ast.first)._codeLine(",");
-                this._codeIndents()
-                    ._visitJscex(ast.second)._codeLine();
+                this._codeIndents()._visitJscex(ast.first)._newLine(",");
+                this._codeIndents()._visitJscex(ast.second)._newLine();
                 this._codeIndentLevel(-1);
 
-                this._codeIndents()
-                    ._code(")");
+                this._codeIndents()._code(")");
             },
 
             "loop": function (ast) {
-                this._codeLine(this._builderVar + ".Loop(");
+                this._newLine(this._builderVar + ".Loop(");
                 this._codeIndentLevel(1);
 
                 if (ast.condition) {
                     this._codeIndents()
-                        ._codeLine("function () {");
+                        ._newLine("function () {");
                     this._codeIndentLevel(1);
 
                     this._codeIndents()
-                        ._code("return ")._visitRaw(ast.condition)._codeLine(";");
+                        ._code("return ")._visitRaw(ast.condition)._newLine(";");
                     this._codeIndentLevel(-1);
 
                     this._codeIndents()
-                        ._codeLine("},");
+                        ._newLine("},");
                 } else {
-                    this._codeIndents()._codeLine("null,");
+                    this._codeIndents()._newLine("null,");
                 }
 
                 if (ast.update) {
                     this._codeIndents()
-                        ._codeLine("function () {");
+                        ._newLine("function () {");
                     this._codeIndentLevel(1);
 
                     this._codeIndents()
-                        ._visitRaw(ast.update)._codeLine(";");
+                        ._visitRaw(ast.update)._newLine(";");
                     this._codeIndentLevel(-1);
 
                     this._codeIndents()
-                        ._codeLine("},");
+                        ._newLine("},");
                 } else {
-                    this._codeIndents()._codeLine("null,");
+                    this._codeIndents()._newLine("null,");
                 }
 
                 this._codeIndents()
-                    ._visitJscex(ast.bodyStmt)._codeLine(",");
+                    ._visitJscex(ast.bodyStmt)._newLine(",");
 
                 this._codeIndents()
-                    ._codeLine(ast.bodyFirst);
+                    ._newLine(ast.bodyFirst);
                 this._codeIndentLevel(-1);
 
                 this._codeIndents()
@@ -788,21 +884,21 @@
             },
 
             "raw": function (ast) {
-                this._visitRaw(ast.stmt);
+                this._visitRaw(ast.stmt, true);
             },
 
             "bind": function (ast) {
                 var info = ast.info;
-                this._code(this._builderVar + ".Bind(")._visitRaw(info.expression)._codeLine(", function (" + info.argName + ") {");
+                this._code(this._builderVar + ".Bind(")._visitRaw(info.expression)._newLine(", function (" + info.argName + ") {");
                 this._codeIndentLevel(1);
 
                 if (info.assignee == "return") {
                     this._codeIndents()
-                        ._codeLine("return " + this._builderVar + ".Return(" + info.argName + ");");
+                        ._newLine("return " + this._builderVar + ".Return(" + info.argName + ");");
                 } else {
                     if (info.assignee) {
                         this._codeIndents()
-                            ._visitRaw(info.assignee)._codeLine(" = " + info.argName + ";");
+                            ._visitRaw(info.assignee)._newLine(" = " + info.argName + ";");
                     }
 
                     this._visitJscexStatements(ast.stmts);
@@ -818,7 +914,7 @@
                 for (var i = 0; i < ast.conditionStmts.length; i++) {
                     var stmt = ast.conditionStmts[i];
                     
-                    this._code("if (")._visitRaw(stmt.cond)._codeLine(") {");
+                    this._code("if (")._visitRaw(stmt.cond)._newLine(") {");
                     this._codeIndentLevel(1);
 
                     this._visitJscexStatements(stmt.stmts);
@@ -828,14 +924,14 @@
                         ._code("} else ");
                 }
 
-                this._codeLine("{");
+                this._newLine("{");
                 this._codeIndentLevel(1);
 
                 if (ast.elseStmts) {
                     this._visitJscexStatements(ast.elseStmts);
                 } else {
                     this._codeIndents()
-                        ._codeLine("return " + this._builderVar + ".Normal();");
+                        ._newLine("return " + this._builderVar + ".Normal();");
                 }
 
                 this._codeIndentLevel(-1);
@@ -845,7 +941,7 @@
             },
 
             "switch": function (ast) {
-                this._code("switch (")._visitRaw(ast.item)._codeLine(") {");
+                this._code("switch (")._visitRaw(ast.item)._newLine(") {");
                 this._codeIndentLevel(1);
 
                 for (var i = 0; i < ast.caseStmts.length; i++) {
@@ -853,9 +949,9 @@
 
                     if (caseStmt.item) {
                         this._codeIndents()
-                            ._code("case ")._visitRaw(caseStmt.item)._codeLine(":");
+                            ._code("case ")._visitRaw(caseStmt.item)._newLine(":");
                     } else {
-                        this._codeIndents()._codeLine("default:");
+                        this._codeIndents()._newLine("default:");
                     }
                     this._codeIndentLevel(1);
 
@@ -868,33 +964,33 @@
             },
 
             "try": function (ast) {
-                this._codeLine(this._builderVar + ".Try(");
+                this._newLine(this._builderVar + ".Try(");
                 this._codeIndentLevel(1);
 
                 this._codeIndents()
-                    ._visitJscex(ast.bodyStmt)._codeLine(",");
+                    ._visitJscex(ast.bodyStmt)._newLine(",");
 
                 if (ast.catchStmts) {
                     this._codeIndents()
-                        ._codeLine("function (" + ast.exVar + ") {");
+                        ._newLine("function (" + ast.exVar + ") {");
                     this._codeIndentLevel(1);
 
                     this._visitJscexStatements(ast.catchStmts);
                     this._codeIndentLevel(-1);
 
                     this._codeIndents()
-                        ._codeLine("},");
+                        ._newLine("},");
                 } else {
                     this._codeIndents()
-                        ._codeLine("null,");
+                        ._newLine("null,");
                 }
 
                 if (ast.finallyStmt) {
                     this._codeIndents()
-                        ._visitJscex(ast.finallyStmt)._codeLine();
+                        ._visitJscex(ast.finallyStmt)._newLine();
                 } else {
                     this._codeIndents()
-                        ._codeLine("null");
+                        ._newLine("null");
                 }
                 this._codeIndentLevel(-1);
 
@@ -927,24 +1023,24 @@
 
         _rawVisitors: {
             "var": function (ast) {
-                this._code("var ");
+                this._both("var ");
 
                 var items = ast[1];
                 for (var i = 0; i < items.length; i++) {
-                    this._code(items[i][0]);
+                    this._both(items[i][0]);
                     if (items[i].length > 1) {
-                        this._code(" = ")._visitRaw(items[i][1]);
+                        this._both(" = ")._visitRaw(items[i][1]);
                     }
-                    if (i < items.length - 1) this._code(", ");
+                    if (i < items.length - 1) this._both(", ");
                 }
 
-                this._code(";");
+                this._both(";");
             },
 
             "seq": function (ast) {
                 for (var i = 1; i < ast.length; i++) {
                     this._visitRaw(ast[i]);
-                    if (i < ast.length - 1) this._code(", "); 
+                    if (i < ast.length - 1) this._both(", ");
                 }
             },
 
@@ -957,17 +1053,17 @@
                 }
 
                 if (needBracket(left)) {
-                    this._code("(")._visitRaw(left)._code(") ");
+                    this._both("(")._visitRaw(left)._both(") ");
                 } else {
-                    this._visitRaw(left)._code(" ");
+                    this._visitRaw(left)._both(" ");
                 }
 
-                this._code(op);
+                this._both(op);
 
                 if (needBracket(right)) {
-                    this._code(" (")._visitRaw(right)._code(")");
+                    this._both(" (")._visitRaw(right)._both(")");
                 } else {
-                    this._code(" ")._visitRaw(right);
+                    this._both(" ")._visitRaw(right);
                 }
             },
 
@@ -975,28 +1071,28 @@
                 var prop = ast[1], index = ast[2];
 
                 function needBracket() {
-                    return !(prop[0] == "name")
+                    return prop[0] != "name";
                 }
 
                 if (needBracket()) {
-                    this._code("(")._visitRaw(prop)._code(")[")._visitRaw(index)._code("]");
+                    this._both("(")._visitRaw(prop)._both(")[")._visitRaw(index)._both("]");
                 } else {
-                    this._visitRaw(prop)._code("[")._visitRaw(index)._code("]");
+                    this._visitRaw(prop)._both("[")._visitRaw(index)._both("]");
                 }
             },
 
             "unary-postfix": function (ast) {
                 var op = ast[1];
                 var item = ast[2];
-                this._visitRaw(item)._code(op);
+                this._visitRaw(item)._both(op);
             },
 
             "unary-prefix": function (ast) {
                 var op = ast[1];
                 var item = ast[2];
-                this._code(op);
+                this._both(op);
                 if (op == "typeof") {
-                    this._code("(")._visitRaw(item)._code(")");
+                    this._both("(")._visitRaw(item)._both(")");
                 } else {
                     this._visitRaw(item);
                 }
@@ -1009,15 +1105,15 @@
 
                 this._visitRaw(name);
                 if ((typeof op) == "string") {
-                    this._code(" " + op + "= ");
+                    this._both(" " + op + "= ");
                 } else {
-                    this._code(" = ");
+                    this._both(" = ");
                 }
                 this._visitRaw(value);
             },
 
             "stat": function (ast) {
-                this._visitRaw(ast[1])._code(";");
+                this._visitRaw(ast[1])._both(";");
             },
 
             "dot": function (ast) {
@@ -1027,30 +1123,30 @@
                 }
 
                 if (needBracket()) {
-                    this._code("(")._visitRaw(ast[1])._code(").")._code(ast[2]);
+                    this._both("(")._visitRaw(ast[1])._both(").")._both(ast[2]);
                 } else {
-                    this._visitRaw(ast[1])._code(".")._code(ast[2]);
+                    this._visitRaw(ast[1])._both(".")._both(ast[2]);
                 }
             },
 
             "new": function (ast) {
                 var ctor = ast[1];
 
-                this._code("new ")._visitRaw(ctor)._code("(");
+                this._both("new ")._visitRaw(ctor)._both("(");
 
                 var args = ast[2];
                 for (var i = 0, len = args.length; i < len; i++) {
                     this._visitRaw(args[i]);
-                    if (i < len - 1) this._code(", ");
+                    if (i < len - 1) this._both(", ");
                 }
 
-                this._code(")");
+                this._both(")");
             },
 
             "call": function (ast) {
             
                 if (isJscexPattern(ast)) {
-                    compileJscexPattern(this._root, ast, this._codeWriter, this._commentWriter);
+                    compileJscexPattern(this._root, ast, this._bothWriter, this._commentWriter);
                 } else {
 
                     var invalidBind = (ast[1][0] == "name") && (ast[1][1] == this._binder);
@@ -1059,15 +1155,15 @@
                         this._buffer = [];
                     }
 
-                    this._visitRaw(ast[1])._code("(");
+                    this._visitRaw(ast[1])._both("(");
 
                     var args = ast[2];
                     for (var i = 0; i < args.length; i++) {
                         this._visitRaw(args[i]);
-                        if (i < args.length - 1) this._code(", ");
+                        if (i < args.length - 1) this._both(", ");
                     }
 
-                    this._code(")");
+                    this._both(")");
 
                     if (invalidBind) {
                         throw ("Invalid bind operation: " + this._buffer.join(""));
@@ -1076,56 +1172,56 @@
             },
 
             "name": function (ast) {
-                this._code(ast[1]);
+                this._both(ast[1]);
             },
 
             "object": function (ast) {
                 var items = ast[1];
                 if (items.length <= 0) {
-                    this._code("{ }");
+                    this._both("{ }");
                 } else {
-                    this._codeLine("{");
-                    this._codeIndentLevel(1);
+                    this._bothLine("{");
+                    this._bothIndentLevel(1);
                     
                     for (var i = 0; i < items.length; i++) {
-                        this._codeIndents()
-                            ._code(stringify(items[i][0]) + ": ")
+                        this._bothIndents()
+                            ._both(stringify(items[i][0]) + ": ")
                             ._visitRaw(items[i][1]);
                         
                         if (i < items.length - 1) {
-                            this._codeLine(",");
+                            this._bothLine(",");
                         } else {
-                            this._codeLine("");
+                            this._bothLine("");
                         }
                     }
                     
-                    this._codeIndentLevel(-1);
-                    this._codeIndents()._code("}");
+                    this._bothIndentLevel(-1);
+                    this._bothIndents()._both("}");
                 }
             },
 
             "array": function (ast) {
-                this._code("[");
+                this._both("[");
 
                 var items = ast[1];
                 for (var i = 0; i < items.length; i++) {
                     this._visitRaw(items[i]);
-                    if (i < items.length - 1) this._code(", ");
+                    if (i < items.length - 1) this._both(", ");
                 }
 
-                this._code("]");
+                this._both("]");
             },
 
             "num": function (ast) {
-                this._code(ast[1]);
+                this._both(ast[1]);
             },
 
             "regexp": function (ast) {
-                this._code("/" + ast[1] + "/" + ast[2]);
+                this._both("/" + ast[1] + "/" + ast[2]);
             },
 
             "string": function (ast) {
-                this._code(stringify(ast[1]));
+                this._both(stringify(ast[1]));
             },
 
             "function": function (ast) {
@@ -1138,37 +1234,37 @@
 
             "return": function (ast) {
                 if (this._pos.inFunction) {
-                    this._code("return");
+                    this._both("return");
                     var value = ast[1];
-                    if (value) this._code(" ")._visitRaw(value);
-                    this._code(";");
+                    if (value) this._both(" ")._visitRaw(value);
+                    this._both(";");
                 } else {
-                    this._code("return ")._visitJscex({ type: "return", stmt: ast })._code(";");
+                    this._both("return ")._visitJscex({ type: "return", stmt: ast })._both(";");
                 }
             },
             
             "for": function (ast) {
-                this._code("for (");
+                this._both("for (");
 
                 var setup = ast[1];
                 if (setup) {
                     this._visitRaw(setup);
                     if (setup[0] != "var") {
-                        this._code("; ");
+                        this._both("; ");
                     } else {
-                        this._code(" ");
+                        this._both(" ");
                     }
                 } else {
-                    this._code("; ");
+                    this._both("; ");
                 }
 
                 var condition = ast[2];
                 if (condition) this._visitRaw(condition);
-                this._code("; ");
+                this._both("; ");
 
                 var update = ast[3];
                 if (update) this._visitRaw(update);
-                this._code(") ");
+                this._both(") ");
 
                 var currInLoop = this._pos.inLoop;
                 this._pos.inLoop = true;
@@ -1180,40 +1276,40 @@
             },
 
             "for-in": function (ast) {
-                this._code("for (");
+                this._both("for (");
 
                 var declare = ast[1];
                 if (declare[0] == "var") { // declare == ["var", [["m"]]]
-                    this._code("var " + declare[1][0][0]);
+                    this._both("var " + declare[1][0][0]);
                 } else {
                     this._visitRaw(declare);
                 }
                 
-                this._code(" in ")._visitRaw(ast[3])._code(") ");
+                this._both(" in ")._visitRaw(ast[3])._both(") ");
 
                 var body = ast[4];
                 this._visitRawBody(body);
             },
 
             "block": function (ast) {
-                this._codeLine("{")
-                this._codeIndentLevel(1);
+                this._bothLine("{")
+                this._bothIndentLevel(1);
 
                 this._visitRawStatements(ast[1]);
-                this._codeIndentLevel(-1);
+                this._bothIndentLevel(-1);
 
-                this._codeIndents()
-                    ._code("}");
+                this._bothIndents()
+                    ._both("}");
             },
 
             "while": function (ast) {
                 var condition = ast[1];
                 var body = ast[2];
 
-                var currInLoop = this._pos.inLoop
+                var currInLoop = this._pos.inLoop;
                 this._pos.inLoop = true;
 
-                this._code("while (")._visitRaw(condition)._code(") ")._visitRawBody(body);
+                this._both("while (")._visitRaw(condition)._both(") ")._visitRawBody(body);
 
                 this._pos.inLoop = currInLoop;
             },
@@ -1225,81 +1321,82 @@
                 var currInLoop = this._pos.inLoop;
                 this._pos.inLoop = true;
 
-                this._code("do ")._visitRawBody(body);
+                this._both("do ")._visitRawBody(body);
 
                 this._pos.inLoop = currInLoop;
 
                 if (body[0] == "block") {
-                    this._code(" ");
+                    this._both(" ");
                 } else {
-                    this._codeLine()._codeIndents();
+                    this._bothLine()
+                        ._bothIndents();
                 }
 
-                this._code("while (")._visitRaw(condition)._code(");");
+                this._both("while (")._visitRaw(condition)._both(");");
             },
 
             "if": function (ast) {
                 var condition = ast[1];
                 var thenPart = ast[2];
 
-                this._code("if (")._visitRaw(condition)._code(") ")._visitRawBody(thenPart);
+                this._both("if (")._visitRaw(condition)._both(") ")._visitRawBody(thenPart);
 
                 var elsePart = ast[3];
                 if (elsePart) {
                     if (thenPart[0] == "block") {
-                        this._code(" ");
+                        this._both(" ");
                     } else {
-                        this._codeLine("")
-                            ._codeIndents();
+                        this._bothLine("")
+                            ._bothIndents();
                     }
 
                     if (elsePart[0] == "if") {
-                        this._code("else ")._visitRaw(elsePart);
+                        this._both("else ")._visitRaw(elsePart);
                     } else {
-                        this._code("else ")._visitRawBody(elsePart);
+                        this._both("else ")._visitRawBody(elsePart);
                     }
                 }
             },
 
             "break": function (ast) {
                 if (this._pos.inLoop || this._pos.inSwitch) {
-                    this._code("break;");
+                    this._both("break;");
                 } else {
-                    this._code("return ")._visitJscex({ type: "break", stmt: ast })._code(";");
+                    this._both("return ")._visitJscex({ type: "break", stmt: ast })._both(";");
                 }
             },
 
             "continue": function (ast) {
                 if (this._pos.inLoop) {
-                    this._code("continue;");
+                    this._both("continue;");
                 } else {
-                    this._code("return ")._visitJscex({ type: "continue", stmt: ast })._code(";");
+                    this._both("return ")._visitJscex({ type: "continue", stmt: ast })._both(";");
                 }
             },
 
             "throw": function (ast) {
                 var pos = this._pos;
                 if (pos.inTry || pos.inFunction) {
-                    this._code("throw ")._visitRaw(ast[1])._code(";");
+                    this._both("throw ")._visitRaw(ast[1])._both(";");
                 } else {
-                    this._code("return ")._visitJscex({ type: "throw", stmt: ast })._code(";");
+                    this._both("return ")._visitJscex({ type: "throw", stmt: ast })._both(";");
                 }
             },
 
             "conditional": function (ast) {
-                this._code("(")._visitRaw(ast[1])._code(") ? (")._visitRaw(ast[2])._code(") : (")._visitRaw(ast[3])._code(")");
+                this._both("(")._visitRaw(ast[1])._both(") ? (")._visitRaw(ast[2])._both(") : (")._visitRaw(ast[3])._both(")");
             },
 
             "try": function (ast) {
 
-                this._codeLine("try {");
-                this._codeIndentLevel(1);
+                this._bothLine("try {");
+                this._bothIndentLevel(1);
 
                 var currInTry = this._pos.inTry;
                 this._pos.inTry = true;
 
                 this._visitRawStatements(ast[1]);
-                this._codeIndentLevel(-1);
+                this._bothIndentLevel(-1);
 
                 this._pos.inTry = currInTry;
 
@@ -1307,30 +1404,30 @@
                 var finallyStatements = ast[3];
 
                 if (catchClause) {
-                    this._codeIndents()
-                        ._codeLine("} catch (" + catchClause[0] + ") {")
-                    this._codeIndentLevel(1);
+                    this._bothIndents()
+                        ._bothLine("} catch (" + catchClause[0] + ") {")
+                    this._bothIndentLevel(1);
 
                     this._visitRawStatements(catchClause[1]);
-                    this._codeIndentLevel(-1);
+                    this._bothIndentLevel(-1);
                 }
 
                 if (finallyStatements) {
-                    this._codeIndents()
-                        ._codeLine("} finally {");
-                    this._codeIndentLevel(1);
+                    this._bothIndents()
+                        ._bothLine("} finally {");
+                    this._bothIndentLevel(1);
 
                     this._visitRawStatements(finallyStatements);
-                    this._codeIndentLevel(-1);
+                    this._bothIndentLevel(-1);
                 }                
 
-                this._codeIndents()
-                    ._code("}");
+                this._bothIndents()
+                    ._both("}");
             },
 
             "switch": function (ast) {
-                this._code("switch (")._visitRaw(ast[1])._codeLine(") {");
-                this._codeIndentLevel(1);
+                this._both("switch (")._visitRaw(ast[1])._bothLine(") {");
+                this._bothIndentLevel(1);
 
                 var currInSwitch = this._pos.inSwitch;
                 this._pos.inSwitch = true;
@@ -1338,24 +1435,24 @@
                 var cases = ast[2];
                 for (var i = 0; i < cases.length; i++) {
                     var c = cases[i];
-                    this._codeIndents();
+                    this._bothIndents();
 
                     if (c[0]) {
-                        this._code("case ")._visitRaw(c[0])._codeLine(":");
+                        this._both("case ")._visitRaw(c[0])._bothLine(":");
                     } else {
-                        this._codeLine("default:");
+                        this._bothLine("default:");
                     }
-                    this._codeIndentLevel(1);
+                    this._bothIndentLevel(1);
 
                     this._visitRawStatements(c[1]);
-                    this._codeIndentLevel(-1);
+                    this._bothIndentLevel(-1);
                 }
-                this._codeIndentLevel(-1);
+                this._bothIndentLevel(-1);
 
                 this._pos.inSwitch = currInSwitch;
 
-                this._codeIndents()
-                    ._code("}");
+                this._bothIndents()
+                    ._both("}");
             }
         }
     };
@@ -1377,7 +1474,8 @@
             // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
             var evalAst = evalCodeAst[1][0][1];
             compileJscexPattern(root, evalAst, codeWriter, commentWriter);
-            var newCode = codeWriter.lines.join("\n");
+            
+            var newCode = codeWriter.lines.join("\n") + "\n\n/*\n" + commentWriter.lines.join("\n") + "\n*/";
             
             root.logger.debug(funcCode + "\n\n>>>\n\n" + newCode);
             
