@@ -2,6 +2,139 @@
 
     var BuilderBase = function () { }
     BuilderBase.prototype = {
+        For: function (condition, update, body) {
+            return {
+                next: function (_this, callback) {
+                    
+                    var loop = function (skipUpdate) {
+                        try {
+                            if (update && !skipUpdate) {
+                                update.call(_this);
+                            }
+
+                            if (!condition || condition.call(_this)) {
+                                body.next(_this, function (type, value, target) {
+                                    if (type == "normal" || type == "continue") {
+                                        loop(false);
+                                    } else if (type == "throw" || type == "return") {
+                                        callback(type, value);
+                                    } else if (type == "break") {
+                                        callback("normal");
+                                    } else {
+                                        throw new Error('Invalid type for "Loop": ' + type);
+                                    }
+                                });
+                            } else {
+                                callback("normal");
+                            }
+                        } catch (ex) {
+                            callback("throw", ex);
+                        }
+                    }
+                    
+                    loop(true);
+                }
+            };
+        },
+        
+        ForIn: function (obj, bodyGenerator) {
+            return {
+                next: function (_this, callback) {
+                
+                    var keys = [];
+                    for (var k in obj) {
+                        keys.push(k);
+                    }
+                    
+                    var loop = function (i) {
+                        try {
+                            if (i < keys.length) {
+                                var body = bodyGenerator(keys[i]);
+                                body.next(_this, function (type, value, target) {
+                                    if (type == "normal" || type == "continue") {
+                                        loop(i + 1);
+                                    } else if (type == "throw" || type == "return") {
+                                        callback(type, value);
+                                    } else if (type == "break") {
+                                        callback("normal");
+                                    } else {
+                                        throw new Error('Invalid type for "Loop": ' + type);
+                                    }
+                                });
+                            } else {
+                                callback("normal");
+                            }
+                        } catch (ex) {
+                            callback("throw", ex);
+                        }
+                    }
+                    
+                    loop(0);
+                }
+            };
+        },
+        
+        While: function (condition, body) {
+            return {
+                next: function (_this, callback) {
+                    var loop = function () {
+                        try {
+                            if (condition.call(_this)) {
+                                body.next(_this, function (type, value, target) {
+                                    if (type == "normal" || type == "continue") {
+                                        loop();
+                                    } else if (type == "throw" || type == "return") {
+                                        callback(type, value);
+                                    } else if (type == "break") {
+                                        callback("normal");
+                                    } else {
+                                        throw new Error('Invalid type for "Loop": ' + type);
+                                    }
+                                });
+                            } else {
+                                callback("normal");
+                            }
+                        } catch (ex) {
+                            callback("throw", ex);
+                        }
+                    }
+                    
+                    loop();
+                }
+            };
+        },
+        
+        Do: function (body, condition) {
+            return {
+                next: function (_this, callback) {
+                
+                    var loop = function () {
+                        body.next(_this, function (type, value, target) {
+                            if (type == "normal" || type == "continue") {
+                                try {
+                                    if (condition.call(_this)) {
+                                        loop();
+                                    } else {
+                                        callback("normal");
+                                    }
+                                } catch (ex) {
+                                    callback("throw", ex);
+                                }
+                            } else if (type == "throw" || type == "return") {
+                                callback(type, value);
+                            } else if (type == "break") {
+                                callback("normal");
+                            } else {
+                                throw new Error('Invalid type for "Loop": ' + type);
+                            }
+                        });
+                    };
+                
+                    loop();
+                }
+            };
+        },
+        
         Loop: function (condition, update, body, bodyFirst) {
             return {
                 next: function (_this, callback) {
