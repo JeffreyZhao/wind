@@ -804,41 +804,7 @@
                 this._codeIndents()._code(")");
             },
             
-            "for": function (ast) {
-                /*
-                this._codeLine(this._builderVar + ".For(")._commentLine("for (");
-                this._bothIndentLevel(1);
-                
-                if (ast.condition) {
-                    this._codeIndents()._newLine("function () {");
-                    this._codeIndentLevel(1);
-                    
-                    this._bothIndents()._code("return ")._comment("; ")._visitRaw(ast.condition)._newLine(";");
-                    this._codeIndentLevel(-1);
-                    
-                    this._codeIndents()._newLine("},");
-                } else {
-                    this._bothIndents()._codeLine("null,")._commentLine(";");
-                }
-                
-                if (ast.update) {
-                    this._codeIndents()._newLine("function () {");
-                    this._codeIndentLevel(1);
-                    
-                    this._bothIndents()._comment("; ")._visitRaw(ast.update)._codeLine(";")._commentLine(") {");
-                    this._codeIndentLevel(-1);
-                    
-                    this._codeIndents()._newLine("},");
-                } else {
-                    this._bothIndents()._codeLine("null,")._commentLine(";) {");
-                }
-                
-                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine();
-                this._bothIndentLevel(-1);
-                
-                this._bothIndents()._code(")")._comment("}");
-                */
-                
+            "for": function (ast) {                
                 if (ast.condition) {
                     this._codeLine(this._builderVar + ".For(function () {")
                         ._commentLine("for (");
