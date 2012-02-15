@@ -1011,38 +1011,44 @@
             },
 
             "try": function (ast) {
-                this._newLine(this._builderVar + ".Try(");
-                this._codeIndentLevel(1);
+                this._codeLine(this._builderVar + ".Try(")._commentLine("try {");
+                this._bothIndentLevel(1);
 
-                this._codeIndents()
-                    ._visitJscex(ast.bodyStmt)._newLine(",");
-
+                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine(",");
+                this._commentIndentLevel(-1);
+                
                 if (ast.catchStmts) {
-                    this._codeIndents()
-                        ._newLine("function (" + ast.exVar + ") {");
-                    this._codeIndentLevel(1);
+                    this._bothIndents()
+                        ._codeLine("function ({0}) {", ast.exVar)
+                        ._commentLine("} catch ({0}) {", ast.exVar);
+                    this._bothIndentLevel(1);
 
                     this._visitJscexStatements(ast.catchStmts);
-                    this._codeIndentLevel(-1);
+                    this._bothIndentLevel(-1);
 
-                    this._codeIndents()
-                        ._newLine("},");
+                    this._bothIndents()._codeLine("},");
+                    if (ast.finallyStmt) {
+                        this._commentLine("} finally {");
+                    } else {
+                        this._commentLine("}");
+                    }
                 } else {
-                    this._codeIndents()
-                        ._newLine("null,");
+                    this._bothIndents()._codeLine("null,")._commentLine("} finally {");
                 }
-
+                
                 if (ast.finallyStmt) {
-                    this._codeIndents()
-                        ._visitJscex(ast.finallyStmt)._newLine();
+                    this._commentIndentLevel(1);
+                    this._bothIndents()._visitJscex(ast.finallyStmt)._newLine();
+                    this._commentIndentLevel(-1);
                 } else {
-                    this._codeIndents()
-                        ._newLine("null");
+                    this._codeIndents()._newLine("null");
                 }
                 this._codeIndentLevel(-1);
-
-                this._codeIndents()
-                    ._code(")");
+                
+                this._codeIndents()._code(")");
+                if (ast.finallyStmt) {
+                    this._commentIndents()._comment("}");
+                }
             },
 
             "normal": function (ast) {
