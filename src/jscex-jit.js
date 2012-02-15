@@ -1046,15 +1046,19 @@
             },
 
             "throw": function (ast) {
-                this._code(this._builderVar + ".Throw(")._visitRaw(ast.stmt[1])._code(")");
+                this
+                    ._code(this._builderVar + ".Throw(")
+                    ._comment("throw ")
+                        ._visitRaw(ast.stmt[1])
+                            ._code(")")._comment(";");
             },
 
             "break": function (ast) {
-                this._code(this._builderVar + ".Break()");
+                this._code(this._builderVar + ".Break()")._comment("break;");
             },
 
             "continue": function (ast) {
-                this._code(this._builderVar + ".Continue()");
+                this._code(this._builderVar + ".Continue()")._comment("continue;");
             },
 
             "return": function (ast) {
@@ -1277,17 +1281,6 @@
             "defun": function (ast) {
                 this._visitRawFunction(ast);
             },
-
-            "return": function (ast) {
-                if (this._pos.inFunction) {
-                    this._both("return");
-                    var value = ast[1];
-                    if (value) this._both(" ")._visitRaw(value);
-                    this._both(";");
-                } else {
-                    this._code("return ")._visitJscex({ type: "return", stmt: ast })._both(";");
-                }
-            },
             
             "for": function (ast) {
                 this._both("for (");
@@ -1408,7 +1401,7 @@
                 if (this._pos.inLoop || this._pos.inSwitch) {
                     this._both("break;");
                 } else {
-                    this._both("return ")._visitJscex({ type: "break", stmt: ast })._both(";");
+                    this._code("return ")._visitJscex({ type: "break", stmt: ast })._code(";");
                 }
             },
 
@@ -1416,7 +1409,18 @@
                 if (this._pos.inLoop) {
                     this._both("continue;");
                 } else {
-                    this._both("return ")._visitJscex({ type: "continue", stmt: ast })._both(";");
+                    this._code("return ")._visitJscex({ type: "continue", stmt: ast })._code(";");
+                }
+            },
+
+            "return": function (ast) {
+                if (this._pos.inFunction) {
+                    this._both("return");
+                    var value = ast[1];
+                    if (value) this._both(" ")._visitRaw(value);
+                    this._both(";");
+                } else {
+                    this._code("return ")._visitJscex({ type: "return", stmt: ast })._code(";");
                 }
             },
 
@@ -1425,7 +1429,7 @@
                 if (pos.inTry || pos.inFunction) {
                     this._both("throw ")._visitRaw(ast[1])._both(";");
                 } else {
-                    this._both("return ")._visitJscex({ type: "throw", stmt: ast })._both(";");
+                    this._code("return ")._visitJscex({ type: "throw", stmt: ast })._code(";");
                 }
             },
 
