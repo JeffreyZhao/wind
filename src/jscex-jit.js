@@ -805,7 +805,7 @@
             },
             
             "for": function (ast) {
-            
+                /*
                 this._codeLine(this._builderVar + ".For(")._commentLine("for (");
                 this._bothIndentLevel(1);
                 
@@ -832,6 +832,47 @@
                 } else {
                     this._bothIndents()._codeLine("null,")._commentLine(";) {");
                 }
+                
+                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine();
+                this._bothIndentLevel(-1);
+                
+                this._bothIndents()._code(")")._comment("}");
+                */
+                
+                if (ast.condition) {
+                    this._codeLine(this._builderVar + ".For(function () {")
+                        ._commentLine("for (");
+                    this._codeIndentLevel(1);
+                    
+                    this._bothIndents()
+                        ._code("return ")
+                        ._comment("; ")
+                            ._visitRaw(ast.condition)
+                                ._newLine(";");
+                    this._codeIndentLevel(-1);
+                    
+                    this._bothIndents()._code("}, ");
+                } else {
+                    this._code(this._builderVar + ".For(null, ")
+                        ._comment("for (; ");
+                }
+                
+                if (ast.update) {
+                    this._newLine("function () {");
+                    this._codeIndentLevel(1);
+                    
+                    this._bothIndents()
+                        ._comment("; ")
+                            ._visitRaw(ast.update)
+                                ._codeLine(";")
+                                ._commentLine(") {");
+                    this._codeIndentLevel(-1);
+                    
+                    this._codeIndents()._newLine("},");
+                } else {
+                    this._codeLine("null,")._commentLine("; ) {");
+                }
+                this._bothIndentLevel(1);
                 
                 this._bothIndents()._visitJscex(ast.bodyStmt)._newLine();
                 this._bothIndentLevel(-1);
