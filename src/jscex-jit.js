@@ -843,33 +843,30 @@
                 this._code(this._builderVar + ".ForIn(")
                     ._comment("for (var {0} in ", ast.argName)
                         ._visitRaw(ast.obj)
-                            ._codeLine(",")
+                            ._codeLine(", function ({0}) {", ast.argName)
                             ._commentLine(") {");
                 this._bothIndentLevel(1);
                 
-                this._codeIndents()._newLine("function ({0}) {", ast.argName);
-                this._codeIndentLevel(1);
-                
                 this._visitJscexStatements(ast.bodyStmts);
-                this._codeIndentLevel(-1);
-                
-                this._codeIndents()._newLine("}");
                 this._bothIndentLevel(-1);
                 
-                this._bothIndents()._code(")")._comment("}");
+                this._bothIndents()._code("})")._comment("}");
             },
             
             "while": function (ast) {
-                this._codeLine(this._builderVar + ".While(")._commentLine("while (");
-                this._bothIndentLevel(1);
-                
-                this._codeIndents()._newLine("function () {");
+                this._newLine(this._builderVar + ".While(function () {");
                 this._codeIndentLevel(1);
-                    
-                this._bothIndents()._code("return ")._visitRaw(ast.condition)._codeLine(";")._commentLine(") {");
+                
+                this._bothIndents()
+                    ._code("return ")
+                    ._comment("while (")
+                        ._visitRaw(ast.condition)
+                            ._codeLine(";")
+                            ._commentLine(") {");
                 this._codeIndentLevel(-1);
-
+                
                 this._codeIndents()._newLine("},");
+                this._bothIndentLevel(1);
                 
                 this._bothIndents()._visitJscex(ast.bodyStmt)._newLine();
                 this._bothIndentLevel(-1);
