@@ -135,50 +135,6 @@
             };
         },
         
-        Loop: function (condition, update, body, bodyFirst) {
-            return {
-                next: function (_this, callback) {
-                    
-                    var nextBody = function (skipUpdate) {
-                        body.next(_this, function (type, value, target) {
-                            if (type == "normal" || type == "continue") {
-                                loop(skipUpdate);
-                            } else if (type == "throw" || type == "return") {
-                                callback(type, value);
-                            } else if (type == "break") {
-                                callback("normal");
-                            } else {
-                                throw new Error('Invalid type for "Loop": ' + type);
-                            }
-                        });
-                    }
-                
-                    var loop = function (skipUpdate) {
-                        try {
-                            if (update && !skipUpdate) {
-                                update.call(_this);
-                            }
-
-                            if (!condition || condition.call(_this)) {
-                                nextBody(false);
-                            } else {
-                                callback("normal");
-                            }
-
-                        } catch (ex) {
-                            callback("throw", ex);
-                        }
-                    }
-                    
-                    if (bodyFirst) {
-                        nextBody(true);
-                    } else {
-                        loop(true);
-                    }
-                }
-            };
-        },
-        
         Delay: function (generator) {
             return {
                 next: function (_this, callback) {

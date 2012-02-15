@@ -43,7 +43,11 @@
             var n = parseInt(p.substring(1, p.length - 1), 10);
             return args[n + 1];
         });
-    }    
+    }
+    
+    function trim(s) {
+        return s.replace(/ +/g, "");
+    }
     
     // seed defined in global
     if (typeof __jscex__tempVarSeed === "undefined") {
@@ -988,26 +992,25 @@
             },
 
             "switch": function (ast) {
-                this._code("switch (")._visitRaw(ast.item)._newLine(") {");
-                this._codeIndentLevel(1);
+                this._both("switch (")._visitRaw(ast.item)._bothLine(") {");
+                this._bothIndentLevel(1);
 
                 for (var i = 0; i < ast.caseStmts.length; i++) {
                     var caseStmt = ast.caseStmts[i];
-
+                    
                     if (caseStmt.item) {
-                        this._codeIndents()
-                            ._code("case ")._visitRaw(caseStmt.item)._newLine(":");
+                        this._bothIndents()
+                            ._both("case ")._visitRaw(caseStmt.item)._bothLine(":");
                     } else {
-                        this._codeIndents()._newLine("default:");
+                        this._bothIndents()._bothLine("default:");
                     }
-                    this._codeIndentLevel(1);
+                    this._bothIndentLevel(1);
 
-                    this._visitJscexStatements(caseStmt.stmts);
-                    this._codeIndentLevel(-1);
+                    this._visitJscexStatements(caseStmt.stmts);                    
+                    this._bothIndentLevel(-1);
                 }
 
-                this._codeIndents()
-                    ._code("}");
+                this._bothIndents()._code("}");
             },
 
             "try": function (ast) {
