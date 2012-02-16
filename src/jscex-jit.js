@@ -1577,12 +1577,10 @@
             var evalAst = evalCodeAst[1][0][1];
             compileJscexPattern(root, evalAst, codeWriter, commentWriter);
             
-            var newCode = codeWriter.lines.join("\n");
-            // root.logger.debug(funcCode + "\n\n>>>\n\n" + newCode);
+            var newCode = merge(commentWriter.lines, codeWriter.lines);
+            root.logger.debug(funcCode + "\n\n>>>\n\n" + newCode);
             
-            var codeToExecute = merge(commentWriter.lines, codeWriter.lines);
-            root.logger.debug(funcCode + "\n\n>>>\n\n" + codeToExecute);
-            return codeGenerator(codeToExecute);
+            return codeGenerator(newCode);
         }
 
         root.compile = compile;
