@@ -663,7 +663,7 @@
             this._normalMode = false;
             this._builderVar = "_builder_$" + (__jscex__tempVarSeed++);
             
-            this._bothLine("(function ({0}) {", params.join(", "));
+            this._bothLine("function ({0}) {", params.join(", "));
             this._bothIndentLevel(1);
 
             this._codeIndents()._newLine("var {0} = Jscex.builders[{1}];", this._builderVar, stringify(this._builderName));
