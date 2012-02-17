@@ -16,8 +16,8 @@ cp ${PROJECT_DIR}/src/${PACKAGE_NAME}.js ${PACKAGE_DIR}
 
 sed \
     -e "s/<name>/${PACKAGE_NAME}/g" \
-    -e 's/<version>/0.5.0/g' \
+    -e 's/<version>/0.6.0/g' \
     -e "s/<main>/${PACKAGE_NAME}.js/g" \
-    -e 's/<description>/The library to help async programming./g' \
+    -e 's/<description>/The library to help asynchronous programming./g' \
     -e 's/<dependencies>//g' \
     ${SOURCE_DIR}/package.json > ${PACKAGE_DIR}/package.json

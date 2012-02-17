@@ -1,3 +1,6 @@
+SOURCE_DIR=`dirname $0`
+PROJECT_DIR=${SOURCE_DIR}/..
+
 scripts=(jscex jscex-builderbase jscex-async jscex-async-powerpack)
 
 for s in ${scripts[@]}; do
@@ -5,10 +8,8 @@ for s in ${scripts[@]}; do
     echo Compressing $s.js
 
     java \
-        -jar ../tools/compiler.jar \
-        --js ../src/${s}.js \
-        --js_output_file ../bin/${s}.min.js \
+        -jar ${PROJECT_DIR}/tools/compiler.jar \
+        --js ${PROJECT_DIR}/src/${s}.js \
+        --js_output_file ${PROJECT_DIR}/bin/${s}.min.js \
         --compilation_level SIMPLE_OPTIMIZATIONS
 done
-
-
