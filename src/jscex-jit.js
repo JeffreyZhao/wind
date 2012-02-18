@@ -100,45 +100,6 @@
         }
     };
     
-    var MultipleCodeWriter = function (writers) {
-        this._writers = writers;
-    }
-    MultipleCodeWriter.prototype = {
-        write: function () {
-            for (var i = 0; i < this._writers; i++) {
-                var w = this._writers[i];
-                w.write.apply(w, arguments);
-            }
-            
-            return this;
-        },
-        
-        writeLine: function () {
-            for (var i = 0; i < this._writers; i++) {
-                var w = this._writers[i];
-                w.writeLine.apply(w, arguments);
-            }
-            
-            return this;
-        },
-        
-        writeIndents: function () {
-            for (var i = 0; i < this._writers; i++) {
-                this._writers[i].writeIndents();
-            }
-            
-            return this;
-        }, 
-        
-        addIndentLevel: function (diff) {
-            for (var i = 0; i < this._writers; i++) {
-                this._writers[i].addIndentLevel(diff);
-            }
-            
-            return this;
-        }
-    }
-    
     function isJscexPattern(ast) {
         if (ast[0] != "call") return false;
         
@@ -171,6 +132,7 @@
         var jscexTreeGenerator = new JscexTreeGenerator(root, builderName);
         var jscexAst = jscexTreeGenerator.generate(funcAst);
 
+        commentWriter.write("{0} << ", builderName);
         var codeGenerator = new CodeGenerator(root, builderName, codeWriter, commentWriter);
         codeGenerator.generate(funcAst[2], jscexAst);
     }
@@ -581,7 +543,6 @@
         
         this._codeWriter = codeWriter;
         this._commentWriter = commentWriter;
-        this._bothWriter = new MultipleCodeWriter([codeWriter, commentWriter]);
     }
     CodeGenerator.prototype = {
     
@@ -1209,7 +1170,7 @@
             "call": function (ast) {
             
                 if (isJscexPattern(ast)) {
-                    compileJscexPattern(this._root, ast, this._bothWriter, this._commentWriter);
+                    compileJscexPattern(this._root, ast, this._codeWriter, this._commentWriter);
                 } else {
 
                     var invalidBind = (ast[1][0] == "name") && (ast[1][1] == this._binder);
