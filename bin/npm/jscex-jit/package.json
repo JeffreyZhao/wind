@@ -1,6 +1,6 @@
 {
     "name": "jscex-jit",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
     "description": "The JIT compiler for Jscex, providing the monadic code transformation ability without losing traditional JavaScript programming experience.",
     "homepage": "https://github.com/JeffreyZhao/jscex",

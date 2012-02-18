@@ -39,47 +39,45 @@
             }
         }
     };
+        
+    var init = function (root) {
 
-    var isCommonJS = (typeof require !== "undefined" && typeof module !== "undefined" && module.exports);
-    var isAmd = (typeof define !== "undefined" && define.amd);
-    
-    var root;
+        root.Logging = {
+            Logger: Logger,
+            Level: Level
+        };
+
+        root.logger = new Logger();
+        root.modules = { };
+        root.binders = { };
+        root.builders = { }; 
+    };
+
+    // CommonJS
+    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    // CommongJS Wrapping
+    var isWrapping = (typeof define === "function" && !define.amd);
+    // CommonJS AMD
+    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
     if (isCommonJS) {
-        root = module.exports;
+        init(module.exports);
+    } else if (isWrapping) {
+        define("jscex", function (require, exports, module) {
+            init(module.exports);
+        });
     } else if (isAmd) {
-        root = { };
+        define("jscex", function () {
+            var root = {};
+            init(root);
+            return root;
+        });
     } else {
         if (typeof Jscex == "undefined") {
             /* defined Jscex in global */
             Jscex = { };
         }
         
-        root = Jscex;
-    }
-
-    root._forInKeys = function (obj) {
-        var keys = [];
-        for (var k in obj) {
-            keys.push(k);
-        }
-
-        return keys;
-    };
-
-    root.Logging = {
-        Logger: Logger,
-        Level: Level
-    };
-
-    root.logger = new Logger();
-    root.modules = { };
-    root.binders = { };
-    root.builders = { };   
-        
-    if (isAmd) {
-        define("jscex", function () {
-            return root;
-        });
+        init(Jscex);
     }
 })();
