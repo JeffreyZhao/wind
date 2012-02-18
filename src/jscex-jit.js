@@ -48,11 +48,6 @@
     function trim(s) {
         return s.replace(/ +/g, "");
     }
-    
-    // seed defined in global
-    if (typeof __jscex__tempVarSeed === "undefined") {
-        __jscex__tempVarSeed = 0;
-    }
 
     var CodeWriter = function (indent) {
         this._indent = indent || "    ";
@@ -100,6 +95,20 @@
         }
     };
     
+    var SeedProvider = function () {
+        this._seeds = {};
+    }
+    SeedProvider.prototype.next = function (key) {
+        var value = this._seeds[key];
+        if (value == undefined) {
+            this._seeds[key] = 0;
+            return 0;
+        } else {
+            this._seeds[key] = ++value;
+            return value;
+        }
+    }
+    
     function isJscexPattern(ast) {
         if (ast[0] != "call") return false;
         
@@ -124,22 +133,23 @@
         return true;
     }
     
-    function compileJscexPattern(root, ast, codeWriter, commentWriter) {
+    function compileJscexPattern(root, ast, seedProvider, codeWriter, commentWriter) {
 
         var builderName = ast[2][0][2][0][1];
         var funcAst = ast[2][0][2][1];
 
-        var jscexTreeGenerator = new JscexTreeGenerator(root, builderName);
+        var jscexTreeGenerator = new JscexTreeGenerator(root, builderName, seedProvider);
         var jscexAst = jscexTreeGenerator.generate(funcAst);
 
         commentWriter.write("{0} << ", builderName);
-        var codeGenerator = new CodeGenerator(root, builderName, codeWriter, commentWriter);
+        var codeGenerator = new CodeGenerator(root, builderName, seedProvider, codeWriter, commentWriter);
         codeGenerator.generate(funcAst[2], jscexAst);
     }
         
-    var JscexTreeGenerator = function (root, builderName) {
+    var JscexTreeGenerator = function (root, builderName, seedProvider) {
         this._root = root;
         this._binder = root.binders[builderName];
+        this._seedProvider = seedProvider;
     }
     JscexTreeGenerator.prototype = {
 
@@ -380,13 +390,11 @@
                 
                 var forInStmt = { type: "for-in", bodyStmts: bodyStmts, obj: ast[3] };
             
-                var id = (__jscex__tempVarSeed++);
-                var keyVar = "_key_$" + id;
-            
                 var argName = ast[2][1]; // ast[2] == ["name", m]
                 if (ast[1][0] == "var") {
                     forInStmt.argName = argName;
                 } else {
+                    var keyVar = "_forInKey_$" + this._seedProvider.next("forInKey");
                     forInStmt.argName = keyVar;
                     forInStmt.bodyStmts.unshift({
                         type: "raw",
@@ -536,10 +544,11 @@
         }
     }
     
-    var CodeGenerator = function (root, builderName, codeWriter, commentWriter) {
+    var CodeGenerator = function (root, builderName, seedProvider, codeWriter, commentWriter) {
         this._root = root;
         this._builderName = builderName;
         this._binder = root.binders[builderName];
+        this._seedProvider = seedProvider;
         
         this._codeWriter = codeWriter;
         this._commentWriter = commentWriter;
@@ -622,7 +631,7 @@
     
         generate: function (params, jscexAst) {
             this._normalMode = false;
-            this._builderVar = "_builder_$" + (__jscex__tempVarSeed++);
+            this._builderVar = "_builder_$" + this._seedProvider.next("builderId");
             
             this._codeLine("(function ({0}) {", params.join(", "))._commentLine("function ({0}) {", params.join(", "));
             this._bothIndentLevel(1);
@@ -1170,7 +1179,7 @@
             "call": function (ast) {
             
                 if (isJscexPattern(ast)) {
-                    compileJscexPattern(this._root, ast, this._codeWriter, this._commentWriter);
+                    compileJscexPattern(this._root, ast, this._seedProvider, this._codeWriter, this._commentWriter);
                 } else {
 
                     var invalidBind = (ast[1][0] == "name") && (ast[1][1] == this._binder);
@@ -1536,7 +1545,7 @@
             
             // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
             var evalAst = evalCodeAst[1][0][1];
-            compileJscexPattern(root, evalAst, codeWriter, commentWriter);
+            compileJscexPattern(root, evalAst, new SeedProvider(), codeWriter, commentWriter);
             
             var newCode = merge(commentWriter.lines, codeWriter.lines);
             root.logger.debug(funcCode + "\n\n>>>\n\n" + newCode);
