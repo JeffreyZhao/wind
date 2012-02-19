@@ -173,18 +173,18 @@
                 
                 var results = isTaskArray ? [] : {};
 
-                var onComplete = function (t) {
-                    if (t.error) {
+                var onComplete = function () {
+                    if (this.error) {
                         for (var id in taskKeys) {
                             tasks[taskKeys[id]].removeEventListener("complete", onComplete);
                         }
 
-                        taskWhenAll.complete("failure", t.error);
+                        taskWhenAll.complete("failure", this.error);
                     } else {
-                        var key = taskKeys[t.id];
-                        results[key] = t.result;
+                        var key = taskKeys[this.id];
+                        results[key] = this.result;
                         
-                        delete taskKeys[t.id];
+                        delete taskKeys[this.id];
                         
                         runningNumber--;
 
@@ -265,7 +265,7 @@
                         tasks[taskKeys[id]].removeEventListener("complete", onComplete);
                     }
                 
-                    taskWhenAny.complete("success", { key: taskKeys[t.id], task: t });
+                    taskWhenAny.complete("success", { key: taskKeys[this.id], task: this });
                 }
                 
                 // now all the tasks are in "running" status.
@@ -315,11 +315,11 @@
             var firstTask = this;
             return Task.create(function (t) {
                 
-                var nextHandler = function (nextTask) {
-                    if (nextTask.error) {
-                        t.complete("failure", nextTask.error);
+                var nextOnComplete = function () {
+                    if (this.error) {
+                        t.complete("failure", this.error);
                     } else {
-                        t.complete("success", nextTask.result);
+                        t.complete("success", this.result);
                     }
                 };
                 
@@ -329,20 +329,20 @@
                     }
                 
                     if (nextTask.status == "running") {
-                        nextTask.addEventListener("complete", nextHandler);
+                        nextTask.addEventListener("complete", nextOnComplete);
                     } else {
-                        nextHandler(nextTask);
+                        nextOnComplete.call(nextTask);
                     }
                 };
                 
-                var firstHandler = function (firstTask) {
-                    if (firstTask.error) {
-                        return t.complete("failure", firstTask.error);
+                var firstOnComplete = function () {
+                    if (this.error) {
+                        return t.complete("failure", this.error);
                     }
                     
                     var nextTask;
                     try {
-                        nextTask = nextGenerator(firstTask.result);
+                        nextTask = nextGenerator(this.result);
                     } catch (ex) {
                         return t.complete("failure", ex);
                     }
@@ -355,9 +355,9 @@
                 }
                 
                 if (firstTask.status == "running") {
-                    firstTask.addEventListener("complete", firstHandler);
+                    firstTask.addEventListener("complete", firstOnComplete);
                 } else {
-                    firstHandler(firstTask);
+                    firstOnComplete.call(firstTask);
                 }
             });
         };

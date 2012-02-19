@@ -86,6 +86,8 @@
 
                 this.status = "running";
                 this._delegate(this);
+                
+                return this;
             },
             
             complete: function (type, value) {
@@ -132,7 +134,7 @@
 
                 for (var i = 0; i < listeners.length; i++) {
                     try {
-                        listeners[i](this);
+                        listeners[i].call(this);
                     } catch (ex) {
                         root.logger.warn("[WARNING] The task's " + ev + " listener threw an error: " + ex);
                     }
@@ -141,7 +143,7 @@
 
             addEventListener: function (ev, listener) {
                 if (!this._listeners) {
-                    return;
+                    return this;
                 }
 
                 if (!this._listeners[ev]) {
@@ -149,20 +151,23 @@
                 }
                 
                 this._listeners[ev].push(listener);
+                return this;
             },
 
             removeEventListener: function (ev, listener) {
                 if (!this._listeners) {
-                    return;
+                    return this;
                 }
 
                 var evListeners = this._listeners[ev];
-                if (!evListeners) return;
+                if (!evListeners) return this;
                 
                 var index = evListeners.indexOf(listener);
                 if (index >= 0) {
                     evListeners.splice(index, 1);
                 }
+                
+                return this;
             }
         };
         
@@ -193,12 +198,12 @@
                     next: function (_this, callback) {
                         
                         var onComplete = function (t) {
-                            if (t.error) {
-                                callback("throw", t.error);
+                            if (this.error) {
+                                callback("throw", this.error);
                             } else {
                                 var nextTask;
                                 try {
-                                    nextTask = generator.call(_this, t.result);
+                                    nextTask = generator.call(_this, this.result);
                                 } catch (ex) {
                                     callback("throw", ex);
                                     return;
