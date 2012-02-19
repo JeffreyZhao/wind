@@ -311,6 +311,57 @@
             };
         };
         
+        Task.prototype.then = Task.prototype.continueWith = function (nextGenerator) {
+            var firstTask = this;
+            return Task.create(function (t) {
+                
+                var nextHandler = function (nextTask) {
+                    if (nextTask.error) {
+                        t.complete("failure", nextTask.error);
+                    } else {
+                        t.complete("success", nextTask.result);
+                    }
+                };
+                
+                var processNext = function (nextTask) {
+                    if (nextTask.status == "ready") {
+                        nextTask.start();
+                    }
+                
+                    if (nextTask.status == "running") {
+                        nextTask.addEventListener("complete", nextHandler);
+                    } else {
+                        nextHandler(nextTask);
+                    }
+                };
+                
+                var firstHandler = function (firstTask) {
+                    if (firstTask.error) {
+                        return t.complete("failure", firstTask.error);
+                    }
+                    
+                    var nextTask;
+                    try {
+                        nextTask = nextGenerator(firstTask.result);
+                    } catch (ex) {
+                        return t.complete("failure", ex);
+                    }
+                    
+                    processNext(nextTask);
+                };
+                
+                if (firstTask.status == "ready") {
+                    firstTask.start();
+                }
+                
+                if (firstTask.status == "running") {
+                    firstTask.addEventListener("complete", firstHandler);
+                } else {
+                    firstHandler(firstTask);
+                }
+            });
+        };
+        
         // for the methods always success
         Jscexify.fromCallback = function (fn) {
             var callbackArgNames = collectCallbackArgNames(arguments);
