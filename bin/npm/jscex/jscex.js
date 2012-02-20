@@ -11,31 +11,31 @@
         this.level = Level.DEBUG;
     };
     Logger.prototype = {
-        log: function (msg) {
+        log: function (level, msg) {
             try { console.log(msg); } catch (ex) { }
         },
 
         debug: function (msg) {
             if (this.level <= Level.DEBUG) {
-                this.log(msg);
+                this.log(Level.DEBUG, msg);
             }
         },
 
         info: function (msg) {
             if (this.level <= Level.INFO) {
-                this.log(msg);
+                this.log(Level.INFO, msg);
             }
         },
 
         warn: function (msg) {
             if (this.level <= Level.WARN) {
-                this.log(msg);
+                this.log(Level.WARN, msg);
             }
         },
 
         error: function (msg) {
             if (this.level <= Level.ERROR) {
-                this.log(msg);
+                this.log(Level.ERROR, msg);
             }
         }
     };
