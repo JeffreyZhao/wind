@@ -57,12 +57,7 @@
 
  ***********************************************************************/
 
-/**
- * Defined in global, no "var".
- */
-UglifyJS = {};
-
-(function (exports) {
+(function () {
 
 /* -----[ Tokenizer (constants) ]----- */
 
@@ -1308,22 +1303,58 @@ var warn = function() {};
 
 /* -----[ Exports ]----- */
 
-exports.tokenizer = tokenizer;
-exports.parse = parse;
-exports.slice = slice;
-exports.curry = curry;
-exports.member = member;
-exports.array_to_hash = array_to_hash;
-exports.PRECEDENCE = PRECEDENCE;
-exports.KEYWORDS_ATOM = KEYWORDS_ATOM;
-exports.RESERVED_WORDS = RESERVED_WORDS;
-exports.KEYWORDS = KEYWORDS;
-exports.ATOMIC_START_TOKEN = ATOMIC_START_TOKEN;
-exports.OPERATORS = OPERATORS;
-exports.is_alphanumeric_char = is_alphanumeric_char;
-exports.set_logger = function(logger) {
-        warn = logger;
+var init = function (root) {
+    if (root.modules["parser"]) {
+        return;
+    }
+    
+    root.parse = parse;
+    
+    root.modules["parser"] = true;
+}
+
+// CommonJS
+var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+// CommongJS Wrapping
+var isWrapping = (typeof define === "function" && !define.amd);
+// CommonJS AMD
+var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
+
+if (isCommonJS) {
+    module.exports.init = init;
+} else if (isWrapping) {
+    define("jscex-parser", function (require, exports, module) {
+        module.exports.init = init;
+    });
+} else if (isAmd) {
+    define("jscex-parser", function () {
+        return { init: init };
+    });
+} else {
+    if (typeof Jscex === "undefined") {
+        throw new Error('Missing the root object, please load "jscex" module first.');
+    }
+    
+    init(Jscex);
+}
+
+/*
+scope.tokenizer = tokenizer;
+scope.parse = parse;
+scope.slice = slice;
+scope.curry = curry;
+scope.member = member;
+scope.array_to_hash = array_to_hash;
+scope.PRECEDENCE = PRECEDENCE;
+scope.KEYWORDS_ATOM = KEYWORDS_ATOM;
+scope.RESERVED_WORDS = RESERVED_WORDS;
+scope.KEYWORDS = KEYWORDS;
+scope.ATOMIC_START_TOKEN = ATOMIC_START_TOKEN;
+scope.OPERATORS = OPERATORS;
+scope.is_alphanumeric_char = is_alphanumeric_char;
+scope.set_logger = function (logger) {
+    warn = logger;
 };
+*/
 
-
-})(UglifyJS);
+})();

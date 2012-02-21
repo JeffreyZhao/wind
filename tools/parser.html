@@ -1,10 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-    <title>UglifyJS Parser</title>
+    <title>Parser</title>
     
     <script language="javascript" type="text/javascript" src="../lib/json2.js"></script>
-    <script language="javascript" type="text/javascript" src="../lib/uglifyjs-parser.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex-parser.js"></script>
 </head>
 <body>
     <textarea id="code" style="font-family:consolas,monaco; width:500px; height:300px;">function helloworld() { alert("Hello World!"); }</textarea><br />
@@ -46,7 +47,7 @@
             var result;
             
             try {
-                var list = UglifyJS.parse(code);
+                var list = Jscex.parse(code);
                 
                 var builder = [];
                 serialize(builder, list, 0);

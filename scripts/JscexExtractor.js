@@ -66,6 +66,8 @@ JscexExtractor.prototype = {
             case "INDEX":
             case "OBJECT_INIT":
             case "ARRAY_INIT":
+            case "PROPERTY_INIT":
+            case "NEW_WITH_ARGS":
             case ".":
             case ">":
             case "<":
@@ -91,6 +93,7 @@ JscexExtractor.prototype = {
             case "null":
             case "true":
             case "false":
+            case "this":
                 break;
             case ";":
                 this._visit(node.expression);
@@ -121,8 +124,8 @@ JscexExtractor.prototype = {
                 this._visit(node.value);
                 break;
             default:
-               debugger;
-               throw new Error('"' + token + '" is not currently supported.');
+                debugger;
+                throw new Error('"' + token + '" is not currently supported.');
         }
     },
 

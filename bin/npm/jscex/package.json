@@ -1,0 +1,13 @@
+{
+    "name": "jscex",
+    "version": "0.6.0",
+    "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
+    "description": "The essential components for Jscex.",
+    "homepage": "https://github.com/JeffreyZhao/jscex",
+    "main": "jscex.js",
+    "bugs": {
+        "url": "https://github.com/JeffreyZhao/jscex/issues",
+        "email": "jeffz@live.com"
+    },
+    "dependencies": {  }
+}

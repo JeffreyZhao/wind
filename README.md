@@ -1,3 +1,5 @@
+## 中文用户请[点此访问中文版](https://github.com/JeffreyZhao/jscex/blob/master/README-cn.md)。
+
 "Jscex" is short for "JavaScript Computation EXpressions". It provides a monadic extensions for JavaScript language and would significantly improve your programming life in certain scenarios. The project is written in JavaScript completely, which mean it can be used in any execution engines support [ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm), including mainstream browsers or server side JavaScript environments (e.g., [Node.js](http://nodejs.org/)).
 
 Currently features:
@@ -38,7 +40,7 @@ All the following samples can be found in samples/async folder.
 
 ### Clock:
 
-We are going to draw a clock with HTML5 canvas on the page (samples/async/clock.html). It's rather easy for most front-end programmers:
+We are going to draw a clock with HTML5 canvas on the page ([samples/async/clock.html](http://files.zhaojie.me/jscex/samples/async/clock.html)). It's rather easy for most front-end programmers:
 
     function drawClock(time) {
         // clear and canvas and draw a clock on it.
@@ -91,7 +93,7 @@ It seems the implementation with Jscex is a bit longer in this simple case - ple
 
 ### Animations
 
-Animations are important for rich user interfaces. Let's build an animation like "move the element from here to there in a period of time" (samples/async/move.html). The traditional version of the <code>move</code> could be:
+Animations are important for rich user interfaces. Let's build an animation like "move the element from here to there in a period of time" ([samples/async/move.html](http://files.zhaojie.me/jscex/samples/async/move.html)). The traditional version of the <code>move</code> could be:
 
     var moveTraditionally = function (e, startPos, endPos, duration, callback) {
 
@@ -237,7 +239,7 @@ I believe there's no need to explain more - it's just the standard "bubble sort"
         $await(_quickSortAsync(array, 0, array.length - 1));
     }));
 
-The complete sample is in "samples/async/sorting-animations.html". After opening the page with browser support HTML5 canvas, you can click the links to view the animation of three sorting algorithms: bubble sort, selection sort and quick sort.
+The complete sample is in "[samples/async/sorting-animations.html](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html)". After opening the page with browser support HTML5 canvas, you can click the links to view the animation of three sorting algorithms: [bubble sort](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html?quick), [selection sort](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html?selection) and [quick sort](http://files.zhaojie.me/jscex/samples/async/sorting-animations.html?quick).
 
 ### Tower of Hanoi
 
@@ -257,7 +259,7 @@ which in code:
 
     hanoi(5, "A", "C", "B");
 
-If we need to show the algorithm in animation (samples/async/hanoi.html), we could re-write the code just like the sample above:
+If we need to show the algorithm in animation ([samples/async/hanoi.html](http://files.zhaojie.me/jscex/samples/async/hanoi.html)), we could re-write the code just like the sample above:
 
     var hanoiAsync = eval(Jscex.compile("async", function(n, from, to, mid) {
         if (n > 0) {
@@ -291,7 +293,7 @@ If you open the sample page in the browser, you'll find the discs is moving one 
         }
     }));
 
-Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. In Jscex async library, "async task" only means "operation would be finished in the future". In the example above, the button's "click" event is also an async task - the task would be finished when the button is clicked, then the program keeps going, move a disc and wait for another click.
+Before each <code>moveDiscAsync</code> operation, the program would wait for the button's "click" event. In Jscex async library, "async task" only means "operation would be finished in the future". In the example above, the button's "click" event is also an async task - the task would be finished [when the button is clicked](http://files.zhaojie.me/jscex/samples/async/hanoi-2.html), then the program keeps going, move a disc and wait for another click.
 
 People can write async programs without callbacks, that's how Jscex improve productivity and maintainability.
 
@@ -306,19 +308,19 @@ Here's a simple file server build with Node.js:
     var url = require("url");
     var path = require("path");
 
-    var transferFile = function(request, response) {
+    var transferFile = function (request, response) {
         var uri = url.parse(request.url).pathname;
         var filepath = path.join(process.cwd(), uri);
 
         // check whether the file is exist and get the result from callback
-        path.exists(filepath, function(exists) {
+        path.exists(filepath, function (exists) {
             if (!exists) {
                 response.writeHead(404, {"Content-Type": "text/plain"});
                 response.write("404 Not Found\n");
                 response.end();
             } else {
                 // read the file content and get the result from callback
-                fs.readFile(filepath, "binary", function(error, data) {
+                fs.readFile(filepath, "binary", function (error, data) {
                     if (error) {
                         response.writeHead(500, {"Content-Type": "text/plain"});
                         response.write(error + "\n");
@@ -333,7 +335,7 @@ Here's a simple file server build with Node.js:
         });
     }
 
-    http.createServer(function(request, response) {
+    http.createServer(function (request, response) {
         transferFile(request, response);
     }).listen(8124, "127.0.0.1");
 
@@ -347,7 +349,7 @@ There're two async method used above: <code>path.exists</code> and <code>fs.read
     Jscex.Async.Node.Path.extend(path);
     Jscex.Async.Node.FileSystem.extend(fs);
 
-    var transferFileAsync = eval(Jscex.compile("async", function(request, response) {
+    var transferFileAsync = eval(Jscex.compile("async", function (request, response) {
         var uri = url.parse(request.url).pathname;
         var filepath = path.join(process.cwd(), uri);
 
@@ -356,20 +358,21 @@ There're two async method used above: <code>path.exists</code> and <code>fs.read
             response.writeHead(404, {"Content-Type": "text/plain"});
             response.write("404 Not Found\n");
         } else {
-            var file = $await(fs.readFileAsync(filepath));
-            if (file.error) {
-                response.writeHead(500, {"Content-Type": "text/plain"});
-                response.write(file.error + "\n");
-            } else {
+
+            try {
+                var data = $await(fs.readFileAsync(filepath));
                 response.writeHead(200);
-                response.write(file.data, "binary");
+                response.write(data, "binary");
+            } catch (ex) {
+                response.writeHead(500, {"Content-Type": "text/plain"});
+                response.write(ex + "\n");
             }
         }
 
         response.end();
     }));
 
-    http.createServer(function(request, response) {
+    http.createServer(function (request, response) {
         transferFileAsync(request, response).start();
     }).listen(8125, "127.0.0.1");
 
@@ -485,7 +488,8 @@ There're three limitations of the current version of Jscex - none of them become
 Jscex compiler can only handle explicit <code>$await</code> operation:
 
 * Simple: <code>$await(...);</code>
-* Assign the result to a variable: <code>var r = $await(...);</code>
+* Local declaration: <code>var result = $await(...);</code>
+* Assignment: <code>this.result = $await(...);</code>
 * Directly return: <code>return $await(...);</code>
 
 Other kinds of usages could not be compiled:
@@ -543,8 +547,8 @@ But the compilation (of inner function) is based on static code parsing and gene
 
 Jscex compiler could generate code for almost all the features of ECMAScript 3 except:
 
-* Break to label
-* Bind operation (e.g. <code>$await</code>) in <code>switch</code> statement, please use <code>if</code>/<code>else</code> instead.
+* <code>break</code> or <code>continue</code> to label.
+* Conditional <code>break</code> in <code>switch</code> block (e.g., <code>if (a > 0) break;</code>).
 
 # AOT compiler
 
