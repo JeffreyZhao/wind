@@ -55,7 +55,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
     var printAsync = eval(Jscex.compile("async", function (text) {
         console.log(text);
-    )});
+    }));
 
 其中`eval(Jscex.compile("async", …))`部分只是一个包装，一种标识，让程序员可以清楚的意识到这不是一个普通方法。在使用Jscex的时候，我们不会在其他任何地方，其他任何一种方式使用`eval`或是`Jscex.compile`，完全不会表现出其“邪恶”的一面，更不会出现在生产环境中。更多信息，请参考“[Jscex调试](../debugging-cn.md)”相关内容。
 
@@ -83,7 +83,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
     var printAllAsync = eval(Jscex.compile("async", function (texts) {
         for (var i = 0; i < texts.length; i++) {
-            $await(printAsync(text[i])); // 使用$await命令执行一个Task对象
+            $await(printAsync(texts[i])); // 使用$await命令执行一个Task对象
         }
     }));
 
@@ -391,11 +391,11 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 * **failure**：任务执行失败时触发，此时该任务的`status`字段为`faulted`或`canceled`（视错误对象的`isCancallation`字段而定），且`error`字段为错误对象。
 * **complete**：无论任务成功还是失败，都会触发该事件。
 
-参数`listener`为事件处理方法，签名为`function (t)`，其中`t`为事件所在Task对象。
+参数`listener`为事件处理方法，无参数，执行时`this`为触发事件的Task对象。
 
 使用示例：
 
-    var task = someAsyncMethod();    task.addEventListener("success", function (t) {        console.log("Task " + t.id + " is succeeded with result: " + t.result);    });    task.addEventListener("failure", function (t) {        console.log("Task " + t.id + " is failed with error: " + t.error);    });    task.addEventListener("complete", function (t) {        console.log("Task " + t.id + " is completed with status: " + t.status);    });
+    var task = someAsyncMethod();    task.addEventListener("success", function () {        console.log("Task " + this.id + " is succeeded with result: " + this.result);    });    task.addEventListener("failure", function (t) {        console.log("Task " + this.id + " is failed with error: " + this.error);    });    task.addEventListener("complete", function (t) {        console.log("Task " + this.id + " is completed with status: " + this.status);    });
 
 ### removeEventListener(ev, listener)
 
