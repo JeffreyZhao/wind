@@ -1523,7 +1523,7 @@
             
             buffer.push(comment);
             buffer.push(code.substring(comment.length));
-            buffer.push("\n");
+            buffer.push("\r\n");
         }
         
         return buffer.join("");
@@ -1548,7 +1548,7 @@
             compileJscexPattern(root, evalAst, new SeedProvider(), codeWriter, commentWriter);
             
             var newCode = merge(commentWriter.lines, codeWriter.lines);
-            root.logger.debug(funcCode + "\n\n>>>\n\n" + newCode);
+            root.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Jscexified: \r\n" + newCode + "\r\n");
             
             return codeGenerator(newCode);
         }
