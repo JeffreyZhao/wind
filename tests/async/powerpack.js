@@ -33,29 +33,19 @@ Task.delay = function (timeout, error, result) {
     });
 }
 
-Object.prototype.keys = function () {
-    var result = [];
-
-    for (var k in this) {
-        if (this.hasOwnProperty(k)) {
-            result.push(k);
-        }
-    }
-
-    return result;
-}
-
+// Add a member;
+Object.prototype.abc = 123;
 
 describe("Task", function () {
 
     describe("#whenAll()", function () {
 
         it("should directly return an empty object with an empty object input", function () {
-            Task.whenAll({}).start().result.keys().length.should.equal(0);
+            Task.whenAll({}).start().result.should.eql({});
         });
 
         it("should directly return an empty array with an empty array input", function () {
-            Task.whenAll([]).start().result.length.should.equal(0);
+            Task.whenAll([]).start().result.should.eql([]);
         });
 
         it("should directly return the result if the task is already succeeded", function () {
