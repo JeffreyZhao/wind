@@ -133,11 +133,7 @@
                 }
 
                 for (var i = 0; i < listeners.length; i++) {
-                    try {
-                        listeners[i].call(this);
-                    } catch (ex) {
-                        root.logger.warn("[WARNING] The task's " + ev + " listener threw an error: " + ex);
-                    }
+                    listeners[i].call(this);
                 }
             },
 

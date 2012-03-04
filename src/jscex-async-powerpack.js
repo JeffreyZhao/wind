@@ -1,4 +1,5 @@
 (function () {
+    "use strict";
 
     var isArray = function (array) {
         return Object.prototype.toString.call(array) === '[object Array]';
@@ -40,7 +41,7 @@
         var Async = root.Async;
         var Task = Async.Task;
         var CanceledError = Async.CanceledError;
-        
+
         // Async members
         Async.sleep = function (delay, /* CancellationToken */ ct) {
             return Task.create(function (t) {
@@ -120,43 +121,46 @@
                 }
             });
         }
-        
-        // Task members
+
         Task.whenAll = function () {
-            
-            var tasks = { };
-            var isTaskArray;
+            var inputTasks;
 
             if (arguments.length == 1) {
                 var arg = arguments[0];
-                if (Task.isTask(arg)) {
-                    tasks[0] = arg;
-                    isTaskArray = true;
+
+                if (Task.isTask(arg)) { // a single task
+                    inputTasks = [arg];
                 } else {
-                    tasks = arg;
-                    isTaskArray = isArray(tasks);
+                    inputTasks = arg;
                 }
             } else {
-                for (var i = 0; i < arguments.length; i++)
-                    tasks[i] = arguments[i];
-                isTaskArray = true;
+                inputTasks = new Array(arguments.length);
+                for (var i = 0; i < arguments.length; i++) {
+                    inputTasks[i] = arguments[i];
+                }
             }
-            
+
             return Task.create(function (taskWhenAll) {
                 var taskKeys = {};
-                
-                for (var key in tasks) {
-                    if (tasks.hasOwnProperty(key)) {
-                        var t = tasks[key];
-                        if (Task.isTask(t)) {
-                            taskKeys[t.id] = key;
-                        }
+
+                for (var key in inputTasks) {
+                    if (!inputTasks.hasOwnProperty(key)) continue;
+
+                    var t = inputTasks[key];
+                    if (!t) continue;
+
+                    if (!Task.isTask(t)) {
+                        inputTasks[key] = t = Task.whenAll(t);
                     }
+
+                    taskKeys[t.id] = key;
                 }
-                
+
                 // start all the tasks
                 for (var id in taskKeys) {
-                    var t = tasks[taskKeys[id]];
+                    if (!taskKeys.hasOwnProperty(id)) continue;
+
+                    var t = inputTasks[taskKeys[id]];
                     if (t.status == "ready") {
                         t.start();
                     }
@@ -164,19 +168,24 @@
                 
                 // if there's a task already failed, then failed
                 for (var id in taskKeys) {
-                    var t = tasks[taskKeys[id]];
+                    if (!taskKeys.hasOwnProperty(id)) continue;
+
+                    var t = inputTasks[taskKeys[id]];
                     if (t.error) {
                         taskWhenAll.complete("failure", t.error);
                         return;
                     }
                 }
                 
-                var results = isTaskArray ? [] : {};
+                var results = isArray(inputTasks) ? new Array(inputTasks.length) : {};
+                var runningNumber = 0;
 
                 var onComplete = function () {
                     if (this.error) {
                         for (var id in taskKeys) {
-                            tasks[taskKeys[id]].removeEventListener("complete", onComplete);
+                            if (!taskKeys.hasOwnProperty(id)) continue;
+
+                            inputTasks[taskKeys[id]].removeEventListener("complete", onComplete);
                         }
 
                         taskWhenAll.complete("failure", this.error);
@@ -194,12 +203,12 @@
                     }
                 }
                 
-                var runningNumber = 0;
-                
                 // now all the tasks should be "succeeded" or "running"
                 for (var id in taskKeys) {
+                    if (!taskKeys.hasOwnProperty(id)) continue;
+
                     var key = taskKeys[id]
-                    var t = tasks[key];
+                    var t = inputTasks[key];
                     if (t.status == "succeeded") {
                         results[key] = t.result;
                         delete taskKeys[t.id];
@@ -213,7 +222,7 @@
                     taskWhenAll.complete("success", results);
                 }
             });
-        }
+        };
         
         Task.whenAny = function () {
         
