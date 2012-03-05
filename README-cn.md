@@ -36,29 +36,24 @@ Jscex可以在任何JavaScript引擎上执行，我们这里目前最典型的�
 
 #### 浏览器
 
-请下载[src目录](src)下的所有文件，并在相同目录下创建quick-start.html文件，写入：
+要在浏览器里使用Jscex辅助异步程序开发，只需要在页面上引入[jscex-async.bundle.js](bin\jscex-async.bundle.js)文件即可，例如：
 
-    <script src="jscex.js"></script>
-    <script src="jscex-parser.js"></script>
-    <script src="jscex-jit.js"></script>
-    <script src="jscex-builderbase.js"></script>
-    <script src="jscex-async.js"></script>
-    <script src="jscex-async-powerpack.js"></script>
+    <script src="jscex-async.bundle.js"></script>
 
-Jscex模块化十分细致，但您暂时无需了解以上脚本的含义。
+当然，您也可以直接引用[在线文件](https://raw.github.com/JeffreyZhao/jscex/master/bin/jscex-async.bundle.js)。请注意，这是一个打包文件，体积较大，适用于开发及调试。如果您要在生产环境里使用Jscex，请参考[部署Jscex](doc/deploy-cn.md)相关内容。
 
 #### Node.js
 
-Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装jscex，jscex-jit及jscex-async三个模块。
+Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装jscex，jscex-jit，jscex-async和jscex-async-powerpack四个模块。
 
-    npm install jscex jscex-jit jscex-async
+    npm install jscex jscex-jit jscex-async jscex-async-powerpack
 
-您暂时还需要下载jscex-async-powerpack.js文件，并在其相同目录下创建quick-start.js，写入：
+然后在脚本里使用：
 
     var Jscex = require("jscex");
     require("jscex-jit").init(Jscex);
     require("jscex-async").init(Jscex);
-    require("./jscex-async-powerpack").init(Jscex);
+    require("jscex-async-powerpack").init(Jscex);
 
 ### 实现
 
@@ -107,31 +102,5 @@ Jscex以模块化形式分发，目前主要有以下几个模块：
 
 Jscex使用BSD授权协议。
 
-<pre>Copyright 2011 (c) Jeffrey Zhao &lt;jeffz@live.com&gt;
-Based on UglifyJS (https://github.com/mishoo/UglifyJS).
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-    * Redistributions of source code must retain the above
-      copyright notice, this list of conditions and the following
-      disclaimer.
-
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials
-      provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY
-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGE.</pre>
+    Copyright 2011 (c) Jeffrey Zhao jeffz@live.com
+    Based on UglifyJS (https://github.com/mishoo/UglifyJS).    Redistribution and use in source and binary forms, with or without    modification, are permitted provided that the following conditions    are met:        * Redistributions of source code must retain the above          copyright notice, this list of conditions and the following          disclaimer.        * Redistributions in binary form must reproduce the above          copyright notice, this list of conditions and the following          disclaimer in the documentation and/or other materials          provided with the distribution.    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY    EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR    PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,    OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR    TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF    SUCH DAMAGE.
