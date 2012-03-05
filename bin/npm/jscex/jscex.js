@@ -1,10 +1,13 @@
 (function () {
 
     var Level = {
-        DEBUG: 1,
-        INFO: 2,
-        WARN: 3,
-        ERROR: 4
+        ALL: 0,
+        TRACE: 1,
+        DEBUG: 2,
+        INFO: 3,
+        WARN: 4,
+        ERROR: 5,
+        OFF: 100
     };
 
     var Logger = function () {
@@ -12,31 +15,29 @@
     };
     Logger.prototype = {
         log: function (level, msg) {
-            try { console.log(msg); } catch (ex) { }
+            if (this.level <= level) {
+                try { console.log(msg); } catch (ex) { }
+            }
+        },
+
+        trace: function (msg) {
+            this.log(Level.TRACE, msg);
         },
 
         debug: function (msg) {
-            if (this.level <= Level.DEBUG) {
-                this.log(Level.DEBUG, msg);
-            }
+            this.log(Level.DEBUG, msg);
         },
 
         info: function (msg) {
-            if (this.level <= Level.INFO) {
-                this.log(Level.INFO, msg);
-            }
+            this.log(Level.INFO, msg);
         },
 
         warn: function (msg) {
-            if (this.level <= Level.WARN) {
-                this.log(Level.WARN, msg);
-            }
+            this.log(Level.WARN, msg);
         },
 
         error: function (msg) {
-            if (this.level <= Level.ERROR) {
-                this.log(Level.ERROR, msg);
-            }
+            this.log(Level.ERROR, msg);
         }
     };
         

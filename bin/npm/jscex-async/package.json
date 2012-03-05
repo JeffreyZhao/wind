@@ -1,6 +1,6 @@
 {
     "name": "jscex-async",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
     "description": "The library to help asynchronous programming.",
     "homepage": "https://github.com/JeffreyZhao/jscex",

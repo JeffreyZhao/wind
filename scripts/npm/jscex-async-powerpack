@@ -17,7 +17,7 @@ cp ${PROJECT_DIR}/src/${PACKAGE_NAME}.js ${PACKAGE_DIR}
 
 sed \
     -e "s/<name>/${PACKAGE_NAME}/g" \
-    -e 's/<version>/0.6.0/g' \
+    -e 's/<version>/0.6.1/g' \
     -e "s/<main>/${PACKAGE_NAME}.js/g" \
     -e 's/<description>/The powerpack for Jscex asynchronous, provides the common extensions and patterns./g' \
     -e 's/<dependencies>//g' \
