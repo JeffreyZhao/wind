@@ -60,59 +60,66 @@
 
 Jscex异步增强模块也包含了一些常见的任务协作方式，它们作为静态方法定义在`Jscex.Async.Task`类型上。
 
-### whenAll(t0[, t1[, t2[, …]]])
+### whenAll(tasks)
 
-`whenAll`方法接受一系列的Task对象，并返回一个新的Task对象，该新对象只有在所有Task都成功结束之后才会结束，并使用数组返回所有Task对象的结果，其顺序与输入Task的顺序一一对应。
+`whenAll`方法接受一个Task对象的集合，该集合可以是一个数组或是键值对，甚至是数组与键值对的任意组合。`whenAll`会返回一个新的Task对象，该新对象只有在所有Task都成功结束之后才会结束，并返回一个结果集合，其结果与输入Task集合一一对应。
 
 使用示例：
 
     var Task = Jscex.Async.Task;
 
-    var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
+    var getFollowersAsync = eval(Jscex.compile("async", function (userId) {
+
+        // 获取所有追随者的ID
+        var followerIds = $await(getFollowerIds(userId));
+
+        return $await(Task.whenAll({
+            user: getUserAsync(userId),
+            followers: followerIds.map(function (id) {
+                return getUserAsync(id);
+            })
+        }));
+        
+        // 返回结果：
+        // {
+        //     user: <user对象>
+        //     followers: [ <follower对象1>, <follower对象2>, … ]
+        // }
+    });
+    
+在启动`whenAll`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。当任意一个输入Task对象发生错误时，新Task对象也会立即地直接抛出该异常，而其余正在运行的Task不受任何影响，无论成功还是失败都会执行完毕。
+
+### whenAll(t0[, t1[, t2[, …]]])
+
+`whenAll`方法可以接受一系列的Task对象，并返回一个新的Task对象，该新对象只有在所有Task都成功结束之后才会结束，并使用数组返回所有Task对象的结果，其顺序与输入Task的顺序一一对应。
+
+使用示例：
+
+    var Task = Jscex.Async.Task;
+
+    var getFollowersAsync = eval(Jscex.compile("async", function (userId) {
+
+        // 获取所有追随者的ID
+        var followerIds = $await(getFollowerIds(userId));
 
         var results = $await(Task.whenAll(
-            queryUserAsync(userId),
-            queryItemsAsync(userId)
+            getUserAsync(userId),
+            getFollowerListAsync(followerIds)
         ));
 
         return {
             user: results[0],
-            items: results[1]
+            followers: results[1]
         };
     });
 
-在启动`whenAll`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。当任意一个输入Task对象发生错误时，新Task对象也会立即地直接抛出该异常，而其余正在运行的Task不受任何影响，无论成功还是失败都会执行完毕。
+总而言之，以下这条语句：
 
-### whenAll(taskArray)
+    Task.whenAll(t1, t2, t3, …, tN)
+    
+等价于：
 
-`whenAll`方法亦可接受一个Task对象数组`taskArray`作为参数，其余表现与上述重载完全相同。
-
-使用示例：
-
-    var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
-
-        var tasks = [queryUserAsync(userId), queryItemsAsync(userId)];
-        var results = $await(Task.whenAll(tasks));
-
-        return {
-            user: results[0],
-            items: results[1]
-        };
-    });
-
-### whenAll(taskMap)
-
-`whenAll`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。新Task对象的返回值也是一个对象，包含所有Task对象的运行结果，并与输入对象的字段一一对应。该方法的其他表现与之前的两个重载完全相同。
-
-使用示例：
-
-    var getUserItemsAsync = eval(Jscex.compile("async", function (userId) {
-
-        return $await(Task.whenAll({
-            user: queryUserAsync(userId),
-            items: queryItemsAsync(userId)
-        }));
-    });
+    Task.whenAll([ t1, t2, t3, …, tN ])
 
 ### whenAny(t0[, t1[, t2[, …]]])
 
