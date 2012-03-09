@@ -1,6 +1,5 @@
 /*******************************************************************
- * This file is designed to be used for asynchronous programming.
- * with Jscex in debug mode.
+ * This file is designed to write Jscex code in debug mode.
 
  * The file is a bundle of:
  * 1. jscex.js

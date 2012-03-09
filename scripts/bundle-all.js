@@ -6,8 +6,7 @@ var srcDir = path.join(__dirname, "..", "src");
 var buffer = [];
 
 buffer.push("/*******************************************************************");
-buffer.push(" * This file is designed to be used for asynchronous programming.");
-buffer.push(" * with Jscex in debug mode.");
+buffer.push(" * This file is designed to write Jscex code in debug mode.");
 buffer.push("");
 buffer.push(" * The file is a bundle of:");
 buffer.push(" * 1. jscex.js");
@@ -36,5 +35,5 @@ buffer.push("");
 buffer.push("// jscex-async-powerpack.js");
 buffer.push(fs.readFileSync(path.join(srcDir, "jscex-async-powerpack.js")));
 
-var targetPath = path.join(__dirname, "..", "bin", "jscex-async.bundle.js");
+var targetPath = path.join(__dirname, "..", "bin", "jscex.bundle.js");
 fs.writeFileSync(targetPath, buffer.join("\r\n"), "utf8");
