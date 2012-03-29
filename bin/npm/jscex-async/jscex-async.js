@@ -1,8 +1,11 @@
 (function () {
 
+    var CanceledErrorTypeID = "670a1076-712b-4edd-9b70-64b152fe1cd9";
+    var isCanceledError = function (ex) { return ex._typeId == CanceledErrorTypeID; }
     var CanceledError = function () { }
     CanceledError.prototype = {
-        isCancellation: true,
+        isTypeOf: isCanceledError,
+        _typeId: CanceledErrorTypeID,
         message: "The task has been cancelled."
     }
 
@@ -108,7 +111,7 @@
 
                     this.error = value;
 
-                    if (value.isCancellation) {
+                    if (isCanceledError(value)) {
                         this.status = "canceled";
                     } else {
                         this.status = "faulted";
