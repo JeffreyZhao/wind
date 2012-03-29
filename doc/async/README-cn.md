@@ -185,25 +185,33 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 然后，对于支持取消的异步任务，都会接受一个CancellationToken作为参数，并根据其状态来行动。这里我们还是以异步增强模块中的`sleep`方法进行说明：
 
-    var printEverySecondAsync = eval(Jscex.compile("async", function (ct) {        var i = 0;        while (true) {            $await(Jscex.Async.sleep(1000, ct));            console.log(i++);        }    }));
+    var printEverySecondAsync = eval(Jscex.compile("async", function (ct) {
+        var i = 0;
+        while (true) {
+            $await(Jscex.Async.sleep(1000, ct));
+            console.log(i++);
+        }
+    }));
 
     printEverySecondAsync(ct).start();
 
 如果您在浏览器或是Node.js的JavaScript交互式控制台上运行上述代码，将会从0开始，每隔一秒打印一个数字，永不停止，直到有人调用`ct.cancel()`为止。
 
-在一个Jscex异步方法中，“取消”的表现形式为“异常”。例如，在`ct.cancel()`调用之后，上述代码的中的`$await(Jscex.Async.sleep(1000, ct))`语句将会抛出一个异常，其`isCancellation`字段为true，我们可以使用`try…catch`进行捕获：
+在一个Jscex异步方法中，“取消”的表现形式为“异常”。例如，在`ct.cancel()`调用之后，上述代码的中的`$await(Jscex.Async.sleep(1000, ct))`语句将会抛出一个`Jscex.Async.CanceledError`错误，我们可以使用`try…catch`进行捕获：
 
-    var task = Jscex.Async.sleep(1000, ct);
+    var ct = new CancellationToken();
+    var task = Jscex.Async.sleep(5000, ct);
     try {
-        $await(task); // 调用ct.cancel()
+        setTimeout(function () { ct.cancel() }, 1000); // 1秒后调用ct.cancel();
+        $await(task);
     } catch (ex) {
-        console.log(ex.isCancellation); // true
+        console.log(CancelledError.isTypeOf(ex)); // true
         console.log(task.status); // canceled
     }
 
-如果抛出的错误，其`isCancellation`为true的话，则该Task对象的`status`字段也会返回字符串`"canceled"`，表明其已被取消。反之亦然：对于一个Jscex异步方法来说，从内部抛出一个`isCancellation`字段为true的异常，则它的状态也会标识为“已取消”。试想，在相当数量的情况下，我们不会用`try…catch`来捕获一个`$await`指令所抛出的异常，于是这个异常会继续顺着“调用栈”继续向调用者传递，于是相关路径上所有的Task对象都会成为`canceled`状态。这是一个**简单而统一**的模型。
+如果某个Task对象抛出了`CancelledError`错误对象，则它的`status`字段会返回字符串`"canceled"`，表明其已被取消。同理，对于一个Jscex异步方法来说，如果从内部抛出一个未被捕获的`CancelledError`错误对象，则它的状态也会标识为“已取消”。试想，在很多情况下，我们不会用`try…catch`来捕获一个`$await`指令所抛出的异常，于是这个异常会继续顺着“调用栈”继续向调用者传递，于是相关路径上所有的Task对象都会成为`canceled`状态。这是一个**简单而统一**的模型。
 
-有些情况下我们也需要手动操作CancellationToken对象，向外抛出一个`isCancellation`为true的异常，以表示当前异步方法已被取消：
+有些情况下我们也需要手动操作CancellationToken对象，向外抛出一个`CanceledError`错误，以表示当前异步方法已被取消：
 
     if (ct.isCancellationRequested) {
         throw new Jscex.Async.CanceledError();
@@ -213,9 +221,9 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
     ct.throwIfCancellationRequested();
 
-`throwIfCancellationRequested`是CancellationToken对象上的辅助方法，其实就是简单地检查`isCancellationRequested`字段是否为true，并抛出一个`Jscex.Async.CanceledError`对象（下文也会称作CanceledError）。CanceledError是Jscex异步模块中内置类型，其`isCancellation`字段为true，仅仅是为了方便开发者而已。
+`throwIfCancellationRequested`是CancellationToken对象上的辅助方法，其实就是简单地检查`isCancellationRequested`字段是否为true，并抛出一个`CanceledError`对象。
 
-手动判断`isCancellationRequested`的情况也是存在的，因为某些时候我们需要在取消的时候做一些“收尾工作”，于是便可以：
+有时候我们也需要手动判断`isCancellationRequested`，因为可能我们需要在取消的时候做一些“收尾工作”，于是便可以：
 
     if (ct.isCancellationRequested) {
 
@@ -229,7 +237,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
     try {
         $await(…); // 当任务被取消时
     } catch (ex) {
-        if (ex.isCancellation) { // 取消引发的异常
+        if (CancelledError.isTypeOf(ex)) { // 取消引发的异常
             // 做些收尾工作
         }
 
@@ -291,7 +299,17 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 而将其绑定为Task对象时只需：
 
-    fs.readFileAsync = function (path) {        return Task.create(function (t) {            fs.readFile(path, function (err, data) {                if (err) {                    t.complete("failure", err);                } else {                    t.complete("success", data);                }            });        });    }
+    fs.readFileAsync = function (path) {
+        return Task.create(function (t) {
+            fs.readFile(path, function (err, data) {
+                if (err) {
+                    t.complete("failure", err);
+                } else {
+                    t.complete("success", data);
+                }
+            });
+        });
+    }
 
 于是在一个Jscex异步方法中使用时：
 
@@ -305,7 +323,25 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 错误处理也是异步编程的主要麻烦之处之一。在异步环境中，我们往往需要在“每个”异步操作的回调函数里判断是否出现错误，一旦有所遗漏，在出现问题之后就很难排查了。例如：
 
-    fs.readFile(file0, function (err0, data0) {        if (err0) {            // 错误处理        } else {            fs.readFile(file1, function (err1, data1) {                if (err1) {                    // 错误处理                } else {                    fs.readFile(file2, function (err2, data2) {                        if (err2) {                            // 错误处理                        } else {                            // 使用data0，data1和data 2                        }                    });                }            });        }    });
+    fs.readFile(file0, function (err0, data0) {
+        if (err0) {
+            // 错误处理
+        } else {
+            fs.readFile(file1, function (err1, data1) {
+                if (err1) {
+                    // 错误处理
+                } else {
+                    fs.readFile(file2, function (err2, data2) {
+                        if (err2) {
+                            // 错误处理
+                        } else {
+                            // 使用data0，data1和data 2
+                        }
+                    });
+                }
+            });
+        }
+    });
 
 如今Jscex改变了这个窘境，只需要一个`try…catch`便可以捕获到任意多个异步操作的异常，保留了传统编程过程中的实践：
 
@@ -331,9 +367,41 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 基于这两个功能，我们便可以实现`sleep方法`及其取消功能了。实现支持取消的异步操作绑定往往分三步进行：
 
-    var Task = Jscex.Async.Task;    var CanceledError = Jscex.Async.CanceledError;    var sleep = function (delay, /* CancellationToken */ ct) {		return Task.create(function (t) {
-            // 第一步			if (ct && ct.isCancellationRequested) {                t.complete("failure", new CanceledError());            }            // 第二步            var seed;            var cancelHandler;                        if (ct) {                cancelHandler = function () {                    clearTimeout(seed);                    t.complete("failure", new CanceledError());                }            }            
-            // 第三步            var seed = setTimeout(function () {                if (ct) {                    ct.unregister(cancelHandler);                }                                t.complete("success");            }, delay);                        if (ct) {                ct.register(cancelHandler);            }		});    }
+    var Task = Jscex.Async.Task;
+    var CanceledError = Jscex.Async.CanceledError;
+
+    var sleep = function (delay, /* CancellationToken */ ct) {
+		return Task.create(function (t) {
+            // 第一步
+			if (ct && ct.isCancellationRequested) {
+                t.complete("failure", new CanceledError());
+            }
+
+            // 第二步
+            var seed;
+            var cancelHandler;
+            
+            if (ct) {
+                cancelHandler = function () {
+                    clearTimeout(seed);
+                    t.complete("failure", new CanceledError());
+                }
+            }
+            
+            // 第三步
+            var seed = setTimeout(function () {
+                if (ct) {
+                    ct.unregister(cancelHandler);
+                }
+                
+                t.complete("success");
+            }, delay);
+            
+            if (ct) {
+                ct.register(cancelHandler);
+            }
+		});
+    }
 
 **第一步：判断CancellationToken状态。**取消操作由CancellationToken类型对象来提供，但由于其往往是可选操作，因此`ct`参数可能为`undefined`。在sleep方法一开始，我们先判断`ct.isCancellationRequested`是否为true，“是”便直接将Task对象传递“取消”信息。这是因为在某些特殊情况下，该CancellationToken已经被标识为取消了，作为支持取消操作的异步绑定，这可以算作是一个习惯或是规范。
 
@@ -347,12 +415,21 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 似乎将已有的异步操作绑定为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份绑定方法，而是使用[异步增强模块](powerpack-cn.md)里的辅助方法，例如：
 
-    var Jscex = require("jscex-jit");    require("jscex-async").init(Jscex);
+    var Jscex = require("jscex-jit");
+    require("jscex-async").init(Jscex);
     require("./jscex-async-powerpack").init(Jscex);
 
     var path = require("path"),
         fs = require("fs");
-    Jscexify = Jscex.Async.Jscexify;    path.existsAsync = Jscexify.fromCallback(path.exists);    fs.readAsync = Jscexify.fromStandard(fs.read, "bytesRead", "buffer");    fs.writeAsync = Jscexify.fromStandard(fs.write, "written", "buffer");    fs.readFileAsync = Jscexify.fromStandard(fs.readFile);    fs.writeFileAsync = Jscexify.fromStandard(fs.writeFile);
+    Jscexify = Jscex.Async.Jscexify;
+
+    path.existsAsync = Jscexify.fromCallback(path.exists);
+
+    fs.readAsync = Jscexify.fromStandard(fs.read, "bytesRead", "buffer");
+    fs.writeAsync = Jscexify.fromStandard(fs.write, "written", "buffer");
+
+    fs.readFileAsync = Jscexify.fromStandard(fs.readFile);
+    fs.writeFileAsync = Jscexify.fromStandard(fs.writeFile);
 
 这便是JavaScript语言的威力。
 
@@ -395,7 +472,19 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 使用示例：
 
-    var task = someAsyncMethod();    task.addEventListener("success", function () {        console.log("Task " + this.id + " is succeeded with result: " + this.result);    });    task.addEventListener("failure", function (t) {        console.log("Task " + this.id + " is failed with error: " + this.error);    });    task.addEventListener("complete", function (t) {        console.log("Task " + this.id + " is completed with status: " + this.status);    });
+    var task = someAsyncMethod();
+
+    task.addEventListener("success", function () {
+        console.log("Task " + this.id + " is succeeded with result: " + this.result);
+    });
+
+    task.addEventListener("failure", function (t) {
+        console.log("Task " + this.id + " is failed with error: " + this.error);
+    });
+
+    task.addEventListener("complete", function (t) {
+        console.log("Task " + this.id + " is completed with status: " + this.status);
+    });
 
 ### removeEventListener(ev, listener)
 
@@ -411,7 +500,17 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 使用示例：
 
-    fs.readFileAsync = function (path) {        return Task.create(function (t) {            fs.readFile(path, function (err, data) {                if (err) {                    t.complete("failure", err); // 出错                } else {                    t.complete("success", data); // 成功                }            });        });    }
+    fs.readFileAsync = function (path) {
+        return Task.create(function (t) {
+            fs.readFile(path, function (err, data) {
+                if (err) {
+                    t.complete("failure", err); // 出错
+                } else {
+                    t.complete("success", data); // 成功
+                }
+            });
+        });
+    }
 
 ### id
 
