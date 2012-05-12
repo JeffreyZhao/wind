@@ -6,7 +6,7 @@ Currently features:
 
 * A JIT (just-in-time) compiler which generates codes **at runtime**, mainly used in development environment.
 * An AOT (ahead-of-time) compiler which generates code **before runtime**. The AOT compiled code are independent of JIT compiler, which is target in production environment.
-* An async library which simplified async programming significantly.
+* An async library (with powerpack) which simplified async programming significantly.
 
 # Jscex asynchronous library
 
@@ -18,15 +18,44 @@ So Jscex comes to the rescue with its asynchronous library.
 
 ## How to use
 
-The core feature of Jscex is a compiler which convert standard JavaScript functions into a monadic ones. The compiler consists of three parts:
+### Node.js
 
-* lib/json2.js: The [JSON](http://json.org/) stringifier provided by Douglas Crockfod. You need this file for the environment doesn't suuport <code>JSON.stringify</code> method.
-* lib/uglifyjs-parser.js: The JavaScript parser of [UglifyJS](https://github.com/mishoo/UglifyJS) project. It's the JavaScript port of the LISP project [parse-js](http://marijn.haverbeke.nl/parse-js/).
-* src/jscex.js: The implementation of Jscex JIT compiler, which produces code at runtime.
+If you want to use Jscex with Node.js, please install the following packages from npm:
 
-All the three files list above are uncompressed version mainly used for developement. The minified version of them are in "bin" folder, which is suitable for production use (if you're not using AOT compile mode, see the "AOT compiler" section for more detail). Furthermore, the dev version of Jscex compiler would produce programmer-friendly code, which is easily for debugging and the minified version would run a little faster.
+    npm install jscex jscex-jit jscex-async jscex-async-powerpack
 
-To use the async library of Jscex, we should also load the "src/jscex.async.js" file. Now everything is prepared, here's how we compile a normal JavaScript function with async builder:
+then initialize these packages in your `js` file:
+
+    var Jscex = require("jscex");
+    require("jscex-jit").init(Jscex);
+    require("jscex-async").init(Jscex);
+    require("jscex-async-powerpack").init(Jscex);
+
+You can also copy all the files under "src" folder to get the latest build.
+
+### Web page
+
+If you want to use Jscex with in web page, you can references the files under "src" folder in the pge:
+
+    <!-- base -->
+    <script src="jscex.js"></script>
+
+    <!-- parser -->
+    <script src="jscex-parser.js"></script>
+
+    <!-- JIT -->
+    <script src="jscex-jit.js"></script>
+
+    <!-- async builder and powerpack -->
+    <script src="jscex-builderbase.js"></script>
+    <script src="jscex-async.js"></script>
+    <script src="jscex-async-powerpack.js"></script>
+
+All the files list above are uncompressed version mainly used for developement. The minified version of them are in "bin" folder, which is suitable for production use (if you're not using AOT compile mode, see the "AOT compiler" section for more detail). Furthermore, the dev version of Jscex compiler would produce programmer-friendly code, which is easily for debugging and the minified version would run a little faster.
+
+### Define an async function
+
+Now everything is prepared, here's how we compile a normal JavaScript function with async builder:
 
     var somethingAsync = eval(Jscex.compile("async", function (a, b) {
         // implementation
@@ -378,107 +407,6 @@ There're two async method used above: <code>path.exists</code> and <code>fs.read
 
 All the Jscex files are compatible with [CommonJS](http://commonjs.org/) module specification, which can be loaded by <code>require</code> method in Node.js. Jscex async library has a simple model of "async tasks", everyone can easily write extensions/adaptors for existing async operations. Please check the following section for more details.
 
-## Async tasks and extensions for async operations
-
-Jscex async library works with async tasks. An async task uses protocal defined in <code>Jscex.Async.Task</code>, which followed by Jscex functions and the build in helpers like <code>Jscex.Async.sleep</code>. An task object has the following members:
-
-* <code>start()</code> method: start an async task. This method can only be invoked in "ready" status.
-* <code>addListener(onComplete)</code> method: register an "onComplete" handler which would be called when the task is completed (either succeeded or failed). We can register handlers in "ready" and "running" status. A handler would be passed the task object as the only argument.
-* <code>status</code> field: indicated the status of the task. There're four kinds of status:
-  * ready: when the task is created but not started.
-  * running: the <code>start</code> method is called and the task is running.
-  * succeeded: the task is succeeded and we can get the result from the <code>result</code> field.
-  * failed: the task is failed and we can get the error from the <code>error</code> field.
-* <code>result</code> field: get the result of the task, see the <code>status</code> "succeeded" above.
-* <code>error</code> field: get the error of the task, see the <code>status</code> "failed" above.
-
-Here's the sample of using async tasks manually:
-
-    var someMethodAsync = eval(Jscex.compile("async", function () {
-        // ...
-    }));
-
-    var task = someMethodAsync();
-    task.addListener(function (t) {
-        if (t.status == "succeeded") {
-            console.log(t.result);
-        } else if (t.status == "failed") {
-            console.log(t.error);
-        } else {
-            throw "Something got wrong in Jscex async library.";
-        }
-    });
-
-    task.start();
-
-The <code>$await</code> operator in Jscex function would also handle an async task with these members.
-
-### Write extensions/adaptors for async operations.
-
-There're plenty of async operations already exists, maybe in the browser (e.g. DOM events) or in the other library/frameworks (jQuery animations, Node.js APIs). Everyone can easily write extensions/adaptors for existing async operations. For example, we can extend the XMLHttpRequest object to simplify the usage (src/jscex.async.xhr.js):
-
-    XMLHttpRequest.prototype.receiveAsync = function () {
-        var _this = this;
-
-        var delegate = {
-            "start": function (callback) {
-                _this.onreadystatechange = function () {
-                    if (_this.readyState == 4) {
-                        callback("success", _this.responseText);
-                    }
-                }
-
-                _this.send();
-            }
-        };
-
-        return new Jscex.Async.Task(delegate);
-    }
-
-The <code>Jscex.Async.Task</code> class accept an delegate of the async operation. The delegate object has a <code>start</code> method which accept a callback function. Invoke the callback when the async operation completes:
-
-* <code>callback("success", result)</code> when the operation finished normally:
-* <code>callback("failure", error)</code> when error occurred.
-
-As another example, The Node.js sample above uses the extensions defined in "src/jscex.async.node.js":
-
-    Jscex.Async.Node = {};
-    Jscex.Async.Node.Path = {};
-    Jscex.Async.Node.FileSystem = {};
-
-    Jscex.Async.Node.Path.extend = function (path) {
-
-        path.existsAsync = function (filepath) {
-            var delegate = {
-                "start": function (callback) {
-                    path.exists(filepath, function (exists) {
-                        callback("success", exists);
-                    });
-                }
-            };
-
-            return new Jscex.Async.Task(delegate);
-        };
-    }
-
-    Jscex.Async.Node.FileSystem.extend = function (fs) {
-
-        fs.readFileAsync = function (filepath) {
-            var delegate = {
-                "start": function (callback) {
-                    fs.readFile(filepath, function (error, data) {
-                        var result = { error: error, data: data };
-                        callback("success", result);
-                    });
-                }
-            };
-
-            return new Jscex.Async.Task(delegate);
-        }
-    }
-
-Jscex would provide more build in extensions for popular JavaScript libraries/frameworks in the future.
-
 ## Limitations:
 
 There're three limitations of the current version of Jscex - none of them becomes a real problem in my experiences.
@@ -613,7 +541,7 @@ For the <code>bubbleSortAsync</code> method above, it would be compiled into:
         );
     })
 
-The AOT compiler would keep the code others than Jscex functions. The code generated by AOT compiler could be compressed safely. Futhermore, the compiled code could execute without "json2.js", "uglifyjs-parser.js" and "jscex.js". The async methods could be executed properly with only "jscex.async.js", which is only 3KB when gzipped. Besides, the AOT compiled code can now be executed in the future "strict mode" of ECMAScript 5 (which doesn't support <code>eval</code> method).
+The AOT compiler would keep the code others than Jscex functions. The code generated by AOT compiler could be compressed safely. Futhermore, the compiled code could execute without "jscex-parser.js" and "jscex-jit.js". The async methods could be executed properly with only "jscex-async.js" and "jscex-async-powerpack", which is only 3KB when gzipped. 
 
 ## Limitation
 
