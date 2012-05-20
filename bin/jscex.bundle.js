@@ -3414,9 +3414,12 @@ scope.set_logger = function (logger) {
 // jscex-async.js
 (function () {
 
+    var CanceledErrorTypeID = "670a1076-712b-4edd-9b70-64b152fe1cd9";
+    var isCanceledError = function (ex) { return ex._typeId == CanceledErrorTypeID; }
     var CanceledError = function () { }
     CanceledError.prototype = {
-        isCancellation: true,
+        isTypeOf: isCanceledError,
+        _typeId: CanceledErrorTypeID,
         message: "The task has been cancelled."
     }
 
@@ -3522,7 +3525,7 @@ scope.set_logger = function (logger) {
 
                     this.error = value;
 
-                    if (value.isCancellation) {
+                    if (isCanceledError(value)) {
                         this.status = "canceled";
                     } else {
                         this.status = "faulted";
@@ -3644,11 +3647,11 @@ scope.set_logger = function (logger) {
             root.Async = { };
         };
         
-        var async = root.Async;
-        async.CancellationToken = CancellationToken;
-        async.CanceledError = CanceledError;
-        async.Task = Task;
-        async.AsyncBuilder = AsyncBuilder;
+        var Async = root.Async;
+        Async.CancellationToken = CancellationToken;
+        Async.CanceledError = CanceledError;
+        Async.Task = Task;
+        Async.AsyncBuilder = AsyncBuilder;
         
         if (!root.builders) {
             root.builders = { };
@@ -3721,9 +3724,29 @@ scope.set_logger = function (logger) {
 
 })();
 
+
 // jscex-async-powerpack.js
 (function () {
     "use strict";
+
+    var AggregateErrorTypeID = "4a73efb8-c2e2-4305-a05c-72385288650a";
+
+    var AggregateError = function (errors) {
+        this.children = [];
+        
+        if (errors) {
+            for (var i = 0; i < errors.length; i++) {
+                this.children.push(errors[i]);
+            }
+        }
+    }
+    AggregateError.prototype = {
+        _typeId: AggregateErrorTypeID,
+        message: "This is an error contains sub-errors, please check the 'children' collection for more details.",
+        isTypeOf: function (ex) {
+            return ex._typeId == AggregateErrorTypeID;
+        }
+    }
 
     var isArray = function (array) {
         return Object.prototype.toString.call(array) === '[object Array]';
@@ -3767,6 +3790,8 @@ scope.set_logger = function (logger) {
         var CanceledError = Async.CanceledError;
 
         // Async members
+        Async.AggregateError = AggregateError;
+
         Async.sleep = function (delay, /* CancellationToken */ ct) {
             return Task.create(function (t) {
                 if (ct && ct.isCancellationRequested) {
@@ -3889,61 +3914,53 @@ scope.set_logger = function (logger) {
                         t.start();
                     }
                 }
-                
-                // if there's a task already failed, then failed
-                for (var id in taskKeys) {
-                    if (!taskKeys.hasOwnProperty(id)) continue;
 
-                    var t = inputTasks[taskKeys[id]];
-                    if (t.error) {
-                        taskWhenAll.complete("failure", t.error);
-                        return;
-                    }
-                }
-                
-                var results = isArray(inputTasks) ? new Array(inputTasks.length) : {};
-                var runningNumber = 0;
+                var done = function () {
 
-                var onComplete = function () {
-                    if (this.error) {
-                        for (var id in taskKeys) {
-                            if (!taskKeys.hasOwnProperty(id)) continue;
+                    var results = isArray(inputTasks) ? new Array(inputTasks.length) : { };
+                    var errors = [];
 
-                            inputTasks[taskKeys[id]].removeEventListener("complete", onComplete);
+                    for (var id in taskKeys) {
+                        if (!taskKeys.hasOwnProperty(id)) continue;
+
+                        var key = taskKeys[id];
+                        var t = inputTasks[key];
+
+                        if (t.error) {
+                            errors.push(t.error);
+                        } else {
+                            results[key] = t.result;
                         }
+                    }
 
-                        taskWhenAll.complete("failure", this.error);
+                    if (errors.length > 0) {
+                        taskWhenAll.complete("failure", new AggregateError(errors));
                     } else {
-                        var key = taskKeys[this.id];
-                        results[key] = this.result;
-                        
-                        delete taskKeys[this.id];
-                        
-                        runningNumber--;
-
-                        if (runningNumber == 0) {
-                            taskWhenAll.complete("success", results);
-                        }
+                        taskWhenAll.complete("success", results);
                     }
                 }
+
+                var runningNumber = 0;
                 
-                // now all the tasks should be "succeeded" or "running"
                 for (var id in taskKeys) {
                     if (!taskKeys.hasOwnProperty(id)) continue;
 
                     var key = taskKeys[id]
                     var t = inputTasks[key];
-                    if (t.status == "succeeded") {
-                        results[key] = t.result;
-                        delete taskKeys[t.id];
-                    } else { // running
+
+                    if (t.status == "running") {
                         runningNumber++;
-                        t.addEventListener("complete", onComplete);
+
+                        t.addEventListener("complete", function () {
+                            if (--runningNumber == 0) {
+                                done();
+                            }
+                        });
                     }
                 }
-                
+
                 if (runningNumber == 0) {
-                    taskWhenAll.complete("success", results);
+                    done();
                 }
             });
         };

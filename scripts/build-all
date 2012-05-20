@@ -2,3 +2,4 @@ SOURCE_DIR=`dirname $0`
 
 ${SOURCE_DIR}/compress-all
 ${SOURCE_DIR}/npm-all
+node ${SOURCE_DIR}/bundle-all

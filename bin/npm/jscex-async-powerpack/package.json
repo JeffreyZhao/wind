@@ -1,6 +1,6 @@
 {
     "name": "jscex-async-powerpack",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
     "description": "The powerpack for Jscex asynchronous, provides the common extensions and patterns.",
     "homepage": "https://github.com/JeffreyZhao/jscex",
