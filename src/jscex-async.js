@@ -233,11 +233,11 @@
             root.Async = { };
         };
         
-        var async = root.Async;
-        async.CancellationToken = CancellationToken;
-        async.CanceledError = CanceledError;
-        async.Task = Task;
-        async.AsyncBuilder = AsyncBuilder;
+        var Async = root.Async;
+        Async.CancellationToken = CancellationToken;
+        Async.CanceledError = CanceledError;
+        Async.Task = Task;
+        Async.AsyncBuilder = AsyncBuilder;
         
         if (!root.builders) {
             root.builders = { };
