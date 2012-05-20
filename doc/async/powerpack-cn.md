@@ -62,7 +62,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 ### whenAll(tasks)
 
-`whenAll`方法接受一个Task对象的集合，该集合可以是一个数组或是键值对，甚至是数组与键值对的任意组合。`whenAll`会返回一个新的Task对象，该新对象只有在所有Task都成功结束之后才会结束，并返回一个结果集合，其结果与输入Task集合一一对应。
+`whenAll`方法接受一个Task对象的集合，该集合可以是一个数组或是键值对，甚至是数组与键值对的任意组合。`whenAll`会返回一个新的Task对象，该新对象只有在所有Task都完成（无论成功与否）之后才会结束。假如所有的输入Task对象都成功执行完毕，则新的Task对象会返回一个结果集合，其结果与输入Task集合一一对应。
 
 使用示例：
 
@@ -87,7 +87,22 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
         // }
     });
     
-在启动`whenAll`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。当任意一个输入Task对象发生错误时，新Task对象也会立即地直接抛出该异常，而其余正在运行的Task不受任何影响，无论成功还是失败都会执行完毕。
+在启动`whenAll`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。假如有一个或多个输入任务失败，则新Task对象也会处于失败状态。在这种情况下，新Task对象的`error`属性是一个`Jscex.Async.AggregateError`对象，其`children`属性是一个数组，包含了所有出错Task的错误对象，但顺序不定。例如：
+
+    var Task = Jscex.Async.Task;
+    var AggregateError = Jscex.Async.AggregateError;
+    
+    var executeInParallel = eval(Jscex.compile("async", function (t0, t1) {
+
+        try {
+            return $await(Task.whenAll([ t0, t1 ]));
+        } catch (ex) {
+            console.log(AggregateError.isTypeOf(ex)); // true
+            for (var i = 0; i < ex.children.length; i++) {
+                console.log(ex.children[i]);
+            }
+        }
+    });
 
 ### whenAll(t0[, t1[, t2[, …]]])
 
