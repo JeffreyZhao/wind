@@ -1232,7 +1232,7 @@
                 var left = ast[1];
                 var right = ast[2];
                 
-                if (getPrecedence(ast) < getPrecedence(ast)) {
+                if (getPrecedence(ast) < getPrecedence(left)) {
                     this._both("(")._visitRaw(left)._both(").")._both(right);
                 } else {
                     this._visitRaw(left)._both(".")._both(right);
