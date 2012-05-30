@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Compare</title>
+    
+    <script language="javascript" type="text/javascript" src="../src/jscex.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex-parser.js"></script>
+    <script language="javascript" type="text/javascript" src="../src/jscex-jit.js"></script>
+</head>
+<body>
+    <textarea id="code" style="font-family:consolas,monaco; width:500px; height:100px;">var a = (1 + 2) * (3 + 4);</textarea><br />
+    <input type="button" onclick="generate()" value="generate" />
+    <div id="r"></div>
+
+    <script type="text/javascript">
+        function generate() {
+            var code = document.getElementById("code").value;
+            var result;
+            
+            try {
+                var result = Jscex.compile(
+                    "nothing",
+                    "function () { " + code + " }",
+                    true).code;
+            } catch (ex) {
+                result = "error";
+            }
+            
+            document.getElementById("r").innerHTML = "<pre style='font-family:consolas,monaco;'>" + result + "</pre>";
+        }
+    </script>
+</body>
+</html>
+
