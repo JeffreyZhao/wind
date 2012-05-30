@@ -1510,6 +1510,85 @@ scope.set_logger = function (logger) {
         return s.replace(/ +/g, "");
     }
 
+    function getPrecedence(ast) {
+        var type = ast[0];
+        switch (type) {
+            case "dot": // .
+            case "sub": // []
+            case "call": // ()
+                return 1;
+            case "unary-postfix": // ++ -- - ~ ! delete new typeof void
+            case "unary-prefix":
+                return 2;
+            case "var":
+            case "binary":
+                switch (ast[1]) {
+                    case "*":
+                    case "/":
+                    case "%":
+                        return 3;
+                    case "+":
+                    case "-":
+                        return 4;
+                    case "<<":
+                    case ">>":
+                    case ">>>":
+                        return 5;
+                    case "<":
+                    case "<=":
+                    case ">":
+                    case ">=":
+                    case "instanceof":
+                        return 6;
+                    case "==":
+                    case "!=":
+                    case "===":
+                    case "!==":
+                        return 7;
+                    case "&":
+                        return 8;
+                    case "^":
+                        return 9;
+                    case "|":
+                        return 10;
+                    case "&&":
+                        return 11;
+                    case "||":
+                        return 12;
+                }
+            case "conditional":
+                return 13;
+            case "assign":
+                return 14;
+            case "new":
+                return 15;
+            case "stat":
+            case "name":
+            case "object":
+            case "array":
+            case "num":
+            case "regexp":
+            case "string":
+            case "function":
+            case "defun":
+            case "for":
+            case "for-in":
+            case "block":
+            case "while":
+            case "do":
+            case "if":
+            case "break":
+            case "continue":
+            case "return":
+            case "throw":
+            case "try":
+            case "switch": 
+                return 0;
+            default:
+                return 100; // the smallest
+        }
+    }
+
     var CodeWriter = function (indent) {
         this._indent = indent || "    ";
         this._indentLevel = 0;
@@ -2541,12 +2620,7 @@ scope.set_logger = function (logger) {
             "binary": function (ast) {
                 var op = ast[1], left = ast[2], right = ast[3];
 
-                function needBracket(item) {
-                    var type = item[0];
-                    return !(type == "num" || type == "name" || type == "dot");
-                }
-
-                if (needBracket(left)) {
+                if (getPrecedence(ast) < getPrecedence(left)) {
                     this._both("(")._visitRaw(left)._both(") ");
                 } else {
                     this._visitRaw(left)._both(" ");
@@ -2554,7 +2628,7 @@ scope.set_logger = function (logger) {
 
                 this._both(op);
 
-                if (needBracket(right)) {
+                if (getPrecedence(ast) <= getPrecedence(right)) {
                     this._both(" (")._visitRaw(right)._both(")");
                 } else {
                     this._both(" ")._visitRaw(right);
@@ -2564,11 +2638,7 @@ scope.set_logger = function (logger) {
             "sub": function (ast) {
                 var prop = ast[1], index = ast[2];
 
-                function needBracket() {
-                    return prop[0] != "name";
-                }
-
-                if (needBracket()) {
+                if (getPrecedence(ast) < getPrecedence(prop)) {
                     this._both("(")._visitRaw(prop)._both(")[")._visitRaw(index)._both("]");
                 } else {
                     this._visitRaw(prop)._both("[")._visitRaw(index)._both("]");
@@ -2578,14 +2648,23 @@ scope.set_logger = function (logger) {
             "unary-postfix": function (ast) {
                 var op = ast[1];
                 var item = ast[2];
-                this._visitRaw(item)._both(op);
+                
+                if (getPrecedence(ast) <= getPrecedence(item)) {
+                    this._both("(")._visitRaw(item)._both(")");
+                } else {
+                    this._visitRaw(item);
+                }
+                
+                this._both(" " + op);
             },
 
             "unary-prefix": function (ast) {
                 var op = ast[1];
                 var item = ast[2];
-                this._both(op);
-                if (op == "typeof") {
+                
+                this._both(op + " ");
+                
+                if (getPrecedence(ast) < getPrecedence(item)) {
                     this._both("(")._visitRaw(item)._both(")");
                 } else {
                     this._visitRaw(item);
@@ -2611,15 +2690,13 @@ scope.set_logger = function (logger) {
             },
 
             "dot": function (ast) {
-                function needBracket() {
-                    var leftOp = ast[1][0];
-                    return !(leftOp == "dot" || leftOp == "name");
-                }
-
-                if (needBracket()) {
-                    this._both("(")._visitRaw(ast[1])._both(").")._both(ast[2]);
+                var left = ast[1];
+                var right = ast[2];
+                
+                if (getPrecedence(ast) < getPrecedence(left)) {
+                    this._both("(")._visitRaw(left)._both(").")._both(right);
                 } else {
-                    this._visitRaw(ast[1])._both(".")._both(ast[2]);
+                    this._visitRaw(left)._both(".")._both(right);
                 }
             },
 
@@ -2984,7 +3061,7 @@ scope.set_logger = function (logger) {
             
             buffer.push(comment);
             buffer.push(code.substring(comment.length));
-            buffer.push("\r\n");
+            buffer.push("\n");
         }
         
         return buffer.join("");
@@ -2996,7 +3073,7 @@ scope.set_logger = function (logger) {
             return;
         }
         
-        function compile(builderName, func) {
+        function compile(builderName, func, separateCodeAndComment) {
             var funcCode = func.toString();
             var evalCode = "eval(Jscex.compile(" + stringify(builderName) + ", " + funcCode + "))"
             var evalCodeAst = root.parse(evalCode);
@@ -3008,10 +3085,19 @@ scope.set_logger = function (logger) {
             var evalAst = evalCodeAst[1][0][1];
             compileJscexPattern(root, evalAst, new SeedProvider(), codeWriter, commentWriter);
             
-            var newCode = merge(commentWriter.lines, codeWriter.lines);
-            root.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Jscexified: \r\n" + newCode + "\r\n");
-            
-            return codeGenerator(newCode);
+            if (separateCodeAndComment) {
+                return {
+                    code: codeWriter.lines.join("\n"),
+                    codeLines: codeWriter.lines,
+                    comment: commentWriter.lines.join("\n"),
+                    commentLines: commentWriter.lines
+                };
+            } else {
+                var newCode = merge(commentWriter.lines, codeWriter.lines);
+                root.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Jscexified: \r\n" + newCode + "\r\n");
+                
+                return codeGenerator(newCode);
+            }
         }
 
         root.compile = compile;

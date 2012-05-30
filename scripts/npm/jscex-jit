@@ -18,7 +18,7 @@ cp ${PROJECT_DIR}/src/${PACKAGE_NAME}.js ${PACKAGE_DIR}
 
 sed \
     -e "s/<name>/${PACKAGE_NAME}/g" \
-    -e 's/<version>/0.6.0/g' \
+    -e 's/<version>/0.6.1/g' \
     -e "s/<main>/${PACKAGE_NAME}.js/g" \
     -e 's/<description>/The JIT compiler for Jscex, providing the monadic code transformation ability without losing traditional JavaScript programming experience./g' \
     -e 's/<dependencies>//g' \
