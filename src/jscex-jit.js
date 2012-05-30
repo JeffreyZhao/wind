@@ -1159,10 +1159,6 @@
             "binary": function (ast) {
                 var op = ast[1], left = ast[2], right = ast[3];
 
-                function needBracket(item) {
-                    return 
-                }
-
                 if (getPrecedence(ast) < getPrecedence(left)) {
                     this._both("(")._visitRaw(left)._both(") ");
                 } else {
@@ -1181,11 +1177,7 @@
             "sub": function (ast) {
                 var prop = ast[1], index = ast[2];
 
-                function needBracket() {
-                    return prop[0] != "name";
-                }
-
-                if (needBracket()) {
+                if (getPrecedence(ast) < getPrecedence(prop)) {
                     this._both("(")._visitRaw(prop)._both(")[")._visitRaw(index)._both("]");
                 } else {
                     this._visitRaw(prop)._both("[")._visitRaw(index)._both("]");
@@ -1196,9 +1188,7 @@
                 var op = ast[1];
                 var item = ast[2];
                 
-                var needBracket = getPrecedence(ast) <= getPrecedence(item);
-                
-                if (needBracket) {
+                if (getPrecedence(ast) <= getPrecedence(item)) {
                     this._both("(")._visitRaw(item)._both(")");
                 } else {
                     this._visitRaw(item);
@@ -1211,11 +1201,9 @@
                 var op = ast[1];
                 var item = ast[2];
                 
-                var needBracket = getPrecedence(ast) < getPrecedence(item);
-                
                 this._both(op + " ");
                 
-                if (needBracket) {
+                if (getPrecedence(ast) < getPrecedence(item)) {
                     this._both("(")._visitRaw(item)._both(")");
                 } else {
                     this._visitRaw(item);
@@ -1241,15 +1229,13 @@
             },
 
             "dot": function (ast) {
-                function needBracket() {
-                    var leftOp = ast[1][0];
-                    return !(leftOp == "dot" || leftOp == "name");
-                }
-
-                if (needBracket()) {
-                    this._both("(")._visitRaw(ast[1])._both(").")._both(ast[2]);
+                var left = ast[1];
+                var right = ast[2];
+                
+                if (getPrecedence(ast) < getPrecedence(ast)) {
+                    this._both("(")._visitRaw(left)._both(").")._both(right);
                 } else {
-                    this._visitRaw(ast[1])._both(".")._both(ast[2]);
+                    this._visitRaw(left)._both(".")._both(right);
                 }
             },
 
