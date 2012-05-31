@@ -101,6 +101,7 @@
                 return 14;
             case "new":
                 return 15;
+            case "seq":
             case "stat":
             case "name":
             case "object":
@@ -124,7 +125,7 @@
             case "switch": 
                 return 0;
             default:
-                return 100; // the smallest
+                return 100; // the lowest
         }
     }
 
@@ -1149,11 +1150,22 @@
                 this._both(";");
             },
 
-            "seq": function (ast) {
-                for (var i = 1; i < ast.length; i++) {
-                    this._visitRaw(ast[i]);
-                    if (i < ast.length - 1) this._both(", ");
+            "seq": function (ast, noBracket) {
+                var left = ast[1];
+                var right = ast[2];
+                
+                if (!noBracket) this._both("(");
+                
+                this._visitRaw(left);
+                this._both(", ");
+                
+                if (right[0] == "seq") {
+                    arguments.callee.call(this, right, true);
+                } else {
+                    this._visitRaw(right);
                 }
+                
+                if (!noBracket) this._both(")");
             },
 
             "binary": function (ast) {
@@ -1214,13 +1226,19 @@
                 var op = ast[1];
                 var name = ast[2];
                 var value = ast[3];
-
-                this._visitRaw(name);
+                
+                if (name[0] == "assign") {
+                    this._both("(")._visitRaw(name)._both(")");
+                } else {
+                    this._visitRaw(name);
+                }
+                
                 if ((typeof op) == "string") {
                     this._both(" " + op + "= ");
                 } else {
                     this._both(" = ");
                 }
+                
                 this._visitRaw(value);
             },
 
@@ -1258,14 +1276,18 @@
                 if (isJscexPattern(ast)) {
                     compileJscexPattern(this._root, ast, this._seedProvider, this._codeWriter, this._commentWriter);
                 } else {
+                    var caller = ast[1];
+                
+                    var invalidBind = (caller[0] == "name") && (caller[1] == this._binder);
+                    // throw?
 
-                    var invalidBind = (ast[1][0] == "name") && (ast[1][1] == this._binder);
-                    if (invalidBind) {
-                        this._pos = { inFunction: true };
-                        this._buffer = [];
+                    if (getPrecedence(ast) < getPrecedence(caller)) {
+                        this._both("(")._visitRaw(caller)._both(")");
+                    } else {
+                        this._visitRaw(caller);
                     }
-
-                    this._visitRaw(ast[1])._both("(");
+                    
+                    this._both("(");
 
                     var args = ast[2];
                     for (var i = 0; i < args.length; i++) {
@@ -1274,10 +1296,6 @@
                     }
 
                     this._both(")");
-
-                    if (invalidBind) {
-                        throw ("Invalid bind operation: " + this._buffer.join(""));
-                    }
                 }
             },
 
