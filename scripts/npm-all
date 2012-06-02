@@ -2,5 +2,6 @@ SOURCE_DIR=`dirname $0`
 
 ${SOURCE_DIR}/npm/jscex
 ${SOURCE_DIR}/npm/jscex-jit
+${SOURCE_DIR}/npm/jscex-aot
 ${SOURCE_DIR}/npm/jscex-async
 ${SOURCE_DIR}/npm/jscex-async-powerpack

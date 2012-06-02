@@ -1,13 +1,4 @@
-module.paths.unshift(__dirname);
-
-var Jscex = require("jscex");
-require("jscex-jit").init(Jscex);
 require("../lib/narcissus-parser");
-
-Jscex.logger.level = Jscex.Logging.Level.WARN;
-
-// default binders
-Jscex.binders["async"] = "$await";
 
 var extract = function (ast) {
 
@@ -147,40 +138,76 @@ var extract = function (ast) {
     return results;
 }
 
-function generateCode(inputCode, results) {
-    var codeParts = [];
-    var lastIndex = 0;
+var init = function (root) {
+    if (!root.modules["jit"]) {
+        throw new Error('Missing required components, please initialize "jit" module first.');
+    };
+    
+    function generateCode(inputCode, results) {
+        var codeParts = [];
+        var lastIndex = 0;
 
-    for (var i = 0; i < results.length; i++) {
-        var item = results[i];
-        var compiledCode = Jscex.compile(item.builderName, item.funcCode);
-        codeParts.push(inputCode.substring(lastIndex, item.start));
-        codeParts.push(compiledCode);
-        lastIndex = item.end + 1;
-    }
+        for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var compiledCode = root.compile(item.builderName, item.funcCode);
+            codeParts.push(inputCode.substring(lastIndex, item.start));
+            codeParts.push(compiledCode);
+            lastIndex = item.end + 1;
+        }
 
-    if (lastIndex < inputCode.length) {
-        codeParts.push(inputCode.substring(lastIndex));
+        if (lastIndex < inputCode.length) {
+            codeParts.push(inputCode.substring(lastIndex));
+        }
+        
+        return codeParts.join("");
     }
     
-    return codeParts.join("");
-}
-
-var inputFile, outputFile;
-for (var i = 2; i < process.argv.length; i++) {
-    var name = process.argv[i];
-    if (name == "--input") {
-        inputFile = process.argv[++i];
-    } else if (name == "--output") {
-        outputFile = process.argv[++i];
+    root.compileScript = function (code, binders) {
+        binders = binders || { "async": "$await", "seq": "$yield" };
+        
+        var oldBinders = root.binders;
+        root.binders = binders;
+        
+        try {
+            var codeAst = Narcissus.parser.parse(code);
+            var results = extract(codeAst);
+            return generateCode(codeAst.getSource(), results);
+        } finally {
+            root.binders = oldBinders;
+        }
     }
+    
+    root.modules["aot"] = true;
 }
 
-var fs = require("fs");
+if (module.parent) { // command
+    exports.init = init;
+} else {
+    module.paths.unshift(__dirname);
+    
+    var Jscex = require("jscex");
+    require("jscex-jit").init(Jscex);
+    init(Jscex);
+    
+    Jscex.logger.level = Jscex.Logging.Level.WARN;
+    
+    var inputFile, outputFile;
+    for (var i = 2; i < process.argv.length; i++) {
+        var name = process.argv[i];
+        if (name == "--input") {
+            inputFile = process.argv[++i];
+        } else if (name == "--output") {
+            outputFile = process.argv[++i];
+        }
+    }
+    
+    var fs = require("fs");
+    var code = fs.readFileSync(inputFile, "utf-8");
+    var newCode = Jscex.compileScript(code);
+    fs.writeFileSync(outputFile, newCode, "utf-8");
+}
 
-var code = fs.readFileSync(inputFile, "utf-8");
-var codeAst = Narcissus.parser.parse(code);
-var results = extract(codeAst);
-var newCode = generateCode(codeAst.getSource(), results);
 
-fs.writeFileSync(outputFile, newCode, "utf-8");
+
+
+
