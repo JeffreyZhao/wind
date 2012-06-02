@@ -1,12 +1,8 @@
 "use strict";
 
-var Jscex = require("../src/jscex");
-require("../src/jscex-jit").init(Jscex);
-require("../src/jscex-aot").init(Jscex);
+var jscexc = require("../src/jscexc");
 
 require("should");
-
-Jscex.logger.level = Jscex.Logging.Level.OFF;
 
 describe("simple test", function () {
 
@@ -18,7 +14,7 @@ describe("simple test", function () {
             }));
         }
     
-        var newCode = Jscex.compileScript("var f = " + f.toString());
+        var newCode = jscexc.compile("var f = " + f.toString());
         newCode.match(/\$await/g).length.should.equal(1);
     });
 
