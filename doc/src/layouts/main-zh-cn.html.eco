@@ -3,8 +3,12 @@
 <head>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta charset="utf-8"/>
-<title>Jscex - Async flow control in JavaScript, with JavaScript</title>
+<title>Jscex - 回归 JavaScript 的异步流程控制</title>
 <link rel="stylesheet" href="http://jeffreyzhao.github.com/jscex/stylesheets/stylesheet.css" />
+<link rel="stylesheet" href="/styles/highlight-vs.css" />
+<script src="/scripts/jquery-1.7.2.min.js"></script>
+<script src="/scripts/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 <style>
 img { width: auto; }
 </style>
@@ -17,7 +21,7 @@ img { width: auto; }
           <a id="forkme_banner" href="https://github.com/JeffreyZhao/jscex">View on GitHub</a>
 
           <h1 id="project_title">Jscex</h1>
-          <h2 id="project_tagline">Async flow control in JavaScript, with JavaScript</h2>
+          <h2 id="project_tagline">Jscex - 回归 JavaScript 的异步流程控制</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/JeffreyZhao/jscex/zipball/master">Download this project as a .zip file</a>

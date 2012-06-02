@@ -1,6 +1,5 @@
 ---
 layout: main
-tagline: Async flow control in JavaScript, with JavaScript
 ---
 
 ### 中文用户请[点此访问中文版](./zh-cn/)。

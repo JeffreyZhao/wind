@@ -1,7 +1,9 @@
 ---
-layout: main
-tagline: 回归 JavaScript 的异步流程控制
+layout: main-zh-cn
 ---
+
+<script src="/scripts/jscex-async.bundle.min.js"></script>
+<script src="/scripts/sorting-animations.js"></script>
 
 ### 新闻
 
@@ -17,102 +19,135 @@ Jscex的核心功能之一，便是对异步编程进行了极大程度的简化
 
 请尝试解决以下问题，并与基于Jscex的实现进行比较。
 
-#### 问题：每隔一秒打印菲波那契数列
+#### 排序算法动画演示
 
-您一定听说过[菲波那契（Fibonacci）数列](http://en.wikipedia.org/wiki/Fibonacci_number)，它的定义是：
+人人都会排序算法，那么能否使用动画来演示排序算法的运作过程？例如以下是快速排序的动画演示：
 
-![image](http://latex.codecogs.com/gif.latex?F_n%20=%20F_{n-1}%20+%20F_{n%20-%202})
+<input value="排序" type="button" id="btnSort" />
 
-其边界情况为：
+<div>
 
-![image](http://latex.codecogs.com/gif.latex?F_0%20=%200,%20F_1%20=%201)
+<canvas id="sorting-canvas" width="300" height="300" style="border:solid 1px black">
+    您的浏览器不支持Canvas绘图，请使用IE9+，Chrome，Firefox，Safari等现代浏览器。
+</canvas>
 
-我们可以很轻松地写出其迭代算法：
+<script>/* Begin */
 
-    var fib = function () {
-        
-        console.log(0);
-        console.log(1);
+    var sa = new SortingAnimations($("#sorting-canvas")[0]);
+    var array = sa.randomArray();
+    sa.paint(array);
+    
+    var btnSort = $("#btnSort");
+    if (sa.supported) {
+        btnSort.click(function () {
+            btnSort.attr("disabled", "disabled");
+            
+            if (array.sorted) {
+                array = sa.randomArray();
+            }
 
-        var a = 0, current = 1;
-        while (true) {
-            var b = a;
-            a = current;
-            current = a + b;
+            sa.quickSortAsync(array).start().addEventListener("success", function () {
+                array.sorted = true;
+                btnSort.removeAttr("disabled");
+            });
+        });
+    } else {
+        btnSort.remove();
+    }
+    
+/* End */</script>
 
-            console.log(current);
+</div>
+
+#### 问题分析
+
+我们就以最简单的“冒泡排序”进行分析：
+
+    var compare = function (x, y) {
+        return x - y; 
+    }
+
+    var swap = function (a, i, j) {
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+
+    var bubbleSort = function (array) {
+        for (var x = 0; x < array.length; x++) {
+            for (var y = 0; y < array.length - x; y++) {
+                if (compare(array[y], array[y + 1]) > 0) {
+                    swap(array, y, y + 1);
+                }
+            }
         }
-    };
+    }
 
-执行`fib()`会无限打印出菲薄纳契数列中的每一项。那么，您能将其改写成“每隔一秒打印一项”吗？
+所谓冒泡排序，便是使用双重循环，两两比较相邻的元素，如果顺序不对，则交换两者。我们有了基本算法，想要将其用动画表现出来，其实只要运用以下两点策略即可：
 
-#### 引入Jscex脚本
+* 增加交换和比较操作的耗时，因为排序算法的性能主要取决于交换和比较操作的次数多少。
+* 每次交换元素后重绘数组，这样便能表现出排序的动画效果。
 
-Jscex可以在任何JavaScript引擎上执行，我们这里目前最典型的两类JavaScript执行环境来演示Jscex使用方式。
+看上去很简单，不是吗？
 
-#### 浏览器
+#### 异步编程之殇
 
-要在浏览器里使用Jscex辅助异步程序开发，只需要在页面上引入[jscex-async.bundle.js](bin\jscex-async.bundle.js)文件即可，例如：
+在其他一些语言里，我们往往可以使用`sleep`函数让当前线程停止一段时间，这样便起到了“等待”的效果。但是，在JavaScript中我们无法做到这一点，唯一的“延时”操作只能使用setTimeout来实现，但它却需要一个回调函数，我们无法这样让`compare`方法“暂停”一段时间：
 
-    <script src="jscex-async.bundle.js"></script>
+    var compare = function (x, y) {
+        setTimeout(function () {
+            return x - y;
+        }, 10); // compare方法依然会立即返回
+    }
 
-当然，您也可以直接引用[在线文件](https://raw.github.com/JeffreyZhao/jscex/master/bin/jscex-async.bundle.js)。请注意，这是一个打包文件，体积较大，适用于开发及调试。如果您要在生产环境里使用Jscex，请参考[部署Jscex](doc/deploy-cn.md)相关内容。
+我们只能把`compare`改造为带有回调函数的方法：
 
-#### Node.js
+    var compare = function (x, y, callback) {
+        setTimeout(function () {
+            callback(x - y); // 通过回调函数传递结果
+        }, 10);
+    }
+    
+同理，`swap`方法也需要通过回调函数传递结果。此时我们会发现，我们很难在`bubbleSort`中使用异步的`compare`和`swap`方法，而且如果要配合循环和判断一齐使用则更加困难。这就是异步编程在流程控制方面的难点所在：我们无法使用传统的JavaScript进行表达，算法会被回调函数分解地支离破碎。
 
-Node.js是目前流行的网络开发技术。如果要在Node.js中使用Jscex，可以使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装jscex，jscex-jit，jscex-async和jscex-async-powerpack四个模块。
+#### Jscex实现
 
-    npm install jscex jscex-jit jscex-async jscex-async-powerpack
+为了解决异步编程中的流程控制问题，人们设计构造了[各式各样的辅助类库](https://github.com/joyent/node/wiki/modules#wiki-async-flow)来简化开发。但我们认为，流程控制是一个语言层面上的问题，JavaScript已经提供了流程控制需要的所有关键字（例如`if`、`for`、`try`等等），开发人员也早已无数次证明了这种方式的灵活及高效。如果我们可以“修复”这些流程控制机制对异步操作“无效”的问题，则开发人员无需学习新的API，不会引入额外的噪音，一切都是最简单，最熟悉的JavaScript代码。
 
-然后在脚本里使用：
+Jscex便做到了这一点。例如，使用Jscex来实现冒泡排序动画，则只需要：
 
-    var Jscex = require("jscex");
-    require("jscex-jit").init(Jscex);
-    require("jscex-async").init(Jscex);
-    require("jscex-async-powerpack").init(Jscex);
-
-#### 实现
-
-基于Jscex实现“每隔一秒打印菲薄纳契数列”十分简单直接，请在quick-start.html或quick-start.js里写入以下脚本：
-
-    var fib = eval(Jscex.compile("async", function () {
-
-        $await(Jscex.Async.sleep(1000)); // “暂停”一秒
-        console.log(0);
-        
-        $await(Jscex.Async.sleep(1000)); // “暂停”一秒
-        console.log(1);
-
-        var a = 0, current = 1;
-        while (true) {
-            var b = a;
-            a = current;
-            current = a + b;
-
-            $await(Jscex.Async.sleep(1000)); // “暂停”一秒
-            console.log(current);
-        }
+    var compareAsync = eval(Jscex.compile("async", function (x, y) {
+        $await(Jscex.Async.sleep(10)); // 暂停10毫秒
+        return x - y; 
     }));
 
-    fib().start();
+    var swapAsync = eval(Jscex.compile("async", function (a, i, j) {
+        $await(Jscex.Async.sleep(20)); // 暂停20毫秒
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+        paint(a); // 重绘数组
+    }));
 
-#### 执行
+    var bubbleSortAsync = eval(Jscex.compile("async", function (array) {
+        for (var x = 0; x < array.length; x++) {
+            for (var y = 0; y < array.length - x; y++) {
+                // 异步比较元素
+                var r = $await(compareAsync(array[y], array[y + 1]));
+                // 异步交换元素
+                if (r > 0) $await(swapAsync(array, y, y + 1));
+            }
+        }
+    }));
+    
+与之前的代码相比，基于Jscex编写的代码只有两个变化：
 
-请使用Chrome，Firefox，Safari或IE8及以上版本浏览器打开quick-start.html页面（Jscex支持IE 6及以上浏览器，但当前示例并不支持，因为只有IE8开始才有`console.log`方法），或使用Node.js执行quick-start.js文件：
+1. 与传统的`function () { ... }`方式不同，我们使用`eval(Jscex.compile("async", function () { ... }))`来定义一个“异步函数”。这样的函数定义方式是“模板代码”，没有任何变化，可以认做是“异步函数”与“普通函数”的区别。
+2. 对于“异步操作”，如上面代码中的`Jscex.Async.sleep`内置函数（其中封装了setTimeout函数），则可以使用`$await(...)`来等待其完成，方法会在该异步操作结束之后才继续下去，其执行流程与普通JavaScript没有任何区别。
 
-    node quick-start.js
+完整代码请参考“[排序算法动画](../samples/async/sorting-algorithms.html)”示例，其中实现了“冒泡排序”，“选择排序”以及“快速排序”三种排序算法的动画。
 
-此时，您将会在浏览器工具或是Node.js标准输出里看到菲薄纳契数列，每隔一秒输出一项。
+### 总结
 
-您也可以在[示例目录](https://github.com/JeffreyZhao/jscex/tree/master/samples/async)下找到[quick-start.html](https://github.com/JeffreyZhao/jscex/tree/master/samples/async/quick-start.html)及[quick-start.js](https://github.com/JeffreyZhao/jscex/tree/master/samples/async/quick-start.js)文件。
+JavaScript的异步及非阻塞特性，让程序员无法使用传统方式表达代码，导致语义丢失，算法被分解地支离破碎。例如，由于只能使用setTimeout回调来实现“延迟”效果，即便是要做到“暂停”这样的简单功能，也已经让人难以看出这是一个“冒泡排序”的实现。
 
-#### 其他
-
-您可以尝试使用其他任何方式解决这个问题，并与基于Jscex的做法进行比较。
-
-JavaScript的异步及非阻塞特性，让程序员无法使用传统方式表达代码，导致语义丢失，算法被分解地支离破碎。例如，由于只能使用setTimeout回调来实现“延迟”效果，即便是要做到“每隔一秒”这样的简单功能，也已经让人难以看出这是一个“菲薄纳契”数列的实现。
-
-使用Jscex，让程序员可以在异步的、非阻塞的JavaScript执行环境里使用传统的“阻塞”表达方式编写代码。并让异步任务的协作，取消以及错误处理等常见需求变得前所未有的简单。
+Jscex的哲学，是真正将异步编程中的流程控制**回归JavaScript本身**。您可以尝试使用其他任何方式解决这个问题，并与上述基于Jscex的做法进行比较。使用Jscex，让程序员可以在异步的、非阻塞的JavaScript执行环境里使用传统的“阻塞”表达方式编写代码。并让异步任务的协作，取消以及错误处理等常见需求变得前所未有的简单。
 
 更多内容请参考“[Jscex异步模块](./manuals/async/)”。
 
@@ -163,3 +198,9 @@ Jscex使用BSD授权协议。
     TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
     THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
     SUCH DAMAGE.
+    
+<script>/* Begin */
+
+$("pre > code").last().addClass("no-highlight");
+
+/* End */</script>
