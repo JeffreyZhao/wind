@@ -12,16 +12,13 @@ $(document).ready(function () {
     var currentLevel = 2;
     
     var getName = function (h) {
-        var prevP = $(h).prev()[0];
-        if (!prevP) return;
-        if (prevP.tagName.toLowerCase() != "p") return;
-        
-        var link = prevP.firstChild;
+        debugger;
+        var link = h.firstChild;
         if (!link) return;
         if (!link.tagName) return;
         if (link.tagName.toLowerCase() != "a") return;
         if (link.innerHTML != "") return;
-        
+
         return link.name;
     }
     
@@ -30,7 +27,7 @@ $(document).ready(function () {
     }
     
     var getLink = function (h, name) {
-        return $("<a>").attr("href", "#" + name).html($(h).html());
+        return $("<a>").attr("href", "#" + name).text($(h).text());
     }
     
     var addToList = function () {

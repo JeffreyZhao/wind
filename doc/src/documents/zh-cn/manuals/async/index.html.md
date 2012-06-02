@@ -5,15 +5,11 @@ title: 异步模块
 
 Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持，因为其背后的理论，以及这种理论在C#，F#或是Scala中的实践，都是以异步编程为核心的。异步编程是各个平台都会遇到的问题，而Jscex便是将其他平台针对此类问题所做的探索，支持以及编程模式，引入到传统JavaScript开发过程中。
 
-<a name="import-module"></a>
-
-## 引入Jscex异步模块
+## <a name="import-module"></a>引入Jscex异步模块
 
 如果您要使用Jscex异步模块，首先必须[引入基础模块](../base/)，之后再基于这个对象初始化异步模块。在开发环境里，可能您还需要[引入Jscex JIT编译器](../jit/)。
 
-<a name="import-module-nodejs"></a>
-
-### Node.js
+### <a name="import-module-nodejs"></a>Node.js
 
 如果您使用的是Node.js，可以直接使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装最新的jscex-async模块：
 
@@ -33,9 +29,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 此类方式也适合非[Node.js](http://nodejs.org/)，但实现[CommonJS规范](http://www.commonjs.org/)的JavaScript运行环境。
 
-<a name="import-module-browser"></a>
-
-### 浏览器
+### <a name="import-module-browser"></a>浏览器
 
 在浏览器环境中使用Jscex异步模块，您同样需要[引入基础模块](../base/)。此时在根（即window对象）上会出现一个Jscex对象。在开发环境里还需要[加载Jscex JIT编译器](../jit/)，然后再引入[jscex-builderbase.js](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-builderbase.js)以及[jscex-async.js](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-async.js)文件即可：
 
@@ -52,9 +46,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 这两个文件会自动为根上的Jscex对象添加异步模块相关的成员，而这种方式也适合各类**没有**实现CommonJS规范的JavaScript运行环境。
 
-<a name="define-async-method"></a>
-
-## 定义异步方法
+## <a name="define-async-method"></a>定义异步方法
 
 在JavaScript里定义一个普通方法很容易，例如：
 
@@ -70,13 +62,9 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 其中`eval(Jscex.compile("async", …))`部分只是一个包装，一种标识，让程序员可以清楚的意识到这不是一个普通方法。在使用Jscex的时候，我们不会在其他任何地方，其他任何一种方式使用`eval`或是`Jscex.compile`，完全不会表现出其“邪恶”的一面，更不会出现在生产环境中。更多信息，请参考“[Jscex调试](../debugging.html)”相关内容。
 
-<a name="use-async-method"></a>
+## <a name="use-async-method"></a>使用异步方法
 
-## 使用异步方法
-
-<a name="use-async-method-directly"></a>
-
-### 直接使用
+### <a name="use-async-method-directly"></a>直接使用
 
 与普通使用不同的是，异步方法在执行后并不会立即启动方法体内的代码，而是会返回一个`Jscex.Async.Task`类型的对象（后文也会称做“任务对象”或是Task对象）：
 
@@ -92,9 +80,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 关于`Jscex.Async.Task`类型成员及其功能，请参考后文“Jscex.Async.Task类型详解”部分。任何一个Jscex异步方法，都可以使用`start()`方法启动，无需依赖其他异步方法（见下节）。这点经常被人忽略，但对于那些需要在已有项目中逐步引入Jscex的情况来说却十分重要。
 
-<a name="use-async-method-in-another"></a>
-
-### 在其他异步方法内使用
+### <a name="use-async-method-in-another"></a>在其他异步方法内使用
 
 对于一个Jscex异步方法返回的Task对象来说，最常见的使用方式便是在另一个异步方法内，通过`$await`命令来执行。例如：
 
@@ -117,9 +103,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 而在Jscex异步方法中，这一切都不是问题。`$await`将为您保证异步操作的执行顺序，您可以使用最传统的编程方式来表达算法，由Jscex来帮您搞定异步操作的各种问题。
 
-<a name="use-async-method-await"></a>
-
-### $await指令的语义
+### <a name="use-async-method-await"></a>$await指令的语义
 
 Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：条件判断就用`if…else`或`switch`，错误捕获就用`try…catch…finally`，循环就用`while`、`for`、`do`，其他包括`break`，`continue`，`return`等等，都是最普通的JavaScript写法，而在Jscex异步方法中，唯一新增的便是`$await`指令。
 
@@ -166,9 +150,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
 在`$await(queryUserTask)`时，如果该任务已经完成，则会立即返回结果，否则便会等待其完成。因此，当这两个互不依赖的查询操作并发执行的情况下，总耗时将会减少到300毫秒。
 
-<a name="task-model"></a>
-
-## 任务模型
+## <a name="task-model"></a>任务模型
 
 `$await`指令的参数是`Jscex.Async.Task`类型的对象，这个对象这个对象可以是一个异步方法的返回结果，或是由其他任何方式得到。在Jscex异步模块眼中，一个异步任务便是指“**能在未来某个时刻返回的操作**”，它可以是一个`setTimeout`的绑定（如之前演示过的`sleep`方法），甚至是一个用户事件：
 
@@ -194,9 +176,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
 
 Jscex的异步模型经过C#，F#及Scala等多种语言平台的检验，可以说拥有非常灵活而丰富的使用模式。
 
-<a name="cancellation-model"></a>
-
-## 取消模型
+## <a name="cancellation-model"></a>取消模型
 
 取消操作也是异步编程中十分常见但也十分麻烦的部分。因此，Jscex异步模块在任务模型中融入一个简单的取消功能，丰富其潜在功能及表现能力。
 
@@ -269,15 +249,11 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 值得注意的是，由于JavaScript的单线程特性，一般只需在异步方法刚进入的时候，或是某个`$await`指令之后才会使用`isCancellationRequested`或是`throwIfCancellationRequested`。我们没有必要在其他时刻，例如两个`$await`指令之间反复访问这些成员，因为它们的行为不会发生任何改变。
 
-<a name="async-operation-binding"></a>
-
-## 将任意异步操作绑定为Task对象
+## <a name="async-operation-binding"></a>将任意异步操作绑定为Task对象
 
 世界上有无数种异步模型，从最简单的回调函数传递结果，用户行为引发的事件，到相对复杂的Promise模型。而在Jscex的异步模块种，能够被`$await`指令识别的，便是用`Jscex.Async.Task`类型来表达的异步任务。任何的异步方法，在执行后都能得到一个Task对象，但如果是其他平台或是环境所提供异步模型，便需要经过绑定才能被`$await`使用。
 
-<a name="async-operation-binding-simple"></a>
-
-### 绑定简单操作
+### <a name="async-operation-binding-simple"></a>绑定简单操作
 
 将任何一个异步操作Task对象，会需要用到`Jscex.Async.Task`类型的`create`静态方法。方便起见，通常我们可以使用`Task`来指向这个全命名：
 
@@ -312,9 +288,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 3. 委托方法的参数是当前的Task对象（也是之前`Task.create`创建的对象），在异步操作完成后，使用其`complete`方法通知Task对象“已完成”。
 4. `complete`方法的第一个参数为字符串`"success"`，表示该异步操作执行成功，并可以通过第二个参数传回该异步操作的结果（亦可空缺）。
 
-<a name="async-operation-binding-raise-error"></a>
-
-### 引发异常
+### <a name="async-operation-binding-raise-error"></a>引发异常
 
 并非所有的异步操作都会成功，在平时“非异步”的编程方式中，我们往往会在出错的情况下抛出异常。如果一个异步操作引发了异常，我们只需要在调用Task对象的`complete`方法时，将第一个参数从`"success"`替换为`"failure"`，并将第二个参数设为错误对象即可。例如Node.js中内置的[File System模块的`readFile`方法](http://nodejs.org/docs/v0.6.5/api/fs.html#fs.readFile)便可能会失败：
 
@@ -385,9 +359,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 甚至，在编写绝大多数Jscex异步方法的时候，我们并不需要显式地进行`try…catch`，我们可以让异常直接向方法外抛出，由统一的地方进行处理。
 
-<a name="async-operation-binding-cancellation"></a>
-
-### 取消操作
+### <a name="async-operation-binding-cancellation"></a>取消操作
 
 从上文的“取消模型”中我们得知，所谓“取消”只不过是引发一个`isCancellation`为true的异常而已。因此，要表示当前异常操作被取消，也只需要向`complete`方法传入`"failure"`即可。不过问题的关键是，我们如果要绑定一个现有的异步操作，往往还需要在取消时实现一些“清理”工作。这里，我们便以异步增强模块中的`sleep`方法来演示“取消”操作的实现方式。
 
@@ -442,9 +414,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 将一个支持取消的异步操作绑定为Task对象是最为麻烦的工作，幸好这样的操作并不多见，并且也有十分规则的模式可以遵循。
 
-<a name="async-operation-binding-helpers"></a>
-
-### 辅助方法
+### <a name="async-operation-binding-helpers"></a>辅助方法
 
 似乎将已有的异步操作绑定为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份绑定方法，而是使用[异步增强模块](./powerpack.html)里的辅助方法，例如：
 
@@ -466,9 +436,7 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 这便是JavaScript语言的威力。
 
-<a name="task-api"></a>
-
-## Jscex.Async.Task 类型详解
+## <a name="task-api"></a>Jscex.Async.Task 类型详解
 
 `Jscex.Async.Task`是Jscex异步模块内的标准异步模型。异步方法产生的Task对象，除了可以交给`$await`指令使用之外，也可以直接使用这个对象。这种做法在某些场合十分重要，例如要在系统中逐步引入Jscex的情况。
 
@@ -596,37 +564,27 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
     if (this.isCancellationRequested) {
         throw new Jscex.Async.CancelledError();
     }
-
-<a name="samples"></a>
     
-## 示例
+## <a name="samples"></a>示例
 
-<a name="samples-browser"></a>
-
-### 浏览器示例
+### <a name="samples-browser"></a>浏览器示例
 
 * [时钟](../../samples/async/clock.html)：演示最基础的使用方式。
 * [排序算法动画](../../samples/async/sorting-algorithms.html)：各类排序算法（冒泡，选择，快速）的演示动画。
 * [模态对话框](../../samples/async/modal-dialog.html)：演示Jscex对于前端用户交互编写方式的改进。
 * [汉诺塔](../../samples/async/hanoi.html)：汉诺塔解决方案的动画演示，同时涉及用户前端交互。
 
-<a name="samples-nodejs"></a>
-
-### Node.js示例
+### <a name="samples-nodejs"></a>Node.js示例
 
 * [复制完整目录](../../samples/async/copy-dir.html)：使用Node.js编写复制完整目录的功能
 * [静态文件服务器](../../samples/async/static-server.html)：演示Node.js环境中最基础的使用方式。
 * [使用Express开发网站](../../samples/async/express-server.html)：使用Jscex改善业务逻辑表现方式，并增强程序并发性。
 
-<a name="samples-others"></a>
-
-### 其他
+### <a name="samples-others"></a>其他
 
 * [jQuery异步操作绑定](../../samples/async/jquery-bindings.html)：提供部分jQuery及其相关插件中异步操作的绑定。
 
-<a name="related-links"></a>
-
-## 相关链接
+## <a name="related-links"></a>相关链接
 
 * [源代码](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-async.js)
 * [异步增强模块](./powerpack.html)
