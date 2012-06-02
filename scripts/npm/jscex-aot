@@ -21,7 +21,7 @@ cp ${PROJECT_DIR}/src/${PACKAGE_NAME}.js ${PACKAGE_DIR}/src
 
 sed \
     -e "s/<name>/${PACKAGE_NAME}/g" \
-    -e 's/<version>/0.6.0/g' \
+    -e 's/<version>/0.6.1/g' \
     -e "s/<main>/src\/${PACKAGE_NAME}.js/g" \
     -e 's/<description>/The AOT compiler for Jscex./g' \
     -e 's/<dependencies>/"jscex": "0.6.x", "jscex-jit": "0.6.x"/g' \
