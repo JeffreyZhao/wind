@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta charset="utf-8"/>
+<title>Jscex - <%= @document.tagline %></title>
+<link rel="stylesheet" href="http://jeffreyzhao.github.com/jscex/stylesheets/stylesheet.css" />
+<style>
+img { width: auto; }
+</style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/JeffreyZhao/jscex">View on GitHub</a>
+
+          <h1 id="project_title">Jscex</h1>
+          <h2 id="project_tagline"><%= @document.tagline %></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/JeffreyZhao/jscex/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/JeffreyZhao/jscex/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+        <section id="main_content" class="inner">
+            <%- @content %>
+        </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Jscex maintained by <a href="https://github.com/JeffreyZhao">JeffreyZhao</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+</body>
+</html>

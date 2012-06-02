@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta charset="utf-8"/>
+<title>Jscex使用指南 - <%= @document.title %></title>
+<link rel="stylesheet" href="/styles/manuals.css" />
+<script src="/scripts/jquery-1.7.2.min.js"></script>
+<script src="/scripts/manuals.js"></script>
+</head>
+<body id="container">
+
+  <header>
+    <h1>Jscex使用指南 - <%= @document.title %></h1>
+    <div id="gtoc">
+	  <p><a href="/zh-cn/">首页</a> | <a href="/zh-cn/manuals/">使用指南</a></p>
+    </div>
+    <hr/>
+  </header>
+
+  <div id="toc">
+    <h2>索引</h2>
+
+    <ul id="toc-list">
+      <li><a href="#module-definition">模块定义</a>
+        <ul>
+          <li><a href="#define">define</a>
+            <ul>
+              <li><a href="#define-id">id</a></li>
+              <li><a href="#define-dependencies">dependencies</a></li>
+              <li><a href="#define-factory">factory</a></li>
+            </ul>
+          </li>
+          <li><a href="#exports">exports</a></li>
+          <li><a href="#require">require</a>
+            <ul>
+              <li><a href="#require-async">require.async</a></li>
+              <li><a href="#require-resolve">require.resolve</a></li>
+              <li><a href="#require-load">require.load</a></li>
+              <li><a href="#require-constructor">require.constructor</a></li>
+            </ul>
+          </li>
+          <li><a href="#module">module</a>
+            <ul>
+              <li><a href="#module-id">module.id</a></li>
+              <li><a href="#module-dependencies">module.dependencies</a></li>
+              <li><a href="#module-exports">module.exports</a></li>
+              <li><a href="#module-constructor">module.constructor</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <hr/>
+  </div>
+
+  <%- @content %>
+    
+</body>
+</html>

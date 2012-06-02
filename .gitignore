@@ -1,3 +1,4 @@
 node_modules
 tools/compiler.jar
 *.swp
+doc/out
