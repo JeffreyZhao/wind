@@ -13,6 +13,13 @@ layout: main-zh-cn
 
 Jscex是JavaScript Computation EXpressions的缩写，它为JavaScript语言提供了一个monadic扩展，能够显著提高一些常见场景下的编程体验（例如异步编程）。Jscex项目完全使用JavaScript编写，能够在任意支持[ECMAScript 3](http://www.ecma-international.org/publications/standards/Ecma-262.htm)的执行引擎里使用，包括各浏览器及服务器端JavaScript环境（例如[Node.js](http://nodejs.org/)）。
 
+Jscex有如下特点：
+
+* 无需学习额外的API或新的语言，直接使用JavaScript语言本身进行编程。
+* 功能强大的异步任务模型，支持并行，取消等常用异步编程模式，经过多种技术平台验证。
+* 在支持JavaScript语言的环境里直接使用（如浏览器或Node.js），无需额外的编译或转化步骤。
+* 基础组件及异步运行库共计4K大小（Minified + GZipped），适合开发网页应用。
+
 ### 快速入门
 
 Jscex的核心功能之一，便是对异步编程进行了极大程度的简化，帮助让开发人员摆脱异步编程方面烦恼，将注意力尽可能多地放在逻辑的表现上，而非异步编程过程中的各类奇技淫巧。
@@ -24,8 +31,6 @@ Jscex的核心功能之一，便是对异步编程进行了极大程度的简化
 人人都会排序算法，那么能否使用动画来演示排序算法的运作过程？例如以下是快速排序的动画演示：
 
 <input value="排序" type="button" id="btnSort" />
-
-<div>
 
 <canvas id="sorting-canvas" width="300" height="300" style="border:solid 1px black">
     您的浏览器不支持Canvas绘图，请使用IE9+，Chrome，Firefox，Safari等现代浏览器。
@@ -56,8 +61,6 @@ Jscex的核心功能之一，便是对异步编程进行了极大程度的简化
     }
     
 /* End */</script>
-
-</div>
 
 #### 问题分析
 
