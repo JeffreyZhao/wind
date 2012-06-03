@@ -152,18 +152,7 @@ JavaScript的异步及非阻塞特性，让程序员无法使用传统方式表�
 
 Jscex的哲学，是真正将异步编程中的流程控制**回归JavaScript本身**。您可以尝试使用其他任何方式解决这个问题，并与上述基于Jscex的做法进行比较。使用Jscex，让程序员可以在异步的、非阻塞的JavaScript执行环境里使用传统的“阻塞”表达方式编写代码。并让异步任务的协作，取消以及错误处理等常见需求变得前所未有的简单。
 
-更多内容请参考“[Jscex异步模块](./manuals/async/)”。
-
-### 模块
-
-Jscex以模块化形式分发，目前主要有以下几个模块：
-
-* [基础模块](./manuals/main/)
-* [JIT编译器模块](./manuals/jit/)
-* [AOT编译器模块](./manuals/aot/)
-* [构造器基础模块](./manuals/builderbase/)
-* [异步模块](./manuals/async/)
- * [异步增强模块](./manuals/async/powerpack.html)
+更多内容请参考[开发文档](manuals/)以及Jscex“[异步模块](manuals/async/)” 。
 
 ### 错误及反馈
 

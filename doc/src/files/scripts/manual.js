@@ -12,7 +12,6 @@ $(document).ready(function () {
     var currentLevel = 2;
     
     var getName = function (h) {
-        debugger;
         var link = h.firstChild;
         if (!link) return;
         if (!link.tagName) return;
