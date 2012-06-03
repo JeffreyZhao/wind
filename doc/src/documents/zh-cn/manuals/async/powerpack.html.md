@@ -5,11 +5,11 @@ title: 异步增强模块
 
 [Jscex异步模块](./)中提供了Jscex支持异步编程的核心类库，例如Task类型或是异步构造器。有了异步模块，我们就可以编写异步方法，或是将某种异步操作封装为Task对象等等。但是，异步模块除了提供了核心功能以外，并没有对日常异步开发中的常见任务给与足够的支持。而[Jscex异步增强模块](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-async-powerpack.js)便对常见的异步开发模式，或是异步操作的绑定模式提供了支持。
 
-## 引入Jscex异步增强模块
+## <a name="import-module"></a>引入Jscex异步增强模块
 
 如果您要使用Jscex异步增强模块，首先必须[引入Jscex异步模块](./)，此时您会得到了一个Jscex根对象，之后再基于这个对象初始化异步增强模块。
 
-### Node.js
+### <a name="import-module-nodejs"></a>Node.js
 
 如果您使用的是Node.js，可以直接使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装最新的jscex-async-powerpack模块：
 
@@ -22,7 +22,7 @@ title: 异步增强模块
     require("jscex-async").init(Jscex); // 引入并初始化Jscex异步模块
     require("jscex-async-powerpack").init(Jscex); // 引入并初始化Jscex异步模块
 
-### 浏览器
+### <a name="import-module-browser"></a>浏览器
 
 如果您要在浏览器里使用Jscex异步增强模块，请[下载该文件](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-async-powerpack.js)，保存在合适的位置，并在页面中引入该文件即可：
 
@@ -30,11 +30,11 @@ title: 异步增强模块
 
 此时异步增强模块会自动为根上的Jscex对象添加异步增强模块相关的成员。该方法也适用于各类**没有**实现CommonJS规范的JavaScript运行环境。
 
-## 异步方法
+## <a name="async-methods"></a>异步方法
 
 异步增强模块中提供了一些常见的异步方法，可直接使用。这些异步方法都定义在`Jscex.Async`模块之上。
 
-### sleep(delay, [ct])
+### <a name="async-methods-sleep"></a>sleep(delay, [ct])
 
 `sleep`方法用于将当前的异步方法暂停一段时间。该方法接受两个参数：
 
@@ -54,7 +54,7 @@ title: 异步增强模块
         }
     }));
 
-### onEvent(target, eventName, [ct])
+### <a name="async-methods-onEvent"></a>onEvent(target, eventName, [ct])
 
 `onEvent`方法用于监听某个对象上某个事件的“下一次”触发。该方法接受三个参数：
 
@@ -83,11 +83,11 @@ title: 异步增强模块
         }
     }));
 
-## 任务协作
+## <a name="task-coordination"></a>任务协作
 
 Jscex异步增强模块也包含了一些常见的任务协作方式，它们作为静态方法定义在`Jscex.Async.Task`类型上。
 
-### whenAll(tasks)
+### <a name="task-coordination-whenAll-tasks"></a>whenAll(tasks)
 
 `whenAll`方法接受一个Task对象的集合，该集合可以是一个数组或是键值对，甚至是数组与键值对的任意组合。`whenAll`会返回一个新的Task对象，该新对象只有在所有Task都完成（无论成功与否）之后才会结束。假如所有的输入Task对象都成功执行完毕，则新的Task对象会返回一个结果集合，其结果与输入Task集合一一对应。
 
@@ -131,7 +131,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
         }
     });
 
-### whenAll(t0[, t1[, t2[, …]]])
+### <a name="task-coordination-whenAll-params"></a>whenAll(t0[, t1[, t2[, …]]])
 
 `whenAll`方法可以接受一系列的Task对象，并返回一个新的Task对象，该新对象只有在所有Task都成功结束之后才会结束，并使用数组返回所有Task对象的结果，其顺序与输入Task的顺序一一对应。
 
@@ -163,7 +163,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
     Task.whenAll([ t1, t2, t3, …, tN ])
 
-### whenAny(t0[, t1[, t2[, …]]])
+### <a name="task-coordination-whenAny-params"></a>whenAny(t0[, t1[, t2[, …]]])
 
 `whenAny`方法可以接受一系列的Task对象，并返回一个新的Task对象，该新对象会在输入的Task中任意一个完成时（无论成功失败）结束。该方法的返回值为一个对象，其`key`字段为任务在输入时的下标，其`task`对象即为第一个完成的任务。
 
@@ -206,7 +206,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
 
 在启动`whenAny`返回的新Task对象时，会立即启动所有输入中尚未开始执行的Task对象。由于“完成”不分成功失败，因此`whenAny`返回的新对象永远不会抛出异常。
 
-### whenAny(taskArray)
+### <a name="task-coordination-whenAny-array"></a>whenAny(taskArray)
 
 `whenAny`方法亦可接受一个Task对象数组`taskArray`作为参数，其余表现与上述重载完全相同。
 
@@ -234,7 +234,7 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
         }
     }));
 
-### whenAny(taskMap)
+### <a name="task-coordination-whenAny-map"></a>whenAny(taskMap)
 
 `whenAny`方法的第三个重载可以接受一个对象`taskMap`作为参数，该对象上的每个字段都对应一个Task对象。与之前的两个重载相比，新Task对象的返回值中的`key`字段保存了完成的那个Task对象所对应的键值。该方法的其他表现与之前的两个重载完全相同。
 
@@ -261,13 +261,13 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
         }
     }));
 
-## 异步操作绑定
+## <a name="binding-helpers"></a>异步操作绑定
 
 如果要在Jscex异步方法中使用现有的异步操作，则需要将其绑定为Jscex中标准的Task对象。一般来说，绑定一个异步操作是一件简单直观的事情，但是像Node.js中提供了大量的异步操作，将其一一绑定也是一件不小的工作量。幸运的是，同一平台内的异步操作都基本具有相同的模式，我们可以通过编写一些的简单的辅助方法，来统一完成绑定操作。
 
 Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法，它们都定义在`Jscex.Async.Jscexify`模块下面。
 
-### fromCallback(fn)
+### <a name="binding-helpers-fromCallback"></a>fromCallback(fn)
 
 某些异步操作会直接使用回调函数返回结果，例如Node.js中Path模块的`exists`方法：
 
@@ -310,7 +310,7 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 当然，如果您只关注回调函数的第一个参数，甚至一个都不关注，自然也可以在使用`fromCallback`的时候不列出参数名称。
 
-### fromStandard(fn)
+### <a name="binding-helpers-fromStandard"></a>fromStandard(fn)
 
 `fromCallback`支持的是以回调形式返回结果的异步操作，而`fromStandard`返回的便是“可能会失败”的“标准接口”，它会将回调函数的第一个参数作为错误对象，如果存在这个对象，则意味着该异步操作出现了错误，于是将其当作异常对象抛出。而真正的“返回值”，则是回调函数收到的第二个参数。
 
@@ -364,7 +364,7 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 当然，如果您只关注回调函数除了错误外的第一个参数，甚至一个都不关注，自然也可以在使用`fromStandard`的时候不列出参数名称。
 
-## 相关链接
+## <a name="related-links"></a>相关链接
 
 * [源代码](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-async-powerpack.js)
 * [异步模块](./)
