@@ -158,7 +158,7 @@ Jscex函数是标准的JavaScript，支持JavaScript语言几乎所有特性：�
     var ev = $await(Jscex.Async.onEvent(btnNext, "click"));
     console.write(ev.clientX, ev.clientY);
 
-因为在Jscex异步模块眼中，用户的点击行为，也是“能在未来某个时刻返回的操作”，这便是一个异步任务。您可以在后文“[模态对话框](../../samples/async/modal-dialog.html)”以及“[汉诺塔](../../samples/async/hanoi.html)”示例中了解这个模型的威力。
+因为在Jscex异步模块眼中，用户的点击行为，也是“能在未来某个时刻返回的操作”，这便是一个异步任务。您可以在后文“[模态对话框](samples/modal-dialog.html)”以及“[汉诺塔](samples/hanoi.html)”示例中了解这个模型的威力。
 
 除了上文提到的`sleep`及`onEvent`以外，[异步增强模块](./powerpack.html)里还包含了更多有用的辅助方法，来应对常见的异步协作问题。例如之前的“并发”执行示例，在实际情况下往往会使用异步增强模块中的`whenAll`辅助方法：
 
@@ -569,20 +569,20 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 
 ### <a name="samples-browser"></a>浏览器示例
 
-* [时钟](../../samples/async/clock.html)：演示最基础的使用方式。
-* [排序算法动画](../../samples/async/sorting-algorithms.html)：各类排序算法（冒泡，选择，快速）的演示动画。
-* [模态对话框](../../samples/async/modal-dialog.html)：演示Jscex对于前端用户交互编写方式的改进。
-* [汉诺塔](../../samples/async/hanoi.html)：汉诺塔解决方案的动画演示，同时涉及用户前端交互。
+* [时钟](samples/clock.html)：演示最基础的使用方式。
+* [排序算法动画](samples/sorting-algorithms.html)：各类排序算法（冒泡，选择，快速）的演示动画。
+* [模态对话框](samples/modal-dialog.html)：演示Jscex对于前端用户交互编写方式的改进。
+* [汉诺塔](samples/hanoi.html)：汉诺塔解决方案的动画演示，同时涉及用户前端交互。
 
 ### <a name="samples-nodejs"></a>Node.js示例
 
-* [复制完整目录](../../samples/async/copy-dir.html)：使用Node.js编写复制完整目录的功能
-* [静态文件服务器](../../samples/async/static-server.html)：演示Node.js环境中最基础的使用方式。
-* [使用Express开发网站](../../samples/async/express-server.html)：使用Jscex改善业务逻辑表现方式，并增强程序并发性。
+* [复制完整目录](samples/copy-dir.html)：使用Node.js编写复制完整目录的功能
+* [静态文件服务器](samples/static-server.html)：演示Node.js环境中最基础的使用方式。
+* [使用Express开发网站](samples/express-server.html)：使用Jscex改善业务逻辑表现方式，并增强程序并发性。
 
 ### <a name="samples-others"></a>其他
 
-* [jQuery异步操作绑定](../../samples/async/jquery-bindings.html)：提供部分jQuery及其相关插件中异步操作的绑定。
+* [jQuery异步操作绑定](samples/jquery-bindings.html)：提供部分jQuery及其相关插件中异步操作的绑定。
 
 ## <a name="related-links"></a>相关链接
 

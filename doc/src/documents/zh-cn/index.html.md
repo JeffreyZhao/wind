@@ -144,7 +144,7 @@ Jscex便做到了这一点。例如，使用Jscex来实现冒泡排序动画，�
 1. 与传统的`function () { ... }`方式不同，我们使用`eval(Jscex.compile("async", function () { ... }))`来定义一个“异步函数”。这样的函数定义方式是“模板代码”，没有任何变化，可以认做是“异步函数”与“普通函数”的区别。
 2. 对于“异步操作”，如上面代码中的`Jscex.Async.sleep`内置函数（其中封装了setTimeout函数），则可以使用`$await(...)`来等待其完成，方法会在该异步操作结束之后才继续下去，其执行流程与普通JavaScript没有任何区别。
 
-完整代码请参考“[排序算法动画](../samples/async/sorting-algorithms.html)”示例，其中实现了“冒泡排序”，“选择排序”以及“快速排序”三种排序算法的动画。
+完整代码请参考“[排序算法动画](manuals/async/samples/sorting-algorithms.html)”示例，其中实现了“冒泡排序”，“选择排序”以及“快速排序”三种排序算法的动画。
 
 ### 总结
 
