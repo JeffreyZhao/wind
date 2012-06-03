@@ -1,0 +1,48 @@
+img {
+    width: auto;
+}
+
+#banner {
+    display: block;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+#banner a {
+    display: inline-block;
+    margin-right: 5px;
+    padding: 10px;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(0,0,0,.5);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+#banner a.manual {
+    padding-right: 50px;
+    background: url('images/manual.png') #0090ff no-repeat 95% 50%;
+}
+
+#banner a.forkme {
+    padding-right: 50px;
+    background: url('images/blacktocat.png') #0090ff no-repeat 95% 50%;
+}
+
+/*
+#manuals_banner {
+  display: block;
+  position: absolute;
+  top:0;
+  right: 125px;
+  z-index: 100;
+  padding: 10px 50px 10px 10px;
+  background: url('images/manual.png') #0090ff no-repeat 95% 50%;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(0,0,0,.5);
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+*/

@@ -1,5 +1,5 @@
 ---
-layout: manuals-zh-cn
+layout: manual-zh-cn
 title: 异步模块
 ---
 
