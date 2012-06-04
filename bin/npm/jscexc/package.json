@@ -9,5 +9,5 @@
         "url": "https://github.com/JeffreyZhao/jscex/issues",
         "email": "jeffz@live.com"
     },
-    "dependencies": { "jscex": "0.6.x", "jscex-jit": "0.6.x" }
+    "dependencies": { "jscex": "0.6.x", "jscex-jit": "0.6.x", "optimist": "x" }
 }

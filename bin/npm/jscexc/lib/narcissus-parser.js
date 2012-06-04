@@ -105,7 +105,7 @@ Narcissus.definitions = (function() {
         "else", "export",
         "false", "finally", "for", "function",
         "if", "import", "in", "instanceof",
-        "let", "module",
+        "let", /*"module",*/
         "new", "null",
         "return",
         "switch",
@@ -1170,6 +1170,8 @@ Narcissus.lexer = (function() {
  */
 
 Narcissus.parser = (function() {
+
+	var MODULE = "_STUB_MODULE";
 
     var lexer = Narcissus.lexer;
     var definitions = Narcissus.definitions;

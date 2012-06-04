@@ -80,6 +80,7 @@ var extract = function (ast) {
             case "ARRAY_INIT":
             case "PROPERTY_INIT":
             case "NEW_WITH_ARGS":
+            case "UNARY_MINUS":
             case ".":
             case ">":
             case "<":
@@ -135,6 +136,9 @@ var extract = function (ast) {
             case "return":
                 visit(node.value);
                 break;
+            case "throw":
+		visit(node.exception);
+		break;
             default:
                 throw new Error('"' + token + '" is not currently supported.');
         }
@@ -182,18 +186,15 @@ var compile = function (code, binders) {
 if (module.parent) { // command
     exports.compile = compile;
 } else {
-    var inputFile, outputFile;
-    for (var i = 2; i < process.argv.length; i++) {
-        var name = process.argv[i];
-        if (name == "--input") {
-            inputFile = process.argv[++i];
-        } else if (name == "--output") {
-            outputFile = process.argv[++i];
-        }
-    }
-    
+
+    var argv = require("optimist")
+        .usage("Usage: $0 --input <input_file> --output <output_file>")
+        .demand("input").alias("i", "input").describe("i", "The input file")
+        .demand("output").alias("o", "output").describe("o", "The output file")
+        .argv;
+
     var fs = require("fs");
-    var code = fs.readFileSync(inputFile, "utf-8");
+    var code = fs.readFileSync(argv.input, "utf-8");
     var newCode = compile(code);
-    fs.writeFileSync(outputFile, newCode, "utf-8");
+    fs.writeFileSync(argv.output, newCode, "utf-8");
 }
