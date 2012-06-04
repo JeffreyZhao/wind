@@ -261,13 +261,13 @@ Jscex异步增强模块也包含了一些常见的任务协作方式，它们作
         }
     }));
 
-## <a name="binding-helpers"></a>异步操作绑定
+## <a name="binding"></a>异步操作绑定
 
 如果要在Jscex异步方法中使用现有的异步操作，则需要将其绑定为Jscex中标准的Task对象。一般来说，绑定一个异步操作是一件简单直观的事情，但是像Node.js中提供了大量的异步操作，将其一一绑定也是一件不小的工作量。幸运的是，同一平台内的异步操作都基本具有相同的模式，我们可以通过编写一些的简单的辅助方法，来统一完成绑定操作。
 
-Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法，它们都定义在`Jscex.Async.Jscexify`模块下面。
+Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法，它们都定义在`Jscex.Async.Binding`模块下面。请注意：在之前的版本中，这个模块也被称为Jscexify，现在您也可以继续使用Jscexify这个别名来代替Binding，但是在未来的版本中将其去除。
 
-### <a name="binding-helpers-fromCallback"></a>fromCallback(fn)
+### <a name="binding-fromCallback"></a>fromCallback(fn)
 
 某些异步操作会直接使用回调函数返回结果，例如Node.js中Path模块的`exists`方法：
 
@@ -278,8 +278,8 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 此时，便可以使用`fromCallback`将此类异步操作绑定为一个返回Task对象的异步方法：
 
-    var Jscexify = Jscex.Async.Jscexify;
-    path.existsAsync = Jscexify.fromCallback(path.exists);
+    var Binding = Jscex.Async.Binding;
+    path.existsAsync = Binding.fromCallback(path.exists);
 
     // 某Jscex异步方法内部
     var exists = $await(path.existsAsync("/etc/passwd"));
@@ -300,7 +300,7 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 此时，也可以在`fromCallback`内逐个指定参数名称，这样最后Task对象的结果将会是一个包含这些字段的对象：
 
-    var splitAsync = Jscexify.fromCallback(split, "equals", "larger", "smaller");
+    var splitAsync = Binding.fromCallback(split, "equals", "larger", "smaller");
     
     // 某Jscex异步方法内部
     var result = $await(splitAsync([1, 2, 3, 4, 5, 6], 3));
@@ -310,7 +310,7 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 当然，如果您只关注回调函数的第一个参数，甚至一个都不关注，自然也可以在使用`fromCallback`的时候不列出参数名称。
 
-### <a name="binding-helpers-fromStandard"></a>fromStandard(fn)
+### <a name="binding-fromStandard"></a>fromStandard(fn)
 
 `fromCallback`支持的是以回调形式返回结果的异步操作，而`fromStandard`返回的便是“可能会失败”的“标准接口”，它会将回调函数的第一个参数作为错误对象，如果存在这个对象，则意味着该异步操作出现了错误，于是将其当作异常对象抛出。而真正的“返回值”，则是回调函数收到的第二个参数。
 
@@ -324,9 +324,9 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 此时我们便可以使用`fromStandard`创建这些异步操作的绑定：
 
-    fs.readdirAsync = Jscexify.fromStandard(fs.readdir);
-    fs.statAsync = Jscexify.fromStandard(fs.stat);
-    fs.mkdirAsync = Jscexify.fromStandard(fs.mkdir);
+    fs.readdirAsync = Binding.fromStandard(fs.readdir);
+    fs.statAsync = Binding.fromStandard(fs.stat);
+    fs.mkdirAsync = Binding.fromStandard(fs.mkdir);
 
 绑定后的异步方法在使用时可能会抛出异常：
 
@@ -351,7 +351,7 @@ Jscex异步增强模块也包含了一些绑定常见异步接口的辅助方法
 
 我们可以将其绑定为：
 
-    var execAsync = Jscexify.fromStandard(exec, "stdout", "stderr");
+    var execAsync = Binding.fromStandard(exec, "stdout", "stderr");
 
     // 某Jscex异步方法内
     try {

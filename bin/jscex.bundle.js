@@ -4129,42 +4129,6 @@ scope.set_logger = function (logger) {
             });
         }
         
-        // Jscexify members
-        if (!Async.Jscexify) {
-            Async.Jscexify = { };
-        }
-        
-        var Jscexify = Async.Jscexify;
-        
-        // for the methods return error and results
-        Jscexify.fromStandard = function (fn) {
-            var callbackArgNames = collectCallbackArgNames(arguments);
-        
-            return function () {
-                var _this = this;
-                var args = collectArgs(arguments, fn.length - 1);
-
-                return Task.create(function (t) {
-                    args.push(function (error, result) {
-                        if (error) {
-                            t.complete("failure", error);
-                        } else if (!callbackArgNames) {
-                            t.complete("success", result);
-                        } else {
-                            var data = {};
-                            for (var i = 0; i < callbackArgNames.length; i++) {
-                                data[callbackArgNames[i]] = arguments[i + 1];
-                            }
-                            
-                            return t.complete("success", data);
-                        }
-                    });
-                    
-                    fn.apply(_this, args);
-                });
-            };
-        };
-        
         Task.prototype.then = Task.prototype.continueWith = function (nextGenerator) {
             var firstTask = this;
             return Task.create(function (t) {
@@ -4216,8 +4180,48 @@ scope.set_logger = function (logger) {
             });
         };
         
+        // Binding members
+        if (!Async.Binding) {
+            Async.Binding = { };
+        }
+
+        if (!Async.Jscexify) {
+            Async.Jscexify = { };
+        }
+        
+        var Binding = Async.Jscexify = Async.Binding;
+        
+        // for the methods return error and results
+        Binding.fromStandard = function (fn) {
+            var callbackArgNames = collectCallbackArgNames(arguments);
+        
+            return function () {
+                var _this = this;
+                var args = collectArgs(arguments, fn.length - 1);
+
+                return Task.create(function (t) {
+                    args.push(function (error, result) {
+                        if (error) {
+                            t.complete("failure", error);
+                        } else if (!callbackArgNames) {
+                            t.complete("success", result);
+                        } else {
+                            var data = {};
+                            for (var i = 0; i < callbackArgNames.length; i++) {
+                                data[callbackArgNames[i]] = arguments[i + 1];
+                            }
+                            
+                            return t.complete("success", data);
+                        }
+                    });
+                    
+                    fn.apply(_this, args);
+                });
+            };
+        };
+        
         // for the methods always success
-        Jscexify.fromCallback = function (fn) {
+        Binding.fromCallback = function (fn) {
             var callbackArgNames = collectCallbackArgNames(arguments);
         
             return function () {
