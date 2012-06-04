@@ -80,6 +80,7 @@ var extract = function (ast) {
             case "ARRAY_INIT":
             case "PROPERTY_INIT":
             case "NEW_WITH_ARGS":
+            case "UNARY_MINUS":
             case ".":
             case ">":
             case "<":
@@ -135,6 +136,9 @@ var extract = function (ast) {
             case "return":
                 visit(node.value);
                 break;
+            case "throw":
+		visit(node.exception);
+		break;
             default:
                 throw new Error('"' + token + '" is not currently supported.');
         }
