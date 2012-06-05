@@ -189,8 +189,8 @@ if (module.parent) { // command
 
     var argv = require("optimist")
         .usage("Usage: $0 --input <input_file> --output <output_file>")
-        .demand("input").alias("i", "input").describe("i", "The input file")
-        .demand("output").alias("o", "output").describe("o", "The output file")
+        .demand("input").alias("input", "i").describe("input", "The input file")
+        .demand("output").alias("output", "o").describe("output", "The output file")
         .argv;
 
     var fs = require("fs");
