@@ -22,7 +22,7 @@ $(document).ready(function () {
     }
     
     var getLevel = function (h) {
-        return h.tagName.toLowerCase() == "h2" ? 2 : 3;
+        return parseInt(h.tagName.toLowerCase().substring(1), 10);
     }
     
     var getLink = function (h, name) {
@@ -49,5 +49,5 @@ $(document).ready(function () {
         $("<li>").append(getLink(this, name)).appendTo(currentList);
     }
     
-    $("#container > h2, #container > h3").each(addToList);
+    $("#container > h2, #container > h3, #container > h4").each(addToList);
 });

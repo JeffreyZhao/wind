@@ -82,9 +82,9 @@ title: 模态对话框（异步编程示例）
 
 ## <a name="appendix"></a>附录
 
-### <a name="appendix-none-jscex-implementation"></a>非Jscex实现
+### <a name="appendix-raw-implementation"></a>原生实现方式
 
-对比所需，在此附上相同功能的非Jscex的实现：
+对比所需，在此附上原生实现方式：
 
     // 弹出“确定/取消”对话框          
     $("#dialog-confirm").dialog({
@@ -121,4 +121,4 @@ title: 模态对话框（异步编程示例）
         }
     });
 
-如果您有更合适的非Jscex实现，请随时联系我。
+如果您其他实现方式，请随时联系我。
