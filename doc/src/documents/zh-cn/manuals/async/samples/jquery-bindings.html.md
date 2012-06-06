@@ -5,11 +5,11 @@ title: jQuery绑定（异步编程示例）
 
 [jQuery](http://jquery.com)类库提供了丰富的异步操作，为了方便jQuery用户使用[Jscex异步模块](../)，并演示常见的异步操作绑定模式。在绑定已有的异步操作时，我们通常会保持原有的参数输入方式不变，而只关注操作的“完成点”，这样使用者便可以快速地了解新方法的使用方式。
 
-## jQuery异步操作
+## <a name="jquery"></a>jQuery异步操作
 
 jQuery提供了AJAX等典型的异步操作。
 
-### $.ajax
+### <a name="jquery-ajax"></a>$.ajax
 
 AJAX方法是典型的异步操作，在jQuery中，发起一个AJAX请求使用的是`$.ajax`方法，例如：
 
@@ -49,11 +49,11 @@ AJAX方法是典型的异步操作，在jQuery中，发起一个AJAX请求使用
         });
     };
 
-## jQuery UI异步操作
+## <a name="jquery-ui"></a>jQuery UI异步操作
 
 [jQuery UI](http://jqueryui.com/)提供了许多常见的UI组件，它们也可以视为异步操作。“异步操作”是指那些“在未来某一时刻结束的操作”，因此，如对话框的“关闭”即可视为该“显示对话框”异步操作的结束标志。
 
-### $.fn.dialog
+### <a name="jquery-ui-dialog"></a>$.fn.dialog
 
 jQuery UI提供了现成的[模态对话框组件](http://jqueryui.com/demos/dialog/)，例如其最简单的使用方式：
 
@@ -98,7 +98,7 @@ jQuery UI提供了现成的[模态对话框组件](http://jqueryui.com/demos/dia
         });
     }
 
-## 相关链接
+## <a name="related-links"></a>相关链接
 
 * [完整代码](https://github.com/JeffreyZhao/jscex/blob/master/samples/async/jquery-bindings.js)
 * [Jscex异步模块](../)
