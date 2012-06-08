@@ -17,10 +17,14 @@
         var SortingAnimations = function (canvas) {
     
             var ctx = canvas.getContext ? canvas.getContext("2d") : null;
-
+            
+            var lineWidth = 9;
+            var swapCost = 100;
+            var compareCost = 100;
+            
             var randomArray = function () {
                 var array = [];
-                var length = Math.floor(canvas.width / 3);
+                var length = Math.floor(canvas.width / (lineWidth + 1));
                 
                 for (var i = 1; i <= length; i++) {
                     array.push(i);
@@ -33,12 +37,12 @@
             var paint = function (array, swaping, comparing) {
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.lineWidth = 3;
+                ctx.lineWidth = lineWidth;
 
                 for (var i = 0; i < array.length; i++)
                 {
-                    var x = 2 + i * 3;
-                    var height = array[i] * 3 * canvas.height / canvas.width;
+                    var x = (lineWidth + 1) * i + lineWidth / 2;
+                    var height = array[i] * (lineWidth + 1) * canvas.height / canvas.width;
                     
                     ctx.beginPath();
                     if (swaping && swaping.indexOf(i) >= 0)
@@ -57,7 +61,7 @@
             
             var compareAsync = eval(Jscex.compile("async", function (x, y, comparing) {
                 paint(array, null, comparing);
-                $await(Jscex.Async.sleep(10));
+                $await(Jscex.Async.sleep(compareCost));
                 return x - y;
             }));
 
@@ -68,12 +72,12 @@
 
                 paint(array, [i, j]);
 
-                $await(Jscex.Async.sleep(20));
+                $await(Jscex.Async.sleep(swapCost));
             }));
             
             var sortOperations = {
             
-                quick: eval(Jscex.compile("async", function (array) {
+                Quick: eval(Jscex.compile("async", function (array) {
             
                     var partitionAsync = eval(Jscex.compile("async", function (begin, end) {
                         var i = begin;
@@ -114,7 +118,7 @@
                     $await(sortAsync(0, array.length - 1));
                 })),
                 
-                bubble: eval(Jscex.compile("async", function (array) {
+                Bubble: eval(Jscex.compile("async", function (array) {
                     for (var i = 0; i < array.length; i++) {
                         for (var j = 0; j < array.length - i; j++) {
                             var r = $await(compareAsync(array[j], array[j + 1], [j, j + 1]));
@@ -123,7 +127,7 @@
                     }
                 })),
                 
-                selection: eval(Jscex.compile("async", function (array) {
+                Selection: eval(Jscex.compile("async", function (array) {
                     for(var j = 0; j < array.length - 1; j++) {
                         var mi = j;
                         for (var i = j + 1; i < array.length; i++) {
@@ -132,6 +136,34 @@
                         }
                         $await(swapAsync(array, mi, j));
                     }            
+                })),
+                
+                Shell: eval(Jscex.compile("async", function (a) {
+                    var i, j, k, temp, gap;
+                    var gaps = [ 1, 5, 13, 43, 113, 297 ];
+                    
+                    var n = a.length;
+                       
+                    for (k = 0; gaps[k] < n; k++) { }
+                    
+                    while (--k >= 0)
+                    {
+                        gap = gaps[k];
+                        for (i = gap; i < n; i++)
+                        {
+                            temp = a[i];
+                            
+                            j = i;
+                            
+                            while (j >= gap && a[j - gap] > temp)
+                            {
+                                a[j] = a[j - gap];
+                                j = j - gap;
+                            }
+                            
+                            a[j] = temp;
+                        }
+                    }
                 }))
             };
 
@@ -156,7 +188,7 @@
         <input id="btnSort" type="button" value="Sort" />
     </p>
     
-    <canvas id="canvas" height="300" width="300" style="border:solid 1px black">
+    <canvas id="canvas" height="300" width="300">
         <span style="font-size:20pt;">Your browser doesn't support canvas.</span>
     </canvas>
     
@@ -180,11 +212,11 @@
                     array = sa.randomArray();
                 }
 
-                sa.sortAsync(comboNames.val(), array).start().addEventListener("success", function () {
+                sa.sortAsync(comboNames.val(), array).addEventListener("success", function () {
                     array.sorted = true;
                     btnSort.removeAttr("disabled");
                     comboNames.removeAttr("disabled");
-                });
+                }).start();
             });
             
             sa.paint(array);
