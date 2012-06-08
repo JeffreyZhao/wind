@@ -22,7 +22,7 @@
                 var array = [];
                 var length = Math.floor(canvas.width / 3);
                 
-                for (var i = 1; i < canvas.width / 3; i++) {
+                for (var i = 1; i <= length; i++) {
                     array.push(i);
                 }
 
@@ -30,9 +30,10 @@
                 return array;
             }
             
-            var paint = function (array, i0, i1) {
+            var paint = function (array, swaping, comparing) {
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.lineWidth = 3;
 
                 for (var i = 0; i < array.length; i++)
                 {
@@ -40,7 +41,12 @@
                     var height = array[i] * 3 * canvas.height / canvas.width;
                     
                     ctx.beginPath();
-                    ctx.strokeStyle = (i == i0 || i == i1) ? "red" : "black";
+                    if (swaping && swaping.indexOf(i) >= 0)
+                        ctx.strokeStyle = "red";
+                    else if (comparing && comparing.indexOf(i) >= 0)
+                        ctx.strokeStyle = "green";
+                    else
+                        ctx.strokeStyle = "black";
                     
                     ctx.moveTo(x, canvas.height);
                     ctx.lineTo(x, canvas.height - height);
@@ -49,7 +55,8 @@
                 }
             }
             
-            var compareAsync = eval(Jscex.compile("async", function (x, y) {
+            var compareAsync = eval(Jscex.compile("async", function (x, y, comparing) {
+                paint(array, null, comparing);
                 $await(Jscex.Async.sleep(10));
                 return x - y;
             }));
@@ -59,7 +66,7 @@
                 array[i] = array[j];
                 array[j] = t;
 
-                paint(array, i, j);
+                paint(array, [i, j]);
 
                 $await(Jscex.Async.sleep(20));
             }));
@@ -75,12 +82,12 @@
 
                         while (i <= j) {
                             while (true) {
-                                var r = $await(compareAsync(array[i], pivot));
+                                var r = $await(compareAsync(array[i], pivot, [i]));
                                 if (r < 0) { i++; } else { break; }
                             }
 
                             while (true) {
-                                var r = $await(compareAsync(array[j], pivot));
+                                var r = $await(compareAsync(array[j], pivot, [j]));
                                 if (r > 0) { j--; } else { break; }
                             }
 
@@ -108,10 +115,10 @@
                 })),
                 
                 bubble: eval(Jscex.compile("async", function (array) {
-                    for (var x = 0; x < array.length; x++) {
-                        for (var y = 0; y < array.length - x; y++) {
-                            var r = $await(compareAsync(array[y], array[y + 1]));
-                            if (r > 0) $await(swapAsync(array, y, y + 1));
+                    for (var i = 0; i < array.length; i++) {
+                        for (var j = 0; j < array.length - i; j++) {
+                            var r = $await(compareAsync(array[j], array[j + 1], [j, j + 1]));
+                            if (r > 0) $await(swapAsync(array, j, j + 1));
                         }
                     }
                 })),
@@ -120,7 +127,7 @@
                     for(var j = 0; j < array.length - 1; j++) {
                         var mi = j;
                         for (var i = j + 1; i < array.length; i++) {
-                            var r = $await(compareAsync(array[i], array[mi]));
+                            var r = $await(compareAsync(array[i], array[mi], [i, mi]));
                             if (r < 0) { mi = i; }
                         }
                         $await(swapAsync(array, mi, j));
