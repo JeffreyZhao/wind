@@ -21,7 +21,7 @@
             var ctx = canvas.getContext ? canvas.getContext("2d") : null;
             
             var lineWidth = 9;
-            var swapCost = 100;
+            var updateCost = 100;
             var compareCost = 100;
             
             var sharedTemp = -1;
@@ -38,7 +38,7 @@
                 return array;
             }
             
-            var paint = function (array, swaping, comparing) {
+            var paint = function (array, updating, comparing) {
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.lineWidth = lineWidth;
@@ -51,12 +51,12 @@
                     ctx.beginPath();
                     
                     if (sharedTemp == array[i]) {
-                        if (swaping) {
+                        if (updating) {
                             ctx.strokeStyle = "red";
                         } else if (comparing) {
                             ctx.strokeStyle = "green";
                         }
-                    } else if (swaping && swaping.indexOf(i) >= 0) {
+                    } else if (updating && updating.indexOf(i) >= 0) {
                         ctx.strokeStyle = "red";
                     } else if (comparing && comparing.indexOf(i) >= 0) {
                         ctx.strokeStyle = "green";
@@ -83,13 +83,13 @@
                 array[j] = t;
 
                 paint(array, [i, j]);
-                $await(Jscex.Async.sleep(swapCost));
+                $await(Jscex.Async.sleep(updateCost));
             }));
             
-            var assignAsync = eval(Jscex.compile("async", function (array, i, value) {
+            var assignAsync = eval(Jscex.compile("async", function (array, i, value, updating) {
                 array[i] = value;
-                paint(array, [i]);
-                $await(Jscex.Async.sleep(swapCost));
+                paint(array, updating);
+                $await(Jscex.Async.sleep(updateCost));
             }));
             
             var sortOperations = {
@@ -157,24 +157,24 @@
                     }            
                 })),
                 
-                Shell: eval(Jscex.compile("async", function (a) {
+                Shell: eval(Jscex.compile("async", function (array) {
                     var gaps = [701, 301, 132, 57, 23, 10, 4, 1];
  
-                    for (var gap = Math.floor(a.length / 2); gap > 0; gap = Math.floor(gap / 2)) {
-                        for (var i = gap; i < a.length; i++) {
-                            var temp = sharedTemp = a[i];
+                    for (var gap = Math.floor(array.length / 2); gap > 0; gap = Math.floor(gap / 2)) {
+                        for (var i = gap; i < array.length; i++) {
+                            var temp = sharedTemp = array[i];
                             
                             var j;
                             for (j = i; j >= gap; j -= gap) {
-                                var r = $await(compareAsync(temp, a[j - gap], [j - gap]));
+                                var r = $await(compareAsync(temp, array[j - gap], [j - gap]));
                                 if (r < 0) {
-                                    $await(assignAsync(a, j, a[j - gap]));
+                                    $await(assignAsync(array, j, array[j - gap], [j, j - gap]));
                                 } else {
                                     break;
                                 }
                             }
                             
-                            $await(assignAsync(a, j, temp));
+                            $await(assignAsync(array, j, temp, [j]));
                         }
                     }
                     
