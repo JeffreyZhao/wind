@@ -14,6 +14,8 @@
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.1.min.js"></script>
     
     <script>
+        "use strict";
+        
         var SortingAnimations = function (canvas) {
     
             var ctx = canvas.getContext ? canvas.getContext("2d") : null;
@@ -138,30 +140,13 @@
                     }            
                 })),
                 
-                Shell: eval(Jscex.compile("async", function (a) {
-                    var i, j, k, temp, gap;
-                    var gaps = [ 1, 5, 13, 43, 113, 297 ];
-                    
-                    var n = a.length;
-                       
-                    for (k = 0; gaps[k] < n; k++) { }
-                    
-                    while (--k >= 0)
-                    {
-                        gap = gaps[k];
-                        for (i = gap; i < n; i++)
-                        {
-                            temp = a[i];
-                            
-                            j = i;
-                            
-                            while (j >= gap && a[j - gap] > temp)
-                            {
-                                a[j] = a[j - gap];
-                                j = j - gap;
+                Shell: eval(Jscex.compile("async", function (array) {
+                    for (var gap = Math.floor(array.length / 2); gap > 0; gap = Math.floor(gap / 2)) {
+                        for (var i = gap; i < array.length; i++) {
+                            for (var j = i - gap; j >= 0; j -= gap) {
+                                var r = $await(compareAsync(array[j + gap], array[j], [j + gap, j]));
+                                if (r < 0) $await(swapAsync(array, j + gap, j));
                             }
-                            
-                            a[j] = temp;
                         }
                     }
                 }))
