@@ -169,7 +169,6 @@
                                 var r = $await(compareAsync(temp, a[j - gap], [j - gap]));
                                 if (r < 0) {
                                     $await(assignAsync(a, j, a[j - gap]));
-                                    paint(a, [j, j - gap]);
                                 } else {
                                     break;
                                 }
