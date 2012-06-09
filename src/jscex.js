@@ -1,5 +1,35 @@
 (function () {
 
+    var _ = (function () {
+    
+        var isArray = function (obj) {
+            return Object.prototype.toString.call(obj) === '[object Array]';
+        }
+    
+        var each = function (obj, action) {
+            if (isArray(obj)) {
+                for (var i = 0, len = obj.length; i < len; i++) {
+                    var value = action(i, obj[i]);
+                    if (value !== undefined)
+                        return value;
+                }
+            } else {
+                for (var key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        var value = action(key, obj[key]);
+                        if (value !== undefined)
+                            return value;
+                    }
+                }
+            }
+        }
+        
+        return {
+            isArray: isArray,
+            each: each
+        };
+    })();
+
     var Level = {
         ALL: 0,
         TRACE: 1,
@@ -40,9 +70,41 @@
             this.log(Level.ERROR, msg);
         }
     };
-        
-    var init = function (root) {
+    
+    // CommonJS
+    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    // CommongJS Wrapping
+    var isWrapping = (typeof define === "function" && !define.amd);
+    // CommonJS AMD
+    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd); 
+    
+    /*
+    var define = function (name, options) {
+        if (isCommonJS) {
+            module.exports.init = function (root) {
+                
+                if (!root.modules["parser"]) {
+                    if (typeof __dirname === "string") {
+                        try {
+                            require.paths.unshift(__dirname);
+                        } catch (_) {
+                            try {
+                                module.paths.unshift(__dirname);
+                            } catch (_) {}
+                        }
+                    }
 
+                    require("jscex-parser").init(root);
+                };
+                
+                init(root);
+            }
+        }
+    }
+    */
+    
+    var init = function (root) {
+    
         root.Logging = {
             Logger: Logger,
             Level: Level
@@ -51,15 +113,10 @@
         root.logger = new Logger();
         root.modules = { };
         root.binders = { };
-        root.builders = { }; 
+        root.builders = { };
+        root._ = _;
+        // root.define = define;
     };
-
-    // CommonJS
-    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
-    // CommongJS Wrapping
-    var isWrapping = (typeof define === "function" && !define.amd);
-    // CommonJS AMD
-    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
     
     if (isCommonJS) {
         init(module.exports);
