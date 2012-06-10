@@ -171,7 +171,7 @@
             }
         }
         
-        var initModules = function (root, require, modules) {
+        var loadModules = function (root, require, modules) {
             if (require) {
                 _.each(modules, function (i, name) {
                     if (!root.modules[name]) {
@@ -185,6 +185,12 @@
                     }
                 });
             }
+        }
+        
+        var initModule = function (root, options) {
+            checkDependencies(root, options);
+            options.init(root);
+            root.modules[options.name] = options.version;
         }
         
         var checkDependencies = function (root, options) {
@@ -229,22 +235,18 @@
                 exportBasicOptions(options.exports, options);
                 options.exports.init = function (root) {
                     executeWithCurrentDirInModulePaths(function () {
-                        initModules(root, options.require, autoloads);
+                        loadModules(root, options.require, autoloads);
                     });
                     
-                    checkDependencies(root, options);
-                    options.init(root);
-                    root.modules[options.name] = options.version;
+                    initModule(root, options);
                 }
             } else if (isWrapping) {
                 var dependencies = _.map(autoloads, function (name) { return "jscex-" + name; });
                 define("jscex-" + options.name, dependencies, function (require, exports, module) {
                     exportBasicOptions(exports, options);
                     exports.init = function (root) {
-                        initModules(root, require, autoloads);
-                        checkDependencies(root, options);
-                        options.init(root);
-                        root.modules[options.name] = options.version;
+                        loadModules(root, require, autoloads);
+                        initModule(root, options);
                     };
                 });
             } else if (isAmd) {
@@ -253,10 +255,8 @@
                     var loadedModules = arguments;
                     var exports = {
                         init: function (root) {
-                            initModules(root, null, loadedModules);
-                            checkedDependencies(root, options);
-                            options.init(root);
-                            root.modules[options.name] = options.version;
+                            loadModules(root, null, loadedModules);
+                            initModule(root, options);
                         }
                     };
                     exportBasicOptions(exports, options);
@@ -267,9 +267,7 @@
                     throw new Error('Missing the root object, please load "jscex" module first.');
                 }
                 
-                checkDependencies(Jscex, options);
-                options.init(Jscex);
-                Jscex.modules[options.name] = options.version;
+                initModule(Jscex, options);
             }
         }
         
@@ -314,7 +312,6 @@
                 init(root);
                 return root;
             });
-        } 
-        
+        }
     }
 })();
