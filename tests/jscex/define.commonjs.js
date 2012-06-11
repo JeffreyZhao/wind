@@ -3,7 +3,11 @@
 var Jscex = require("../../src/jscex");
 require("chai").should();
 
-describe("define (in CommonJS)", function () {
+describe("define (CommonJS)", function () {
+    
+    it("should be true for the 'isCommonJS' mark", function () {
+        Jscex.define.isCommonJS.should.equal(true);
+    });
     
     var Root = function (version) {
         this.coreVersion = version;

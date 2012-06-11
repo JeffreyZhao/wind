@@ -1,0 +1,129 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Jscex.define Unit Tests (Raw)</title>
+    <script src="../../tools/script-loader.js"></script>
+    
+    <!-- Mocha -->
+    <link rel="stylesheet" href="../../lib/mocha/mocha.css" />
+    <script src="../../lib/mocha/mocha.js"></script>
+    <script>mocha.setup('bdd');</script>
+    
+    <!-- Chai -->
+    <script src="../../lib/chai.js"></script>
+    <script>chai.Should();</script>
+</head>
+<body>
+    <div id="mocha"></div>
+
+    <script>
+        var Jscex;
+    
+        beforeEach(function (done) {
+            delete Jscex;
+            loadScript("../../src/jscex.js", function () { done(); });
+        });
+    
+        describe("define (Raw)", function () {
+            
+            it("should be false for the 'isCommonJS' mark", function () {
+                Jscex.define.isCommonJS.should.equal(false);
+            });
+            
+            it("should support simple module", function () {
+                Jscex.coreVersion = "0.5.0";
+                
+                Jscex.define({
+                    name: "test",
+                    version: "0.5.0",
+                    dependencies: { core: "~0.5.0" },
+                    init: function (root) {
+                        root.hello = "world";
+                    }
+                });
+                
+                Jscex.hello.should.equal("world");
+                Jscex.modules["test"] = "0.5.0";
+            });
+            
+            it("should support complicated module", function () {
+                Jscex.coreVersion = "0.5.0";
+                Jscex.modules["d0"] = "0.1.0";
+                Jscex.modules["d1"] = "0.2.5";
+                
+                Jscex.define({
+                    name: "test",
+                    version: "0.8.0",
+                    autoloads: ["m0", "m1"],
+                    dependencies: {
+                        "core": "~0.5.0",
+                        "d0": "~0.1.0",
+                        "d1": "~0.2.0"
+                    },
+                    init: function (root) {
+                        root.hello = "world";
+                    }
+                });
+
+                Jscex.hello.should.equal("world");
+                Jscex.modules["test"] = "0.8.0";
+            });
+        
+            it("should throw if module required an invalid core version", function () {
+                Jscex.coreVersion = "0.5.0";
+        
+                (function () {
+                    Jscex.define({
+                        name: "test",
+                        version: "0.9.0",
+                        dependencies: { "core": "~0.6.0" },
+                        init: function (root) {
+                            root.hello = "world";
+                        }
+                    });
+                }).should.throw();
+            });
+            
+            it("should throw if required module is not loaded", function () {
+                Jscex.coreVersion = "0.5.0";
+                
+                (function () {
+                    Jscex.define({
+                        name: "test",
+                        version: "0.9.0",
+                        exports: exports,
+                        dependencies: {
+                            "core": "~0.5.0",
+                            "d0": "~0.1.0"
+                        },
+                        init: function (root) {
+                            root.hello = "world";
+                        }
+                    });
+                }).should.throw();
+            });
+            
+            it("should throw if the required module is loaded but has invalid version", function () {
+                Jscex.coreVersion = "0.5.0";
+                Jscex.modules["d0"] = "0.2.0";
+        
+                (function () {
+                    Jscex.define({
+                        name: "test",
+                        version: "0.9.0",
+                        exports: exports,
+                        dependencies: {
+                            "core": "~0.5.0",
+                            "d0": "~0.1.0"
+                        },
+                        init: function (root) {
+                            root.hello = "world";
+                        }
+                    });
+                }).should.throw();
+            });
+        });
+        mocha.run();
+    </script>
+</body>
+</html>

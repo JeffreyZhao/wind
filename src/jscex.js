@@ -1,11 +1,11 @@
 (function () {
 
     // CommonJS
-    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
+    var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
     // CommongJS Wrapping
-    var isWrapping = (typeof define === "function" && !define.amd);
+    var isWrapping = !!(typeof define === "function" && !define.amd);
     // CommonJS AMD
-    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd); 
+    var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd); 
     
     var init = (function () {
         "use strict";
