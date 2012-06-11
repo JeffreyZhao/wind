@@ -1,6 +1,6 @@
 "use strict";
 
-var Jscex = require("../../src/jscex");
+var Jscex = require("../../../src/jscex");
 require("chai").should();
 
 describe("define (CommonJS)", function () {

@@ -1,16 +1,16 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Jscex.define Unit Tests (Raw)</title>
-    <script src="../../tools/script-loader.js"></script>
+    <title>Unit Tests in Broswser: jscex</title>
+    <script src="../../../tools/script-loader.js"></script>
     
     <!-- Mocha -->
-    <link rel="stylesheet" href="../../lib/mocha/mocha.css" />
-    <script src="../../lib/mocha/mocha.js"></script>
+    <link rel="stylesheet" href="../../../lib/mocha/mocha.css" />
+    <script src="../../../lib/mocha/mocha.js"></script>
     <script>mocha.setup('bdd');</script>
     
     <!-- Chai -->
-    <script src="../../lib/chai.js"></script>
+    <script src="../../../lib/chai.js"></script>
     <script>chai.Should();</script>
 </head>
 <body>
@@ -21,10 +21,10 @@
     
         beforeEach(function (done) {
             delete Jscex;
-            loadScript("../../src/jscex.js", function () { done(); });
+            loadScript("../../../src/jscex.js", function () { done(); });
         });
     
-        describe("define (Raw)", function () {
+        describe("define (Browser)", function () {
             
             it("should be false for the 'cjs' mark", function () {
                 Jscex.define.cjs.should.equal(false);
