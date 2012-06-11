@@ -271,7 +271,7 @@
             }
         }
         
-        defineModule.isCommonJS = isCommonJS;
+        defineModule.cjs = isCommonJS;
         
         return function (root) {
             root.coreVersion = "0.6.5";
@@ -301,7 +301,7 @@
         "use strict";
         
         if (isCommonJS) {
-            init(exports);
+            init(module.exports);
         } else if (isWrapping) {
             define("jscex", function (require, exports, module) {
                 init(exports);

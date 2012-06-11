@@ -5,8 +5,8 @@ require("chai").should();
 
 describe("define (CommonJS)", function () {
     
-    it("should be true for the 'isCommonJS' mark", function () {
-        Jscex.define.isCommonJS.should.equal(true);
+    it("should be true for the 'cjs' mark", function () {
+        Jscex.define.cjs.should.equal(true);
     });
     
     var Root = function (version) {
