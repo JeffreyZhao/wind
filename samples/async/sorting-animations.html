@@ -64,6 +64,22 @@
                 $await(Jscex.Async.sleep(20));
             }));
             
+            Array.prototype.insert = function(value, index) {
+                    var array = this;
+                    for (var i = array.length - 1; index <= i; i--) {
+                        array[i + 1] = array[i];
+                    }
+                    array[index] = value;
+                };
+                
+            Array.prototype.insertBefore = function(from, to) {
+                this.insert(this[from], to);
+                if (to < from) {
+                    from += 1;
+                }
+                this.splice(from, 1);
+            };
+            
             var sortOperations = {
             
                 quick: eval(Jscex.compile("async", function (array) {
@@ -113,6 +129,167 @@
                             var r = $await(compareAsync(array[y], array[y + 1]));
                             if (r > 0) $await(swapAsync(array, y, y + 1));
                         }
+                    }
+                })),
+                
+                // -----------------------------------------
+                // Shaker Sort
+                // -----------------------------------------
+                shaker: eval(Jscex.compile("async",
+                function(array) {
+                    var length = array.length
+                    var left = 0
+                    var right = length - 1
+                    var lastSwappedLeft = left
+                    var lastSwappedRight = right
+
+                    while (left < right) {
+                        lastSwappedRight = 0
+                        for (var i = left; i < right; i++) {
+                            var r = $await(compareAsync(array[i], array[i + 1], [i, i + 1]));
+                            if (r > 0) {
+                                $await(swapAsync(array, i, i + 1));
+                                lastSwappedRight = i;
+                            }
+                        }
+                        right = lastSwappedRight;
+
+                        lastSwappedLeft = length - 1;
+                        for (var j = right; left < j; j--) {
+                            var r = $await(compareAsync(array[j - 1], array[j], [j - 1, j]));
+                            if (r > 0) {
+                                $await(swapAsync(array, j - 1, j));
+                                lastSwappedLeft = j;
+                            }
+                        }
+                        left = lastSwappedLeft;
+                    }
+                })),
+
+                insert: eval(Jscex.compile("async",
+                function insertionSort(array) {
+                    var length = array.length
+                    for (var i = 1; i < length; i++) {
+                        for (var j = i; 0 < j; j--) {
+                            var r = $await(compareAsync(array[j - 1], array[j], [j - 1, j]));
+                            if (r > 0) {
+                                $await(swapAsync(array, j - 1, j));
+                                lastSwappedLeft = j;
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                    }
+                })),
+
+                // -----------------------------------------
+                // Shell Sort
+                // -----------------------------------------
+                shell: eval(Jscex.compile("async",
+                function shellSort(array) {
+                    var length = array.length;
+                    var gap = 1;
+                    while (gap < length) {
+                        gap = 3 * gap + 1;
+                    }
+                    while (gap > 1) {
+                        gap = Math.floor(gap / 3)
+                        for (var i = gap; i < length; i++) {
+                            for (var j = i; 0 < j; j -= gap) {
+                                var r = $await(compareAsync(array[j - gap], array[j], [j - gap, j]));
+                                if (r > 0) {
+                                    $await(swapAsync(array, j - gap, j));
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                })),
+
+                // -----------------------------------------
+                // Merge sort
+                // -----------------------------------------
+                merge: eval(Jscex.compile("async",
+                function(array) {
+                    var sortAsync = eval(Jscex.compile("async",
+                    function(first, last) {
+                        first = (first === undefined) ? 0 : first
+                        last = (last === undefined) ? array.length - 1 : last
+                        if (last - first < 1) {
+                            return
+                        }
+                        var middle = Math.floor((first + last) / 2)
+                        $await(sortAsync(first, middle));
+                        $await(sortAsync(middle + 1, last));
+
+                        var f = first;
+                        var m = middle;
+
+                        while (f <= m && m + 1 <= last) {
+                            var r = $await(compareAsync(array[f], array[m + 1], [f, m + 1]));
+                            if (r >= 0) {
+                                array.insertBefore(m + 1, f);
+                                m++;
+                            }
+                            f++;
+                        }
+                    }));
+                    $await(sortAsync(0, array.length - 1));
+                })),
+
+                heap: eval(Jscex.compile("async",
+                function(array) {
+                		var swapUp = eval(Jscex.compile("async",
+                		function (array, current) {
+                		    var parent = Math.floor((current - 1) / 2)
+                		    while (current != 0) {
+                		    		var r = $await(compareAsync(array[current], array[parent], [current,parent]));
+                		        if (! (r>0)) {
+                		            break;
+                		        }
+                		        $await(swapAsync(array, current, parent));
+                		        current = parent;
+                		        parent = Math.floor((current - 1) / 2);
+                		    }
+                		}));
+										
+										var swapDown = eval(Jscex.compile("async",
+                		function (array, current, length) {
+                		    var child = current * 2 + 1;
+                		    while (true) {
+                		    		var r = $await(compareAsync(array[child+1], array[child], [child,child + 1]));
+                		        if (r>0) {
+                		            child += 1;
+                		        }
+                		        r = $await(compareAsync(array[current], array[child], [current,child]));
+                		        if (r>=0) {
+                		            break;
+                		        }
+                		        if (length <= child) {
+                		            break;
+                		        }
+                		        $await(swapAsync(array, current, child));
+                		        current = child;
+                		        child = current * 2 + 1;
+                		    }
+                		}));
+                		
+										var heapify = eval(Jscex.compile("async",
+                		function (array) {
+                		    for (var i = 0; i < array.length; i++) {
+                		        $await(swapUp(array, i));
+                		    }
+                		}));
+                    $await(heapify(array));
+                    for (var i = array.length - 1; 0 < i; i--) {
+                        var r = $await(compareAsync(array[0], array[i], [0, i]));
+                        if (r > 0) {
+                            $await(swapAsync(array, 0, i));
+                        }
+                        $await(swapDown(array, 0, i));
                     }
                 })),
                 
