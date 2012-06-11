@@ -106,6 +106,7 @@ exports.setupTests = function (Jscex) {
                 _.format("{0}, {1}, {0}, {2}", 1, 2, 3).should.equal("1, 2, 1, 3");
                 _.format("{0}, {1}, {0}, {2}", [1, 2, 3]).should.equal("1, 2, 1, 3");
                 _.format("{0}, {1}, {{0}, {2}", 1, 2, 3).should.equal("1, 2, {1, 3");
+                _.format("{0}, {1}, {0}}, {2}", 1, 2, 3).should.equal("1, 2, 1}, 3");
             });
             
             it("should keep unformatted string if braces are escaped", function () {
