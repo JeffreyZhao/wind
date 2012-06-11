@@ -75,6 +75,30 @@ exports.setupTests = function (Jscex) {
                 obj.should.eql({ ka: 1, kb: 2, kd: 4 })
             });
         });
+        
+        describe("map", function () {
+            it("should convert all array items", function () {
+                var result = _.map([1, 2, 3], function (v) { return v * 10; });
+                result.should.eql([10, 20, 30]);
+            });
+            
+            it("should convert all map key and values if both mappers are provided", function () {
+                var obj = _.map(
+                    { a: 1, b: 2, c: 3 }, 
+                    function (key) { return key + "0"; },
+                    function (value) { return value * 10; });
+                
+                obj.should.eql({ a0: 10, b0: 20, c0: 30 });
+            });
+            
+            it("should keep the same map (but different instance) if neither mappers are provided", function () {
+                var obj = { a: 1, b: 2, c: 3 };
+                var newObj = _.map(obj);
+                
+                obj.should.eql(newObj);
+                obj.should.not.equal(newObj);
+            });
+        });
 
         describe("v2n", function () {
             it("should get number for simple version string", function () {

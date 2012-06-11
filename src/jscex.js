@@ -34,6 +34,27 @@
                 }
             }
             
+            var map = function (obj, mapper, valueMapper) {
+                if (isArray(obj)) {
+                    var array = new Array(obj.length);
+                    for (var i = 0, len = obj.length; i < len; i++) {
+                        array[i] = mapper(obj[i]);
+                    }
+                    return array;
+                } else {
+                    var newObj = {};
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            var value = obj[key];
+                            var newKey = mapper ? mapper(key) : key;
+                            var newValue = valueMapper ? valueMapper(value) : value;
+                            newObj[newKey] = newValue;
+                        }
+                    }
+                    return newObj;
+                }
+            }
+            
             var v2n = function (version) {
                 var value = 0;
                 
@@ -90,6 +111,7 @@
             return {
                 isArray: isArray,
                 each: each,
+                map: map,
                 v2n: v2n,
                 testVersion: testVersion,
                 format: format
