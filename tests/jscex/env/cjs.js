@@ -77,6 +77,8 @@ describe("define (CommonJS)", function () {
             }
         });
 
+        loaded.should.be.empty;
+        
         exports.init(root);
         
         loaded.should.eql(["jscex-m0", "jscex-m1"]);
