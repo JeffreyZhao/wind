@@ -1,8 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Jscex.define Unit Tests (Raw)</title>
-    <script src="../../tools/script-loader.js"></script>
+    <title>Jscex.define Unit Tests (AMD)</title>
     
     <!-- Mocha -->
     <link rel="stylesheet" href="../../lib/mocha/mocha.css" />
@@ -12,28 +11,37 @@
     <!-- Chai -->
     <script src="../../lib/chai.js"></script>
     <script>chai.Should();</script>
+    
+    <script src="../../tools/script-loader.js"></script>
+    <script src="../../lib/require.js"></script>
+    <script src="../../src/jscex.js"></script>
 </head>
 <body>
     <div id="mocha"></div>
 
     <script>
-        var Jscex;
-    
+        /*
         beforeEach(function (done) {
-            delete Jscex;
             loadScript("../../src/jscex.js", function () { done(); });
-        });
+        });*/
     
-        describe("define (Raw)", function () {
+        describe("define (AMD)", function () {
             
-            it("should be false for the 'cjs' mark", function () {
-                Jscex.define.cjs.should.equal(false);
+            it("should be false for the 'cjs' mark", function (done) {
+                require(['jscex'], function (Jscex) {
+                    Jscex.define.cjs.should.equal(false);
+                    done();
+                });
             });
     
-            it("should be false for the 'amd' mark", function () {
-                Jscex.define.amd.should.equal(false);
+            it("should be true for the 'amd' mark", function (done) {
+                require(['jscex'], function (Jscex) {
+                    Jscex.define.amd.should.equal(true);
+                    done();
+                });
             });
             
+            /*
             it("should support simple module", function () {
                 Jscex.coreVersion = "0.5.0";
                 
@@ -125,7 +133,7 @@
                         }
                     });
                 }).should.throw();
-            });
+            });*/
         });
         
         mocha.run();

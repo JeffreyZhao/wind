@@ -9,6 +9,10 @@ describe("define (CommonJS)", function () {
         Jscex.define.cjs.should.equal(true);
     });
     
+    it("should be false for the 'amd' mark", function () {
+        Jscex.define.amd.should.equal(false);
+    });
+    
     var Root = function (version) {
         this.coreVersion = version;
         

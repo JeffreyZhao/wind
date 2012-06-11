@@ -272,6 +272,7 @@
         }
         
         defineModule.cjs = isCommonJS;
+        defineModule.amd = isAmd;
         
         return function (root) {
             root.coreVersion = "0.6.5";
