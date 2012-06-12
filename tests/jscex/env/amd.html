@@ -28,9 +28,7 @@
             delete define;
 
             loadScript("../../../lib/require.js", function () { 
-                loadScript("../../../src/jscex.js", function () {
-                    done();
-                });
+                loadScript("../../../src/jscex.js", done);
             });
         });
     
