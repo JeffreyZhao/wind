@@ -17,10 +17,10 @@
     <div id="mocha"></div>
 
     <script>
-        var Jscex;
-    
+        window.Jscex = { };
+        
         beforeEach(function (done) {
-            delete Jscex;
+            delete window.Jscex;
             loadScript("../../../src/jscex.js", done);
         });
     
@@ -41,8 +41,8 @@
                     name: "test",
                     version: "0.5.0",
                     dependencies: { core: "~0.5.0" },
-                    init: function (root) {
-                        root.hello = "world";
+                    init: function () {
+                        Jscex.hello = "world";
                     }
                 });
                 
@@ -64,8 +64,8 @@
                         "d0": "~0.1.0",
                         "d1": "~0.2.0"
                     },
-                    init: function (root) {
-                        root.hello = "world";
+                    init: function () {
+                        Jscex.hello = "world";
                     }
                 });
 
@@ -81,8 +81,8 @@
                         name: "test",
                         version: "0.9.0",
                         dependencies: { "core": "~0.6.0" },
-                        init: function (root) {
-                            root.hello = "world";
+                        init: function () {
+                            Jscex.hello = "world";
                         }
                     });
                 }).should.throw();
@@ -99,8 +99,8 @@
                             "core": "~0.5.0",
                             "d0": "~0.1.0"
                         },
-                        init: function (root) {
-                            root.hello = "world";
+                        init: function () {
+                            Jscex.hello = "world";
                         }
                     });
                 }).should.throw();
@@ -118,8 +118,8 @@
                             "core": "~0.5.0",
                             "d0": "~0.1.0"
                         },
-                        init: function (root) {
-                            root.hello = "world";
+                        init: function () {
+                            Jscex.hello = "world";
                         }
                     });
                 }).should.throw();

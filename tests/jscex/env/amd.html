@@ -51,21 +51,28 @@
             it("should support simple module", function (done) {
                 require(['jscex'], function (Jscex) {
                     Jscex.coreVersion = "0.5.0";
+                    var initTimes = 0;
                     
                     Jscex.define({
                         name: "test",
                         version: "0.5.0",
                         dependencies: { core: "~0.5.0" },
-                        init: function (root) {
-                            root.hello = "world";
+                        init: function () {
+                            initTimes++;
+                            Jscex.hello = "world";
                         }
                     });
                     
                     require(["jscex-test"], function (test) {
-                        test.init(Jscex);
+                        initTimes.should.equal(0);
+                        
+                        test.init();
+                        test.init();
+                        test.init();
                         
                         Jscex.hello.should.equal("world");
                         Jscex.modules["test"] = "0.5.0";
+                        initTimes.should.equal(1);
                         
                         done();
                     });
@@ -82,6 +89,8 @@
                     Jscex.modules["d0"] = "0.1.0";
                     Jscex.modules["d1"] = "0.2.5";
                     
+                    var initTimes = 0;
+                    
                     Jscex.define({
                         name: "test",
                         version: "0.8.0",
@@ -91,19 +100,24 @@
                             "d0": "~0.1.0",
                             "d1": "~0.2.0"
                         },
-                        init: function (root) {
-                            root.hello = "world";
+                        init: function () {
+                            initTimes++;
+                            Jscex.hello = "world";
                         }
                     });
                     
                     require(["jscex-test"], function (test) {
+                        initTimes.should.equal(0);
                         loaded.should.be.empty;
                     
-                        test.init(Jscex);
+                        test.init();
+                        test.init();
+                        test.init();
                         
                         loaded.should.eql(["m0", "m1"]);
                         Jscex.hello.should.equal("world");
                         Jscex.modules["test"] = "0.8.0";
+                        initTimes.should.equal(1);
                         
                         done();
                     });
@@ -114,19 +128,21 @@
                 require(['jscex'], function (Jscex) {
                     Jscex.coreVersion = "0.5.0";
                     
+                    var initTimes = 0;
+                    
                     Jscex.define({
                         name: "test",
                         version: "0.9.0",
                         dependencies: { "core": "~0.6.0" },
-                        init: function (root) {
-                            root.hello = "world";
-                        }
+                        init: function () { initTimes++; }
                     });
                     
                     require(["jscex-test"], function (test) {
                         (function () {
-                            test.init(Jscex);
+                            test.init();
                         }).should.throw();
+                        
+                        initTimes.should.equal(0);
                         
                         done();
                     });
@@ -137,6 +153,8 @@
                 require(['jscex'], function (Jscex) {
                     Jscex.coreVersion = "0.5.0";
                     
+                    var initTimes = 0;
+                    
                     Jscex.define({
                         name: "test",
                         version: "0.9.0",
@@ -144,15 +162,15 @@
                             "core": "~0.5.0",
                             "d0": "~0.1.0"
                         },
-                        init: function (root) {
-                            root.hello = "world";
-                        }
+                        init: function () { initTimes++; }
                     });
                     
                     require(["jscex-test"], function (test) {
                         (function () {
-                            test.init(Jscex);
+                            test.init();
                         }).should.throw();
+                        
+                        initTimes.should.equal(0);
                         
                         done();
                     });
@@ -164,6 +182,8 @@
                     Jscex.coreVersion = "0.5.0";
                     Jscex.modules["d0"] = "0.2.0";
                     
+                    var initTimes = 0;
+                    
                     Jscex.define({
                         name: "test",
                         version: "0.9.0",
@@ -171,15 +191,15 @@
                             "core": "~0.5.0",
                             "d0": "~0.1.0"
                         },
-                        init: function (root) {
-                            root.hello = "world";
-                        }
+                        init: function () { initTimes++; }
                     });
                     
                     require(["jscex-test"], function (test) {
                         (function () {
-                            test.init(Jscex);
+                            test.init();
                         }).should.throw();
+                        
+                        initTimes.should.be.equal(0);
                         
                         done();
                     });

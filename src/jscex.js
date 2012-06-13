@@ -210,7 +210,7 @@
 
     var initModule = function (options) {
         if (Jscex.modules[options.name]) {
-            throw new Error(_.format("Module {0} is already loaded, please load the module only once.", options.name));
+            throw new Error(_.format('Module "{0}" is already loaded, please load the module only once.', options.name));
         }
     
         checkDependencies(options);
