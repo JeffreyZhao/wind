@@ -2,8 +2,6 @@
 
     // CommonJS
     var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
-    // CommongJS Wrapping
-    var isWrapping = !!(typeof define === "function" && !define.amd);
     // CommonJS AMD
     var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd); 
     
@@ -262,15 +260,6 @@
                     
                     initModule(root, options);
                 }
-            } else if (isWrapping) {
-                var dependencies = _.map(autoloads, function (name) { return "jscex-" + name; });
-                define("jscex-" + options.name, dependencies, function (require, exports, module) {
-                    exportBasicOptions(exports, options);
-                    exports.init = function (root) {
-                        loadModules(root, require, autoloads);
-                        initModule(root, options);
-                    };
-                });
             } else if (isAmd) {
                 var dependencies = _.map(autoloads, function (name) { return "jscex-" + name; });
                 define("jscex-" + options.name, dependencies, function () {
@@ -313,7 +302,7 @@
         };
     })();
     
-    if (!isCommonJS && !isWrapping && !isAmd) {
+    if (!isCommonJS && !isAmd) {
         if (typeof Jscex == "undefined") {
             /* defined Jscex in global */
             Jscex = { };
@@ -325,16 +314,14 @@
         
         if (isCommonJS) {
             init(module.exports);
-        } else if (isWrapping) {
-            define("jscex", function (require, exports, module) {
-                init(exports);
-            });
         } else if (isAmd) {
             define("jscex", function () {
                 var root = {};
                 init(root);
                 return root;
             });
+        } else {
+            throw new Error("Weird things happened, which engine is it?");
         }
     }
 })();
