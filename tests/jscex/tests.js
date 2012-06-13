@@ -137,5 +137,30 @@ exports.setupTests = function (Jscex) {
                 _.format("{0}, {1}, {{0}}, {2}", 1, 2, 3).should.equal("1, 2, {0}, 3");
             });
         });
+        
+        describe("once", function () {
+            it("should only call the parameter function only once", function () {
+                var called = 0;
+                var target = _.once(function () { called ++; });
+                
+                target();
+                target();
+                target();
+                
+                called.should.equal(1);
+            });
+            
+            it("should provide the correct 'this' reference and arguments to the parameter function", function () {
+                var args;
+                var _this = {};
+                _this.target = _.once(function (a, b, c) {
+                    this.should.equal(_this);
+                    args = [a, b, c];
+                });
+                
+                _this.target(1, 2, 3);
+                args.should.eql([1, 2, 3]);
+            });
+        });
     });
 }
