@@ -13,53 +13,59 @@ describe("define (CommonJS)", function () {
         Jscex.define.amd.should.equal(false);
     });
     
-    var Root = function (version) {
-        this.coreVersion = version;
-        
-        this._ = Jscex._;
-        this.modules = { };
-        this.binders = { };
-        this.builders = { };
+    var initialize = function (version) {
+        Jscex.coreVersion = version;
+        Jscex.modules = { };
+        Jscex.binders = { };
+        Jscex.builders = { };
     }
     
     it("should support simple module", function () {
+        initialize("0.5.0");
+    
         var exports = {};
+        var initTimes = 0;
         
         Jscex.define({
             name: "test",
             version: "0.5.0",
             exports: exports,
             dependencies: { core: "~0.5.0" },
-            init: function (root) {
-                root.hello = "world";
+            init: function () { 
+                initTimes++;
+                Jscex.hello = "world";
             }
         });
         
         exports.name.should.equal("test");
         exports.version.should.equal("0.5.0");
-
-        var root = new Root("0.5.0");
-        exports.init(root);
+        initTimes.should.equal(0);
         
-        root.hello.should.equal("world");
-        root.modules["test"] = "0.5.0";
+        exports.init();
+        exports.init();
+        exports.init();
+        
+        Jscex.hello.should.equal("world");
+        Jscex.modules["test"].should.equal("0.5.0");
+        initTimes.should.equal(1);
     });
     
     it("should support complicated module", function () {
         var loaded = [];
         var require = function (name) {
             return {
-                init: function (root) {
+                init: function () {
                     loaded.push(name);
                 }
             };
         }
         
-        var root = new Root("0.5.0");
-        root.modules["d0"] = "0.1.0";
-        root.modules["d1"] = "0.2.5";
+        initialize("0.5.0");
+        Jscex.modules["d0"] = "0.1.0";
+        Jscex.modules["d1"] = "0.2.5";
         
         var exports = {};
+        var initTimes = 0;
         
         Jscex.define({
             name: "test",
@@ -73,43 +79,52 @@ describe("define (CommonJS)", function () {
                 "d1": "~0.2.0"
             },
             init: function (root) {
-                root.hello = "world";
+                initTimes++;
+                Jscex.hello = "world";
             }
         });
 
         loaded.should.be.empty;
+        exports.name.should.equal("test");
+        exports.version.should.equal("0.8.0");
+        initTimes.should.equal(0);
         
-        exports.init(root);
+        exports.init();
+        exports.init();
+        exports.init();
         
         loaded.should.eql(["jscex-m0", "jscex-m1"]);
-        root.hello.should.equal("world");
-        root.modules["test"] = "0.8.0";
+        Jscex.hello.should.equal("world");
+        Jscex.modules["test"].should.equal("0.8.0");
+        initTimes.should.equal(1);
     });
 
     it("should throw if module required an invalid core version", function () {
-        var root = new Root("0.5.0");
+        initialize("0.5.0");
 
         var exports = {};
+        var initTimes = 0;
         
         Jscex.define({
             name: "test",
             version: "0.9.0",
             exports: exports,
             dependencies: { "core": "~0.6.0" },
-            init: function (root) {
-                root.hello = "world";
-            }
+            init: function () { initTimes++; }
         });
         
         (function () {
-            exports.init(root);
+            exports.init();
         }).should.throw();
+        
+        initTimes.should.equal(0);
     });
     
     it("should throw if required module is not loaded", function () {
-        var root = new Root("0.5.0");
+        initialize("0.5.0");
 
         var exports = {};
+        var initTimes = 0;
         
         Jscex.define({
             name: "test",
@@ -119,21 +134,22 @@ describe("define (CommonJS)", function () {
                 "core": "~0.5.0",
                 "d0": "~0.1.0"
             },
-            init: function (root) {
-                root.hello = "world";
-            }
+            init: function () { initTimes++; }
         });
         
         (function () {
-            exports.init(root);
+            exports.init();
         }).should.throw();
+        
+        initTimes.should.equal(0);
     });
-    
+
     it("should throw if the required module is loaded but has invalid version", function () {
-        var root = new Root("0.5.0");
-        root.modules["d0"] = "0.2.0";
+        initialize("0.5.0");
+        Jscex.modules["d0"] = "0.2.0";
 
         var exports = {};
+        var initTimes = 0;
         
         Jscex.define({
             name: "test",
@@ -143,13 +159,13 @@ describe("define (CommonJS)", function () {
                 "core": "~0.5.0",
                 "d0": "~0.1.0"
             },
-            init: function (root) {
-                root.hello = "world";
-            }
+            init: function () { initTimes++; }
         });
         
         (function () {
-            exports.init(root);
+            exports.init();
         }).should.throw();
+        
+        initTimes.should.equal(0);
     });
 });
