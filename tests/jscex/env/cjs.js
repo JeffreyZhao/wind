@@ -4,15 +4,7 @@ var Jscex = require("../../../src/jscex");
 require("chai").should();
 
 describe("define (CommonJS)", function () {
-    
-    it("should be true for the 'cjs' mark", function () {
-        Jscex.define.cjs.should.equal(true);
-    });
-    
-    it("should be false for the 'amd' mark", function () {
-        Jscex.define.amd.should.equal(false);
-    });
-    
+
     var initialize = function (version) {
         Jscex.coreVersion = version;
         Jscex.modules = { };

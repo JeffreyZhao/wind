@@ -289,9 +289,6 @@
         }
     }
 
-    defineModule.cjs = isCommonJS;
-    defineModule.amd = isAmd;
-
     var init = function () {
         Jscex.coreVersion = "0.6.5";
         

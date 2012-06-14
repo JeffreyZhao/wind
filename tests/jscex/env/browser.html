@@ -25,15 +25,7 @@
         });
     
         describe("define (Browser)", function () {
-            
-            it("should be false for the 'cjs' mark", function () {
-                Jscex.define.cjs.should.equal(false);
-            });
-    
-            it("should be false for the 'amd' mark", function () {
-                Jscex.define.amd.should.equal(false);
-            });
-            
+
             it("should support simple module", function () {
                 Jscex.coreVersion = "0.5.0";
                 

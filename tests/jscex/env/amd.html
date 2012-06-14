@@ -34,20 +34,6 @@
     
         describe("define (AMD)", function () {
             
-            it("should be false for the 'cjs' mark", function (done) {
-                require(['jscex'], function (Jscex) {
-                    Jscex.define.cjs.should.equal(false);
-                    done();
-                });
-            });
-
-            it("should be true for the 'amd' mark", function (done) {
-                require(['jscex'], function (Jscex) {
-                    Jscex.define.amd.should.equal(true);
-                    done();
-                });
-            });
-
             it("should support simple module", function (done) {
                 require(['jscex'], function (Jscex) {
                     Jscex.coreVersion = "0.5.0";
