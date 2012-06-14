@@ -161,45 +161,11 @@
             this.log(Level.ERROR, msg);
         }
     };
-    
-    var executeWithCurrentDirInModulePaths = function (action) {
 
-        var dirname = (typeof __dirname === "string") ? __dirname : null;
-
-        var modulePaths;
-        if (dirname) {
-            try {
-                modulePaths = require.paths;
-            } catch (err) {
-                try {
-                    modulePaths = module.paths;
-                } catch (err) { }
-            }
-        }
-        
-        if (modulePaths && dirname) {
-            try {
-                // try to load module from current path
-                modulePaths.unshift(dirname); 
-            } catch (err) { }
-        }
-        
-        try {
-            action();
-        } finally {
-            if (modulePaths && dirname) {
-                try {
-                    // restore the load paths
-                    modulePaths.shift(dirname);
-                } catch (err) { }
-            }
-        }
-    }
-    
     var loadModules = function (require, modules) {
         if (require) {
             _.each(modules, function (i, name) {
-                require("jscex-" + name).init();
+                require("./jscex-" + name).init();
             });
         } else {
             _.each(modules, function (i, m) {
@@ -209,8 +175,13 @@
     }
 
     var initModule = function (options) {
-        if (Jscex.modules[options.name]) {
-            throw new Error(_.format('Module "{0}" is already loaded, please load the module only once.', options.name));
+        var existingVersion = Jscex.modules[options.name];
+        if (existingVersion && existingVersion != options.version) {
+            Jscex.logger.warn(_.format(
+                'The module "{0}" with version "{1}" has already been initialized, skip version "{2}".',
+                options.name,
+                existingVersion,
+                options.version));
         }
     
         checkDependencies(options);
@@ -219,31 +190,30 @@
     }
     
     var checkDependencies = function (options) {
-        var expectedCoreVersion = options.dependencies["core"];
-        if (!_.testVersion(expectedCoreVersion, Jscex.coreVersion)) {
-            throw new Error(_.format(
-                'Version of core component mismatched, expected: "{0}", actual: "{1}".',
-                expectedCoreVersion,
-                Jscex.coreVersion));
-        }
-        
         _.each(options.dependencies, function (name, expectedVersion) {
-            if (name == "core") return;
-            
-            var version = Jscex.modules[name];
-            if (!version) {
-                throw new Error(_.format(
-                    'Missing required module: "{0}", expected version: "{1}".',
-                    name,
-                    expectedVersion));
-            }
-            
-            if (!_.testVersion(expectedVersion, version)) {
-                throw new Error(_.format(
-                    'Version of module "{0}" mismatched, expected: "{1}", actual: "{2}".',
-                    name,
-                    expectedVersion,
-                    version));
+            if (name == "core") {
+                if (!_.testVersion(expectedVersion, Jscex.coreVersion)) {
+                    throw new Error(_.format(
+                        'Version of core component mismatched, expected: "{0}", actual: "{1}".',
+                        expectedVersion,
+                        Jscex.coreVersion));
+                }
+            } else {
+                var version = Jscex.modules[name];
+                if (!version) {
+                    throw new Error(_.format(
+                        'Missing required module: "{0}" (expected version: "{1}").',
+                        name,
+                        expectedVersion));
+                }
+                
+                if (!_.testVersion(expectedVersion, version)) {
+                    throw new Error(_.format(
+                        'Version of module "{0}" mismatched, expected: "{1}", actual: "{2}".',
+                        name,
+                        expectedVersion,
+                        version));
+                }
             }
         });
     }
@@ -264,9 +234,7 @@
         if (isCommonJS) {
             exportBasicOptions(options.exports, options);
             options.exports.init = _.once(function () {
-                executeWithCurrentDirInModulePaths(function () {
-                    loadModules(options.require, autoloads);
-                });
+                loadModules(options.require, autoloads);
                 initModule(options);
             });
         } else if (isAmd) {

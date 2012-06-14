@@ -59,6 +59,8 @@
 
 (function () {
 
+"use strict";
+
 /* -----[ Tokenizer (constants) ]----- */
 
 var KEYWORDS = array_to_hash([
@@ -1303,39 +1305,47 @@ var warn = function() {};
 
 /* -----[ Exports ]----- */
 
-var init = function (root) {
-    if (root.modules["parser"]) {
-        return;
-    }
-    
-    root.parse = parse;
-    
-    root.modules["parser"] = true;
+// CommonJS
+var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
+// CommonJS AMD
+var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
+
+var Jscex;
+
+var defineModule = function () {
+    Jscex.define({
+        name: "parser",
+        version: "0.6.5",
+        exports: isCommonJS && module.exports,
+        require: isCommonJS && require,
+        dependencies: { core: "~0.6.5" },
+        init: function () {
+            Jscex.parse = parse;
+        }
+    });
 }
 
-// CommonJS
-var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
-// CommongJS Wrapping
-var isWrapping = (typeof define === "function" && !define.amd);
-// CommonJS AMD
-var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
-
 if (isCommonJS) {
-    module.exports.init = init;
-} else if (isWrapping) {
-    define("jscex-parser", function (require, exports, module) {
-        module.exports.init = init;
-    });
-} else if (isAmd) {
-    define("jscex-parser", function () {
-        return { init: init };
-    });
-} else {
-    if (typeof Jscex === "undefined") {
-        throw new Error('Missing the root object, please load "jscex" module first.');
+    try {
+        Jscex = require("./jscex");
+    } catch (ex) {
+        Jscex = require("jscex");
     }
     
-    init(Jscex);
+    defineModule();
+} else if (isAmd) {
+    require("jscex", function (jscex) {
+        Jscex = jscex;
+        defineModule();
+    });
+} else {
+    var Fn = Function, global = Fn('return this')();
+    if (!global.Jscex) {
+        throw new Error('Missing the root object, please load "jscex" component first.');
+    }
+    
+    Jscex = global.Jscex;
+    defineModule();
 }
 
 /*

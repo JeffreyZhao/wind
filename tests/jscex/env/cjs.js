@@ -85,7 +85,7 @@ describe("define (CommonJS)", function () {
         exports.init();
         exports.init();
         
-        loaded.should.eql(["jscex-m0", "jscex-m1"]);
+        loaded.should.eql(["./jscex-m0", "./jscex-m1"]);
         Jscex.hello.should.equal("world");
         Jscex.modules["test"].should.equal("0.8.0");
         initTimes.should.equal(1);

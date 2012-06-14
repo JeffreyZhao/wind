@@ -1,5 +1,6 @@
 (function () {
-
+    "use strict";
+    
     var BuilderBase = function () { }
     BuilderBase.prototype = {
         For: function (condition, update, body) {
@@ -287,43 +288,47 @@
             };
         }
     }
-    
-    var init = function (root) {
-        if (!root.modules) {
-            root.modules = { };
-        }
-        
-        if (root.modules["builderbase"]) {
-            return;
-        }
-        
-        root.modules["builderbase"] = true;
-        root.BuilderBase = BuilderBase;
-    }
-    
+
     // CommonJS
-    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
-    // CommongJS Wrapping
-    var isWrapping = (typeof define === "function" && !define.amd);
+    var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
     // CommonJS AMD
-    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
-    
-    if (isCommonJS) {
-        module.exports.init = init;
-    } else if (isWrapping) {
-        define("jscex-builderbase", function (require, exports, module) {
-            module.exports.init = init;
+    var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
+
+    var Jscex;
+
+    var defineModule = function () {
+        Jscex.define({
+            name: "builderbase",
+            version: "0.6.5",
+            exports: isCommonJS && module.exports,
+            require: isCommonJS && require,
+            dependencies: { core: "~0.6.5" },
+            init: function () {
+                Jscex.BuilderBase = BuilderBase;
+            }
         });
-    } else if (isAmd) {
-        define("jscex-builderbase", function () {
-            return { init: init };
-        });
-    } else {
-        if (typeof Jscex === "undefined") {
-            throw new Error('Missing the root object, please load "jscex" module first.');
-        }
-    
-        init(Jscex);
     }
 
+    if (isCommonJS) {
+        try {
+            Jscex = require("./jscex");
+        } catch (ex) {
+            Jscex = require("jscex");
+        }
+        
+        defineModule();
+    } else if (isAmd) {
+        require("jscex", function (jscex) {
+            Jscex = jscex;
+            defineModule();
+        });
+    } else {
+        var Fn = Function, global = Fn('return this')();
+        if (!global.Jscex) {
+            throw new Error('Missing the root object, please load "jscex" component first.');
+        }
+        
+        Jscex = global.Jscex;
+        defineModule();
+    }
 })();
