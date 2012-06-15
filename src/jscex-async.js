@@ -1,4 +1,5 @@
 (function () {
+    "use strict";
 
     var Jscex;
 
@@ -11,9 +12,11 @@
         message: "The task has been cancelled."
     }
 
+    var Fn = Function, global = Fn('return this')();
+    
     // seed defined in global
-    if (typeof __jscex__async__taskIdSeed === "undefined") {
-        __jscex__async__taskIdSeed = 0;
+    if (global.__jscex__async__taskIdSeed === undefined) {
+        global.__jscex__async__taskIdSeed = 0;
     }
 
     var isTask = function (t) {
@@ -270,7 +273,6 @@
             defineModule();
         });
     } else {
-        var Fn = Function, global = Fn('return this')();
         if (!global.Jscex) {
             throw new Error('Missing the root object, please load "jscex" component first.');
         }
