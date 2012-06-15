@@ -1,13 +1,7 @@
 (function () {
     "use strict";
 
-    var Jscex;
-    var Task;
-    var CanceledError;
-
-    var isArray = function (array) {
-        return Object.prototype.toString.call(array) === '[object Array]';
-    };
+    var Jscex, Task, CanceledError, _;
     
     var collectCallbackArgNames = function (args) {
         if (args.length <= 1) return null;
@@ -155,46 +149,36 @@
         return Task.create(function (taskWhenAll) {
             var taskKeys = {};
     
-            for (var key in inputTasks) {
-                if (!inputTasks.hasOwnProperty(key)) continue;
-    
-                var t = inputTasks[key];
-                if (!t) continue;
-    
-                if (!Task.isTask(t)) {
-                    inputTasks[key] = t = Task.whenAll(t);
+            _.each(inputTasks, function (key, task) {
+                if (!task) return;
+                
+                if (!Task.isTask(task)) {
+                    inputTasks[key] = task = whenAll(task);
                 }
-
-                taskKeys[t.id] = key;
-            }
+                
+                taskKeys[task.id] = key;
+            });
 
             // start all the tasks
-            for (var id in taskKeys) {
-                if (!taskKeys.hasOwnProperty(id)) continue;
-
-                var t = inputTasks[taskKeys[id]];
-                if (t.status == "ready") {
-                    t.start();
+            _.each(taskKeys, function (id, key) {
+                var task = inputTasks[key];
+                if (task.status === "ready") {
+                    task.start();
                 }
-            }
+            });
 
             var done = function () {
-
-                var results = isArray(inputTasks) ? new Array(inputTasks.length) : { };
+                var results = _.isArray(inputTasks) ? new Array(inputTasks.length) : { };
                 var errors = [];
 
-                for (var id in taskKeys) {
-                    if (!taskKeys.hasOwnProperty(id)) continue;
-
-                    var key = taskKeys[id];
-                    var t = inputTasks[key];
-
-                    if (t.error) {
-                        errors.push(t.error);
+                _.each(taskKeys, function (id, key) {
+                    var task = inputTasks[key];
+                    if (task.error) {
+                        errors.push(task.error);
                     } else {
-                        results[key] = t.result;
+                        results[key] = task.result;
                     }
-                }
+                });
 
                 if (errors.length > 0) {
                     taskWhenAll.complete("failure", new AggregateError(errors));
@@ -205,22 +189,19 @@
 
             var runningNumber = 0;
             
-            for (var id in taskKeys) {
-                if (!taskKeys.hasOwnProperty(id)) continue;
-
-                var key = taskKeys[id]
-                var t = inputTasks[key];
-
-                if (t.status == "running") {
+            _.each(taskKeys, function (id, key) {
+                var task = inputTasks[key];
+                
+                if (task.status == "running") {
                     runningNumber++;
-
-                    t.addEventListener("complete", function () {
+                    
+                    task.addEventListener("complete", function () {
                         if (--runningNumber == 0) {
                             done();
                         }
                     });
                 }
-            }
+            });
 
             if (runningNumber == 0) {
                 done();
@@ -290,6 +271,7 @@
     
     var then = function (nextGenerator) {
         var firstTask = this;
+        
         return Task.create(function (t) {
             
             var nextOnComplete = function () {
@@ -409,6 +391,7 @@
             dependencies: { async: "~0.6.5" },
             init: function () {
                 
+                _ = Jscex._;
                 Task = Jscex.Async.Task;
                 CanceledError = Jscex.Async.CanceledError;
                 
