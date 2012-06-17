@@ -42,7 +42,7 @@
                     Jscex.define({
                         name: "test",
                         version: "0.5.0",
-                        dependencies: { core: "~0.5.0" },
+                        coreDependency: "~0.5.0",
                         init: function () {
                             initTimes++;
                             Jscex.hello = "world";
@@ -53,7 +53,7 @@
                         initTimes.should.equal(0);
                         test.name.should.equal("test");
                         test.version.should.equal("0.5.0");
-                        test.dependencies.should.eql({ core: "~0.5.0" });
+                        test.coreDependency.should.equal("~0.5.0");
                         
                         test.init();
                         test.init();
@@ -65,7 +65,7 @@
                         Jscex.modules["test"].should.eql({
                             name: "test",
                             version: "0.5.0",
-                            dependencies: { core: "~0.5.0" }
+                            coreDependency: "~0.5.0"
                         });
                         
                         done();
@@ -89,11 +89,8 @@
                         name: "test",
                         version: "0.8.0",
                         autoloads: ["m0", "m1"],
-                        dependencies: {
-                            "core": "~0.5.0",
-                            "d0": "~0.1.0",
-                            "d1": "~0.2.0"
-                        },
+                        coreDependency: "~0.5.0",
+                        dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" },
                         init: function () {
                             initTimes++;
                             Jscex.hello = "world";
@@ -107,7 +104,8 @@
                         test.name.should.equal("test");
                         test.version.should.equal("0.8.0");
                         test.autoloads.should.eql([ "m0", "m1" ]);
-                        test.dependencies.should.eql({ core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" });
+                        test.coreDependency.should.equal("~0.5.0");
+                        test.dependencies.should.eql({ "d0": "~0.1.0", "d1": "~0.2.0" });
                     
                         test.init();
                         test.init();
@@ -121,7 +119,8 @@
                             name: "test",
                             version: "0.8.0",
                             autoloads: [ "m0", "m1" ],
-                            dependencies: { core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" }
+                            coreDependency: "~0.5.0",
+                            dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" }
                         });
                         
                         done();
@@ -138,14 +137,14 @@
                     Jscex.define({
                         name: "test",
                         version: "0.9.0",
-                        dependencies: { "core": "~0.6.0" },
+                        coreDependency: "~0.6.0",
                         init: function () { initTimes++; }
                     });
                     
                     require(["jscex-test"], function (test) {
                         (function () {
                             test.init();
-                        }).should.throw();
+                        }).should.throw(/expected.*actual/);
                         
                         initTimes.should.equal(0);
                         
@@ -163,17 +162,15 @@
                     Jscex.define({
                         name: "test",
                         version: "0.9.0",
-                        dependencies: {
-                            "core": "~0.5.0",
-                            "d0": "~0.1.0"
-                        },
+                        coreDependency: "~0.5.0",
+                        dependencies: { "d0": "~0.1.0" },
                         init: function () { initTimes++; }
                     });
                     
                     require(["jscex-test"], function (test) {
                         (function () {
                             test.init();
-                        }).should.throw();
+                        }).should.throw(/required.*expected/);
                         
                         initTimes.should.equal(0);
                         
@@ -192,17 +189,15 @@
                     Jscex.define({
                         name: "test",
                         version: "0.9.0",
-                        dependencies: {
-                            "core": "~0.5.0",
-                            "d0": "~0.1.0"
-                        },
+                        coreDependency: "~0.5.0",
+                        dependencies: { "d0": "~0.1.0" },
                         init: function () { initTimes++; }
                     });
                     
                     require(["jscex-test"], function (test) {
                         (function () {
                             test.init();
-                        }).should.throw();
+                        }).should.throw(/expected.*actual/);
                         
                         initTimes.should.be.equal(0);
                         

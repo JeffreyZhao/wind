@@ -1318,7 +1318,7 @@ var defineModule = function () {
         version: "0.6.5",
         exports: isCommonJS && module.exports,
         require: isCommonJS && require,
-        dependencies: { core: "~0.6.5" },
+        coreDependency: "~0.6.5",
         init: function () {
             Jscex.parse = parse;
         }

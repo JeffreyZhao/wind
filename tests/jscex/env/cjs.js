@@ -22,7 +22,7 @@ describe("define (CommonJS)", function () {
             name: "test",
             version: "0.5.0",
             exports: exports,
-            dependencies: { core: "~0.5.0" },
+            coreDependency: "~0.5.0",
             init: function () { 
                 initTimes++;
                 Jscex.hello = "world";
@@ -33,7 +33,7 @@ describe("define (CommonJS)", function () {
         
         exports.name.should.equal("test");
         exports.version.should.equal("0.5.0");
-        exports.dependencies.should.eql({ core: "~0.5.0" });
+        exports.coreDependency.should.equal("~0.5.0");
         
         exports.init();
         exports.init();
@@ -44,7 +44,7 @@ describe("define (CommonJS)", function () {
         Jscex.modules["test"].should.eql({
             name: "test",
             version: "0.5.0",
-            dependencies: { core: "~0.5.0" }
+            coreDependency: "~0.5.0"
         });
     });
     
@@ -71,11 +71,8 @@ describe("define (CommonJS)", function () {
             exports: exports,
             require: require,
             autoloads: ["m0", "m1"],
-            dependencies: {
-                "core": "~0.5.0",
-                "d0": "~0.1.0",
-                "d1": "~0.2.0"
-            },
+            coreDependency: "~0.5.0",
+            dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" },
             init: function (root) {
                 initTimes++;
                 Jscex.hello = "world";
@@ -88,7 +85,8 @@ describe("define (CommonJS)", function () {
         exports.name.should.equal("test");
         exports.version.should.equal("0.8.0");
         exports.autoloads.should.eql([ "m0", "m1" ]);
-        exports.dependencies.should.eql({ core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" });
+        exports.coreDependency = "~0.5.0";
+        exports.dependencies.should.eql({ "d0": "~0.1.0", "d1": "~0.2.0" });
         
         exports.init();
         exports.init();
@@ -102,7 +100,8 @@ describe("define (CommonJS)", function () {
             name: "test",
             version: "0.8.0",
             autoloads: [ "m0", "m1" ],
-            dependencies: { core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" }
+            coreDependency: "~0.5.0",
+            dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" }
         });
     });
 
@@ -116,13 +115,13 @@ describe("define (CommonJS)", function () {
             name: "test",
             version: "0.9.0",
             exports: exports,
-            dependencies: { "core": "~0.6.0" },
+            coreDependency: "~0.6.0",
             init: function () { initTimes++; }
         });
         
         (function () {
             exports.init();
-        }).should.throw();
+        }).should.throw(/expected.*actual/);
         
         initTimes.should.equal(0);
     });
@@ -137,16 +136,14 @@ describe("define (CommonJS)", function () {
             name: "test",
             version: "0.9.0",
             exports: exports,
-            dependencies: {
-                "core": "~0.5.0",
-                "d0": "~0.1.0"
-            },
+            coreDependency: "~0.5.0",
+            dependencies: { "d0": "~0.1.0" },
             init: function () { initTimes++; }
         });
         
         (function () {
             exports.init();
-        }).should.throw();
+        }).should.throw(/required.*expected/);
         
         initTimes.should.equal(0);
     });
@@ -162,16 +159,14 @@ describe("define (CommonJS)", function () {
             name: "test",
             version: "0.9.0",
             exports: exports,
-            dependencies: {
-                "core": "~0.5.0",
-                "d0": "~0.1.0"
-            },
+            coreDependency: "~0.5.0",
+            dependencies: { "d0": "~0.1.0" },
             init: function () { initTimes++; }
         });
         
         (function () {
             exports.init();
-        }).should.throw();
+        }).should.throw(/expected.*actual/);
         
         initTimes.should.equal(0);
     });
