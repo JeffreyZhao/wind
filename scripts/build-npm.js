@@ -8,7 +8,7 @@ var path = require("path"),
 
 var npmDir = path.join(__dirname, "../bin/npm");
 var srcDir = path.join(__dirname, "../src");
-var gccPath = path.join(__dirname, "../tools/compiler.jar");
+var libDir = path.join(__dirname, "../lib");
 
 if (path.existsSync(npmDir)) {
     utils.rmdirSync(npmDir);
@@ -75,9 +75,38 @@ var buildOne = function (name) {
     console.log((isCore ? "jscex" : "jscex-" + name) + " generated.");
 }
 
+var buildAot = function () {
+    var dir = path.join(npmDir, "jscexc");
+    fs.mkdirSync(dir);
+    
+    fs.mkdirSync(path.join(dir, "lib"));
+    utils.copySync(path.join(libDir, "narcissus-parser.js"), path.join(dir, "lib/narcissus-parser.js"));
+    
+    fs.mkdirSync(path.join(dir, "src"));
+    utils.copySync(path.join(srcDir, "jscexc.js"), path.join(dir, "src/jscexc.js"));
+    
+    var packageData = _.clone(packageBase);
+    packageData.name = "jscexc";
+    packageData.version = "0.1.5";
+    packageData.main = "src/jscexc.js";
+    packageData.description = "The AOT compiler for Jscex";
+    packageData.dependencies = {
+        "jscex": "~0.6.5",
+        "jscex-jit": "~0.6.5",
+        "optimist": "*"
+    };
+    
+    var packageContent = json2str(packageData);
+    fs.writeFileSync(path.join(dir, "package.json"), packageContent, "utf8");
+    
+    console.log("jscexc generated.");
+}
+
 buildOne(); // core
 
 var modules = [ "parser", "jit", "builderbase", "async", "async-powerpack" ];
 _.each(modules, function (name) {
     buildOne(name);
 });
+
+buildAot();

@@ -193,30 +193,29 @@
     }
     
     var checkDependencies = function (options) {
+        if (options.coreDependency && !_.testVersion(options.coreDependency, Jscex.coreVersion)) {
+            throw new Error(_.format(
+                'Version of core component mismatched, expected: "{0}", actual: "{1}".',
+                options.coreDependency,
+                Jscex.coreVersion));
+            
+        }
+        
         _.each(options.dependencies || [], function (name, expectedVersion) {
-            if (name == "core") {
-                if (!_.testVersion(expectedVersion, Jscex.coreVersion)) {
-                    throw new Error(_.format(
-                        'Version of core component mismatched, expected: "{0}", actual: "{1}".',
-                        expectedVersion,
-                        Jscex.coreVersion));
-                }
-            } else {
-                var module = Jscex.modules[name];
-                if (!module) {
-                    throw new Error(_.format(
-                        'Missing required module: "{0}" (expected version: "{1}").',
-                        name,
-                        expectedVersion));
-                }
+            var module = Jscex.modules[name];
+            if (!module) {
+                throw new Error(_.format(
+                    'Missing required module: "{0}" (expected version: "{1}").',
+                    name,
+                    expectedVersion));
+            }
 
-                if (!_.testVersion(expectedVersion, module.version)) {
-                    throw new Error(_.format(
-                        'Version of module "{0}" mismatched, expected: "{1}", actual: "{2}".',
-                        name,
-                        expectedVersion,
-                        version));
-                }
+            if (!_.testVersion(expectedVersion, module.version)) {
+                throw new Error(_.format(
+                    'Version of module "{0}" mismatched, expected: "{1}", actual: "{2}".',
+                    name,
+                    expectedVersion,
+                    module.version));
             }
         });
     }
@@ -227,6 +226,10 @@
         
         if (options.autoloads) {
             exports.autoloads = options.autoloads;
+        }
+        
+        if (options.coreDependency) {
+            exports.coreDependency = options.coreDependency;
         }
         
         if (options.dependencies) {

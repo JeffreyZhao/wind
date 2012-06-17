@@ -1,13 +1,17 @@
 {
-    "name": "jscexc",
-    "version": "0.6.0",
     "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
-    "description": "The AOT compiler for Jscex.",
     "homepage": "https://github.com/JeffreyZhao/jscex",
-    "main": "src/jscexc.js",
     "bugs": {
         "url": "https://github.com/JeffreyZhao/jscex/issues",
         "email": "jeffz@live.com"
     },
-    "dependencies": { "jscex": "0.6.x", "jscex-jit": "0.6.x", "optimist": "x" }
+    "name": "jscexc",
+    "version": "0.1.5",
+    "main": "src/jscexc.js",
+    "description": "The AOT compiler for Jscex",
+    "dependencies": {
+        "jscex": "~0.6.5",
+        "jscex-jit": "~0.6.5",
+        "optimist": "*"
+    }
 }
