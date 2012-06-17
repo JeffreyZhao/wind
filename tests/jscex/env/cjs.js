@@ -29,17 +29,23 @@ describe("define (CommonJS)", function () {
             }
         });
         
+        initTimes.should.equal(0);
+        
         exports.name.should.equal("test");
         exports.version.should.equal("0.5.0");
-        initTimes.should.equal(0);
+        exports.dependencies.should.eql({ core: "~0.5.0" });
         
         exports.init();
         exports.init();
         exports.init();
         
         Jscex.hello.should.equal("world");
-        Jscex.modules["test"].should.equal("0.5.0");
         initTimes.should.equal(1);
+        Jscex.modules["test"].should.eql({
+            name: "test",
+            version: "0.5.0",
+            dependencies: { core: "~0.5.0" }
+        });
     });
     
     it("should support complicated module", function () {
@@ -53,8 +59,8 @@ describe("define (CommonJS)", function () {
         }
         
         initialize("0.5.0");
-        Jscex.modules["d0"] = "0.1.0";
-        Jscex.modules["d1"] = "0.2.5";
+        Jscex.modules["d0"] = { version: "0.1.0" };
+        Jscex.modules["d1"] = { version: "0.2.5" };
         
         var exports = {};
         var initTimes = 0;
@@ -77,18 +83,27 @@ describe("define (CommonJS)", function () {
         });
 
         loaded.should.be.empty;
+        initTimes.should.equal(0);
+        
         exports.name.should.equal("test");
         exports.version.should.equal("0.8.0");
-        initTimes.should.equal(0);
+        exports.autoloads.should.eql([ "m0", "m1" ]);
+        exports.dependencies.should.eql({ core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" });
         
         exports.init();
         exports.init();
         exports.init();
         
         loaded.should.eql(["./jscex-m0", "./jscex-m1"]);
-        Jscex.hello.should.equal("world");
-        Jscex.modules["test"].should.equal("0.8.0");
         initTimes.should.equal(1);
+        
+        Jscex.hello.should.equal("world");
+        Jscex.modules["test"].should.eql({
+            name: "test",
+            version: "0.8.0",
+            autoloads: [ "m0", "m1" ],
+            dependencies: { core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" }
+        });
     });
 
     it("should throw if module required an invalid core version", function () {
@@ -138,7 +153,7 @@ describe("define (CommonJS)", function () {
 
     it("should throw if the required module is loaded but has invalid version", function () {
         initialize("0.5.0");
-        Jscex.modules["d0"] = "0.2.0";
+        Jscex.modules["d0"] = { version: "0.2.0" };
 
         var exports = {};
         var initTimes = 0;

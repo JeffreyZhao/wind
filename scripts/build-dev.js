@@ -2,8 +2,8 @@
 
 var path = require("path"),
     fs = require("fs"),
-    utils = require("../lib/utils");
-    Jscex = require("../src/jscex"),
+    utils = require("../lib/utils"),
+    Jscex = utils.Jscex,
     _ = Jscex._;
     
 var devDir = path.join(__dirname, "../bin/dev");
@@ -23,7 +23,7 @@ var moduleList = [ "parser", "jit", "builderbase", "async", "async-powerpack" ];
  
 _.each(moduleList, function (i, module) {
     var fullName = "jscex-" + module;
-    var version = Jscex.modules[module];
+    var version = Jscex.modules[module].version;
     var outputName = fullName + "-" + version + ".js";
     utils.copySync(path.join(srcDir, fullName + ".js"), path.join(devDir, outputName));
     console.log(outputName + " generated.");

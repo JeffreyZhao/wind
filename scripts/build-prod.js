@@ -26,7 +26,7 @@ var buildOne = eval(Jscex.compile("async", function (module) {
         version = Jscex.coreVersion;
     } else {
         fullName = "jscex-" + module;
-        version = Jscex.modules[module];
+        version = Jscex.modules[module].version;
     }
     
     var inputFile = fullName + ".js";

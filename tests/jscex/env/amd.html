@@ -51,14 +51,22 @@
                     
                     require(["jscex-test"], function (test) {
                         initTimes.should.equal(0);
+                        test.name.should.equal("test");
+                        test.version.should.equal("0.5.0");
+                        test.dependencies.should.eql({ core: "~0.5.0" });
                         
                         test.init();
                         test.init();
                         test.init();
                         
                         Jscex.hello.should.equal("world");
-                        Jscex.modules["test"] = "0.5.0";
                         initTimes.should.equal(1);
+                        
+                        Jscex.modules["test"].should.eql({
+                            name: "test",
+                            version: "0.5.0",
+                            dependencies: { core: "~0.5.0" }
+                        });
                         
                         done();
                     });
@@ -72,8 +80,8 @@
                     define("jscex-m1", function () { return { init: function () { loaded.push("m1"); } }; });
        
                     Jscex.coreVersion = "0.5.0";
-                    Jscex.modules["d0"] = "0.1.0";
-                    Jscex.modules["d1"] = "0.2.5";
+                    Jscex.modules["d0"] = { version: "0.1.0" };
+                    Jscex.modules["d1"] = { version: "0.2.5" };
                     
                     var initTimes = 0;
                     
@@ -95,15 +103,26 @@
                     require(["jscex-test"], function (test) {
                         initTimes.should.equal(0);
                         loaded.should.be.empty;
+        
+                        test.name.should.equal("test");
+                        test.version.should.equal("0.8.0");
+                        test.autoloads.should.eql([ "m0", "m1" ]);
+                        test.dependencies.should.eql({ core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" });
                     
                         test.init();
                         test.init();
                         test.init();
                         
                         loaded.should.eql(["m0", "m1"]);
-                        Jscex.hello.should.equal("world");
-                        Jscex.modules["test"] = "0.8.0";
                         initTimes.should.equal(1);
+                        
+                        Jscex.hello.should.equal("world");
+                        Jscex.modules["test"].should.eql({
+                            name: "test",
+                            version: "0.8.0",
+                            autoloads: [ "m0", "m1" ],
+                            dependencies: { core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" }
+                        });
                         
                         done();
                     });
@@ -166,7 +185,7 @@
             it("should throw if the required module is loaded but has invalid version", function (done) {
                 require(['jscex'], function (Jscex) {
                     Jscex.coreVersion = "0.5.0";
-                    Jscex.modules["d0"] = "0.2.0";
+                    Jscex.modules["d0"] = { version: "0.2.0" };
                     
                     var initTimes = 0;
                     

@@ -139,19 +139,13 @@
         this.lines = [];
     }
     CodeWriter.prototype = {
-        write: function (format) {
+        write: function (str) {
+            if (str === undefined) return;
+            
             if (this.lines.length == 0) {
                 this.lines.push("");
             }
-        
-            var args = arguments;
-            if (args.length <= 0) return this;
-            
-            var str = format.toString().replace(new RegExp("{\\d+}", "g"), function (p) {
-                var n = parseInt(p.substring(1, p.length - 1), 10);
-                return args[n + 1];
-            });
-            
+
             this.lines[this.lines.length - 1] += str;
             return this;
         },
@@ -224,7 +218,7 @@
         var jscexTreeGenerator = new JscexTreeGenerator(builderName, seedProvider);
         var jscexAst = jscexTreeGenerator.generate(funcAst);
 
-        commentWriter.write("{0} << ", builderName);
+        commentWriter.write(builderName + " << ");
         var codeGenerator = new CodeGenerator(builderName, seedProvider, codeWriter, commentWriter);
         codeGenerator.generate(funcAst[2], jscexAst);
     }
@@ -714,12 +708,12 @@
             this._normalMode = false;
             this._builderVar = "_builder_$" + this._seedProvider.next("builderId");
             
-            this._codeLine("(function ({0}) {", params.join(", "))._commentLine("function ({0}) {", params.join(", "));
+            this._codeLine("(function (" + params.join(", ") + ") {")._commentLine("function (" + params.join(", ") + ") {");
             this._bothIndentLevel(1);
 
-            this._codeIndents()._newLine("var {0} = Jscex.builders[{1}];", this._builderVar, stringify(this._builderName));
+            this._codeIndents()._newLine("var " + this._builderVar + " = Jscex.builders[" + stringify(this._builderName) + "];");
 
-            this._codeIndents()._newLine("return {0}.Start(this,", this._builderVar);
+            this._codeIndents()._newLine("return " + this._builderVar + ".Start(this,");
             this._codeIndentLevel(1);
 
             this._pos = { };
@@ -903,9 +897,9 @@
             
             "for-in": function (ast) {
                 this._code(this._builderVar + ".ForIn(")
-                    ._comment("for (var {0} in ", ast.argName)
+                    ._comment("for (var " + ast.argName + " in ")
                         ._visitRaw(ast.obj)
-                            ._codeLine(", function ({0}) {", ast.argName)
+                            ._codeLine(", function (" + ast.argName + ") {")
                             ._commentLine(") {");
                 this._bothIndentLevel(1);
                 
@@ -1073,8 +1067,8 @@
                 
                 if (ast.catchStmts) {
                     this._bothIndents()
-                        ._codeLine("function ({0}) {", ast.exVar)
-                        ._commentLine("} catch ({0}) {", ast.exVar);
+                        ._codeLine("function (" + ast.exVar + ") {")
+                        ._commentLine("} catch (" + ast.exVar + ") {");
                     this._bothIndentLevel(1);
 
                     this._visitJscexStatements(ast.catchStmts);
@@ -1636,7 +1630,7 @@
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
         var evalAst = evalCodeAst[1][0][1];
         compileJscexPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
-        
+ 
         if (separateCodeAndComment) {
             return {
                 code: codeWriter.lines.join("\n"),

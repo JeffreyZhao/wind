@@ -175,22 +175,25 @@
     }
 
     var initModule = function (options) {
-        var existingVersion = Jscex.modules[options.name];
-        if (existingVersion && existingVersion != options.version) {
+        var existingModule = Jscex.modules[options.name];
+        if (existingModule && existingModule.version != options.version) {
             Jscex.logger.warn(_.format(
                 'The module "{0}" with version "{1}" has already been initialized, skip version "{2}".',
                 options.name,
-                existingVersion,
+                existingModule.version,
                 options.version));
         }
     
         checkDependencies(options);
         options.init();
-        Jscex.modules[options.name] = options.version;
+        
+        var module = {};
+        exportBasicOptions(module, options);
+        Jscex.modules[options.name] = module;
     }
     
     var checkDependencies = function (options) {
-        _.each(options.dependencies, function (name, expectedVersion) {
+        _.each(options.dependencies || [], function (name, expectedVersion) {
             if (name == "core") {
                 if (!_.testVersion(expectedVersion, Jscex.coreVersion)) {
                     throw new Error(_.format(
@@ -199,15 +202,15 @@
                         Jscex.coreVersion));
                 }
             } else {
-                var version = Jscex.modules[name];
-                if (!version) {
+                var module = Jscex.modules[name];
+                if (!module) {
                     throw new Error(_.format(
                         'Missing required module: "{0}" (expected version: "{1}").',
                         name,
                         expectedVersion));
                 }
-                
-                if (!_.testVersion(expectedVersion, version)) {
+
+                if (!_.testVersion(expectedVersion, module.version)) {
                     throw new Error(_.format(
                         'Version of module "{0}" mismatched, expected: "{1}", actual: "{2}".',
                         name,
@@ -221,6 +224,14 @@
     var exportBasicOptions = function (exports, options) {
         exports.name = options.name;
         exports.version = options.version;
+        
+        if (options.autoloads) {
+            exports.autoloads = options.autoloads;
+        }
+        
+        if (options.dependencies) {
+            exports.dependencies = options.dependencies;
+        }
     }
 
     // CommonJS

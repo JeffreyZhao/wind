@@ -39,13 +39,17 @@
                 });
                 
                 Jscex.hello.should.equal("world");
-                Jscex.modules["test"] = "0.5.0";
+                Jscex.modules["test"].should.eql({
+                    name: "test",
+                    version: "0.5.0",
+                    dependencies: { core: "~0.5.0" }
+                });
             });
             
             it("should support complicated module", function () {
                 Jscex.coreVersion = "0.5.0";
-                Jscex.modules["d0"] = "0.1.0";
-                Jscex.modules["d1"] = "0.2.5";
+                Jscex.modules["d0"] = { version: "0.1.0" };
+                Jscex.modules["d1"] = { version: "0.2.5" };
                 
                 Jscex.define({
                     name: "test",
@@ -62,7 +66,12 @@
                 });
 
                 Jscex.hello.should.equal("world");
-                Jscex.modules["test"] = "0.8.0";
+                Jscex.modules["test"].should.eql({
+                    name: "test",
+                    version: "0.8.0",
+                    autoloads: [ "m0", "m1" ],
+                    dependencies: { core: "~0.5.0", "d0": "~0.1.0", "d1": "~0.2.0" }
+                });
             });
         
             it("should throw if module required an invalid core version", function () {
@@ -100,7 +109,7 @@
             
             it("should throw if the required module is loaded but has invalid version", function () {
                 Jscex.coreVersion = "0.5.0";
-                Jscex.modules["d0"] = "0.2.0";
+                Jscex.modules["d0"] = { version: "0.2.0" };
         
                 (function () {
                     Jscex.define({
