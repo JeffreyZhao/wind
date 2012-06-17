@@ -1,4 +1,7 @@
 (function () {
+    "use strict";
+    
+    var Jscex;
     
     var codeGenerator = (typeof eval("(function () {})") == "function") ?
         function (code) { return code; } :
@@ -136,19 +139,13 @@
         this.lines = [];
     }
     CodeWriter.prototype = {
-        write: function (format) {
+        write: function (str) {
+            if (str === undefined) return;
+            
             if (this.lines.length == 0) {
                 this.lines.push("");
             }
-        
-            var args = arguments;
-            if (args.length <= 0) return this;
-            
-            var str = format.toString().replace(new RegExp("{\\d+}", "g"), function (p) {
-                var n = parseInt(p.substring(1, p.length - 1), 10);
-                return args[n + 1];
-            });
-            
+
             this.lines[this.lines.length - 1] += str;
             return this;
         },
@@ -213,22 +210,21 @@
         return true;
     }
     
-    function compileJscexPattern(root, ast, seedProvider, codeWriter, commentWriter) {
+    function compileJscexPattern(ast, seedProvider, codeWriter, commentWriter) {
 
         var builderName = ast[2][0][2][0][1];
         var funcAst = ast[2][0][2][1];
 
-        var jscexTreeGenerator = new JscexTreeGenerator(root, builderName, seedProvider);
+        var jscexTreeGenerator = new JscexTreeGenerator(builderName, seedProvider);
         var jscexAst = jscexTreeGenerator.generate(funcAst);
 
-        commentWriter.write("{0} << ", builderName);
-        var codeGenerator = new CodeGenerator(root, builderName, seedProvider, codeWriter, commentWriter);
+        commentWriter.write(builderName + " << ");
+        var codeGenerator = new CodeGenerator(builderName, seedProvider, codeWriter, commentWriter);
         codeGenerator.generate(funcAst[2], jscexAst);
     }
         
-    var JscexTreeGenerator = function (root, builderName, seedProvider) {
-        this._root = root;
-        this._binder = root.binders[builderName];
+    var JscexTreeGenerator = function (builderName, seedProvider) {
+        this._binder = Jscex.binders[builderName];
         this._seedProvider = seedProvider;
     }
     JscexTreeGenerator.prototype = {
@@ -478,7 +474,7 @@
                     forInStmt.argName = keyVar;
                     forInStmt.bodyStmts.unshift({
                         type: "raw",
-                        stmt: this._root.parse(argName + " = " + keyVar + ";")[1][0]
+                        stmt: Jscex.parse(argName + " = " + keyVar + ";")[1][0]
                     });
                 }
             
@@ -624,10 +620,9 @@
         }
     }
     
-    var CodeGenerator = function (root, builderName, seedProvider, codeWriter, commentWriter) {
-        this._root = root;
+    var CodeGenerator = function (builderName, seedProvider, codeWriter, commentWriter) {
         this._builderName = builderName;
-        this._binder = root.binders[builderName];
+        this._binder = Jscex.binders[builderName];
         this._seedProvider = seedProvider;
         
         this._codeWriter = codeWriter;
@@ -713,12 +708,12 @@
             this._normalMode = false;
             this._builderVar = "_builder_$" + this._seedProvider.next("builderId");
             
-            this._codeLine("(function ({0}) {", params.join(", "))._commentLine("function ({0}) {", params.join(", "));
+            this._codeLine("(function (" + params.join(", ") + ") {")._commentLine("function (" + params.join(", ") + ") {");
             this._bothIndentLevel(1);
 
-            this._codeIndents()._newLine("var {0} = Jscex.builders[{1}];", this._builderVar, stringify(this._builderName));
+            this._codeIndents()._newLine("var " + this._builderVar + " = Jscex.builders[" + stringify(this._builderName) + "];");
 
-            this._codeIndents()._newLine("return {0}.Start(this,", this._builderVar);
+            this._codeIndents()._newLine("return " + this._builderVar + ".Start(this,");
             this._codeIndentLevel(1);
 
             this._pos = { };
@@ -902,9 +897,9 @@
             
             "for-in": function (ast) {
                 this._code(this._builderVar + ".ForIn(")
-                    ._comment("for (var {0} in ", ast.argName)
+                    ._comment("for (var " + ast.argName + " in ")
                         ._visitRaw(ast.obj)
-                            ._codeLine(", function ({0}) {", ast.argName)
+                            ._codeLine(", function (" + ast.argName + ") {")
                             ._commentLine(") {");
                 this._bothIndentLevel(1);
                 
@@ -1072,8 +1067,8 @@
                 
                 if (ast.catchStmts) {
                     this._bothIndents()
-                        ._codeLine("function ({0}) {", ast.exVar)
-                        ._commentLine("} catch ({0}) {", ast.exVar);
+                        ._codeLine("function (" + ast.exVar + ") {")
+                        ._commentLine("} catch (" + ast.exVar + ") {");
                     this._bothIndentLevel(1);
 
                     this._visitJscexStatements(ast.catchStmts);
@@ -1274,7 +1269,7 @@
             "call": function (ast) {
             
                 if (isJscexPattern(ast)) {
-                    compileJscexPattern(this._root, ast, this._seedProvider, this._codeWriter, this._commentWriter);
+                    compileJscexPattern(ast, this._seedProvider, this._codeWriter, this._commentWriter);
                 } else {
                     var caller = ast[1];
                 
@@ -1624,101 +1619,72 @@
         return buffer.join("");
     }
     
-    var init = function (root) {
-    
-        if (root.modules["jit"]) {
-            return;
-        }
-        
-        function compile(builderName, func, separateCodeAndComment) {
-            var funcCode = func.toString();
-            var evalCode = "eval(Jscex.compile(" + stringify(builderName) + ", " + funcCode + "))"
-            var evalCodeAst = root.parse(evalCode);
+    var compile = function (builderName, func, separateCodeAndComment) {
+        var funcCode = func.toString();
+        var evalCode = "eval(Jscex.compile(" + stringify(builderName) + ", " + funcCode + "))"
+        var evalCodeAst = Jscex.parse(evalCode);
 
-            var codeWriter = new CodeWriter();
-            var commentWriter = new CodeWriter();
-            
-            // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
-            var evalAst = evalCodeAst[1][0][1];
-            compileJscexPattern(root, evalAst, new SeedProvider(), codeWriter, commentWriter);
-            
-            if (separateCodeAndComment) {
-                return {
-                    code: codeWriter.lines.join("\n"),
-                    codeLines: codeWriter.lines,
-                    comment: commentWriter.lines.join("\n"),
-                    commentLines: commentWriter.lines
-                };
-            } else {
-                var newCode = merge(commentWriter.lines, codeWriter.lines);
-                root.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Jscexified: \r\n" + newCode + "\r\n");
-                
-                return codeGenerator(newCode);
-            }
-        }
-
-        root.compile = compile;
+        var codeWriter = new CodeWriter();
+        var commentWriter = new CodeWriter();
         
-        root.modules["jit"] = true;
+        // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
+        var evalAst = evalCodeAst[1][0][1];
+        compileJscexPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
+ 
+        if (separateCodeAndComment) {
+            return {
+                code: codeWriter.lines.join("\n"),
+                codeLines: codeWriter.lines,
+                comment: commentWriter.lines.join("\n"),
+                commentLines: commentWriter.lines
+            };
+        } else {
+            var newCode = merge(commentWriter.lines, codeWriter.lines);
+            Jscex.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Jscexified: \r\n" + newCode + "\r\n");
+            
+            return codeGenerator(newCode);
+        }
     }
-    
+
     // CommonJS
-    var isCommonJS = (typeof require === "function" && typeof module !== "undefined" && module.exports);
-    // CommongJS Wrapping
-    var isWrapping = (typeof define === "function" && !define.amd);
+    var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
     // CommonJS AMD
-    var isAmd = (typeof require === "function" && typeof define === "function" && define.amd);
+    var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
+
+    var defineModule = function () {
+        Jscex.define({
+            name: "jit",
+            version: "0.6.5",
+            exports: isCommonJS && module.exports,
+            require: isCommonJS && require,
+            autoloads: [ "parser" ],
+            dependencies: { parser: "~0.6.5" },
+            init: function () {
+                Jscex.compile = compile;
+            }
+        });
+    }
 
     if (isCommonJS) {
-        module.exports.init = function (root) {
-            if (!root.modules["parser"]) {
-                if (typeof __dirname === "string") {
-                    try {
-                        require.paths.unshift(__dirname);
-                    } catch (_) {
-                        try {
-                            module.paths.unshift(__dirname);
-                        } catch (_) {}
-                    }
-                }
-
-                require("jscex-parser").init(root);
-            };
-            
-            init(root);
-        }
-    } else if (isWrapping) {
-        define("jscex-jit", ["jscex-parser"], function (require, exports, module) {
-            module.exports.init = function (root) {
-                if (!root.modules["parser"]) {
-                    require("jscex-parser").init(root);
-                }
-                
-                init(root);
-            };
-        });
-    } else if (isAmd) {
-        define("jscex-jit", ["jscex-parser"], function (parser) {
-            return {
-                init: function (root) {
-                    if (!root.modules["parser"]) {
-                        parser.init(root);
-                    }
-                    
-                    init(root);
-                }
-            };
-        });
-    } else {
-        if (typeof Jscex === "undefined") {
-            throw new Error('Missing the root object, please load "jscex" module first.');
+        try {
+            Jscex = require("./jscex");
+        } catch (ex) {
+            Jscex = require("jscex");
         }
         
-        if (!Jscex.modules["parser"]) {
-            throw new Error('Missing essential components, please initialize "parser" module first.');
+        defineModule();
+    } else if (isAmd) {
+        require("jscex", function (jscex) {
+            Jscex = jscex;
+            defineModule();
+        });
+    } else {
+        var Fn = Function, global = Fn('return this')();
+        if (!global.Jscex) {
+            throw new Error('Missing the root object, please load "jscex" component first.');
         }
-
-        init(Jscex);
+        
+        Jscex = global.Jscex;
+        defineModule();
     }
-
 })();

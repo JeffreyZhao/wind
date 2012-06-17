@@ -5,7 +5,7 @@
         "url": "https://github.com/JeffreyZhao/jscex/issues",
         "email": "jeffz@live.com"
     },
-    "name": "jscex",
+    "name": "jscex-builderbase",
     "version": "0.6.5",
-    "main": "jscex.js"
+    "main": "jscex-builderbase.js"
 }
