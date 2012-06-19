@@ -12,25 +12,25 @@ Jscex.logger.level = Jscex.Logging.Level.WARN;
 
 var Async = Jscex.Async;
 var Task = Async.Task;
-var Jscexify = Async.Jscexify;
+var Binding = Async.Binding;
 
 // path bindings
-path.existsAsync = Jscexify.fromCallback(path.exists);
+path.existsAsync = Binding.fromCallback(path.exists);
 
 // util bindings
-util.pumpAsync = Jscexify.fromStandard(util.pump);
+util.pumpAsync = Binding.fromStandard(util.pump);
 
 // rl bindings
-rl.questionAsync = Jscexify.fromCallback(rl.question);
+rl.questionAsync = Binding.fromCallback(rl.question);
 
 // fs bindings
-fs.mkdirAsync = Jscexify.fromStandard(fs.mkdir);
-fs.readdirAsync = Jscexify.fromStandard(fs.readdir);
-fs.statAsync = Jscexify.fromStandard(fs.stat);
-fs.closeAsync = Jscexify.fromStandard(fs.close);
-fs.openAsync = Jscexify.fromStandard(fs.open);
-fs.readAsync = Jscexify.fromStandard(fs.read);
-fs.writeAsync = Jscexify.fromStandard(fs.write);
+fs.mkdirAsync = Binding.fromStandard(fs.mkdir);
+fs.readdirAsync = Binding.fromStandard(fs.readdir);
+fs.statAsync = Binding.fromStandard(fs.stat);
+fs.closeAsync = Binding.fromStandard(fs.close);
+fs.openAsync = Binding.fromStandard(fs.open);
+fs.readAsync = Binding.fromStandard(fs.read);
+fs.writeAsync = Binding.fromStandard(fs.write);
 
 var copyFileByLoopAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
     var fdIn = $await(fs.openAsync(srcFile, "r"));

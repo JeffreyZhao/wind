@@ -37,9 +37,9 @@ var cache = {
     }
 }
 
-db.getKeysAsync = Jscex.Async.Jscexify.fromCallback(db.getKeys);
-db.getItemAsync = Jscex.Async.Jscexify.fromCallback(db.getItem);
-cache.getAsync = Jscex.Async.Jscexify.fromCallback(cache.get);
+db.getKeysAsync = Jscex.Async.Binding.fromCallback(db.getKeys);
+db.getItemAsync = Jscex.Async.Binding.fromCallback(db.getItem);
+cache.getAsync = Jscex.Async.Binding.fromCallback(cache.get);
 
 app.get("/:n", function (req, res) {
     var time = new Date();

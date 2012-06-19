@@ -42,8 +42,8 @@ require("../../src/jscex-jit").init(Jscex);
 require("../../src/jscex-async").init(Jscex);
 require("../../src/jscex-async-powerpack").init(Jscex);
 
-path.existsAsync = Jscex.Async.Jscexify.fromCallback(path.exists);
-fs.readFileAsync = Jscex.Async.Jscexify.fromStandard(fs.readFile);
+path.existsAsync = Jscex.Async.Binding.fromCallback(path.exists);
+fs.readFileAsync = Jscex.Async.Binding.fromStandard(fs.readFile);
 
 var transferFileAsync = eval(Jscex.compile("async", function (request, response) {
     var uri = url.parse(request.url).pathname;
