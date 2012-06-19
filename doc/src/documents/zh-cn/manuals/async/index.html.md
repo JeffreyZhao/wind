@@ -7,7 +7,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 ## <a name="import-module"></a>引入Jscex异步模块
 
-如果您要使用Jscex异步模块，首先必须[引入基础模块](../base/)，之后再基于这个对象初始化异步模块。在开发环境里，可能您还需要[引入Jscex JIT编译器](../jit/)。
+如果您要使用Jscex异步模块，首先必须[引入核心组件](../core/)，之后再基于这个对象初始化异步模块。在开发环境里，您还需要[引入Jscex JIT编译器](../jit/)。
 
 ### <a name="import-module-nodejs"></a>Node.js
 
@@ -17,34 +17,35 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 然后便可以在脚本中引入并初始化这个模块：
 
-    var Jscex = require("jscex"); // 引入基础模块
-    require("jscex-jit").init(Jscex) // 引入并初始化Jscex JIT编译器
-    require("jscex-async").init(Jscex); // 引入并初始化Jscex异步模块
+    var Jscex = require("jscex"); // 引入核心组件
+    require("jscex-async").init(); // 引入并初始化Jscex异步模块
 
-如果您想使用的是正在开发中的版本，请下载[jscex-builderbase.js](../src/jscex-builderbase.js)以及[jscex-async.js](../src/jscex-async.js)文件。前者为[Jscex通用构造器的基础模块](../builderbase/)，在发布至npm时已经一起和异步模块一起打包在内。将这两个文件放在相同目录下，并使用加载本地文件模块的方式加载jscex-async模块：
+不过，如果您是在开发环境使用Jscex，还需要安装及引入[JIT编译器模块](../jit/)：
 
-    var Jscex = require("./jscex"); // 引入基础模块
-    require("./jscex-jit").init(Jscex) // 引入并初始化Jscex JIT编译器
-    require("./jscex-async").init(Jscex); // 引入并初始化Jscex异步模块
+    require("jscex-jit").init() // 引入并初始化Jscex JIT编译器
 
 此类方式也适合非[Node.js](http://nodejs.org/)，但实现[CommonJS规范](http://www.commonjs.org/)的JavaScript运行环境。
 
 ### <a name="import-module-browser"></a>浏览器
 
-在浏览器环境中使用Jscex异步模块，您同样需要[引入基础模块](../base/)。此时在根（即window对象）上会出现一个Jscex对象。在开发环境里还需要[加载Jscex JIT编译器](../jit/)，然后再引入[jscex-builderbase.js](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-builderbase.js)以及[jscex-async.js](https://github.com/JeffreyZhao/jscex/blob/master/src/jscex-async.js)文件即可：
+在浏览器环境中使用Jscex异步模块，您同样需要引入[核心组件](../core/)。此时在浏览器根（即window对象）上会出现一个Jscex对象，之后再依次引入[构造器基础](../builderbase/)及异步模块的jscex-async-x.y.z.js文件即可：
 
-    <!-- 基础模块 -->
-    <script src="jscex.js"></script>
+    <!-- 核心组件 -->
+    <script src="jscex-x.y.z.js"></script>
 
-    <!-- 解析器及JIT编译器模块 -->
+    <!-- 构造器基础模块 -->
+    <script src="jscex-builderbase-x.y.z.js"></script>
+    <!-- 异步模块 -->
+    <script src="jscex-async-x.y.z.js"></script>
+    
+至此，Jscex根对象已经包括了使用异步模块所需的所有成员。不过，如果您是在开发环境使用，还需要引入[语法解析器模块](../parser/)及[JIT编译器模块](../jit/)：
+    
+    <!-- 解析器模块 -->
     <script src="jscex-parser.js"></script>
+    <!-- JIT编译器模块 -->
     <script src="jscex-jit.js"></script>
-
-    <!-- 构造器基础及异步模块 -->
-    <script src="jscex-builderbase.js"></script>
-    <script src="jscex-async.js"></script>
-
-这两个文件会自动为根上的Jscex对象添加异步模块相关的成员，而这种方式也适合各类**没有**实现CommonJS规范的JavaScript运行环境。
+    
+由于后两者会显著增加加载体积，因此在生产环境中应该使用[预编译器]处理后并去除这两个模块。这种方式也适合各类**没有**实现CommonJS规范的JavaScript运行环境。
 
 ## <a name="define-async-method"></a>定义异步方法
 
@@ -419,8 +420,8 @@ CancellationToken的cancel方法便用于“取消”一个或一系列的异步
 似乎将已有的异步操作绑定为Task对象是十分耗时的工作，但事实上它的工作量并不一定由我们想象中那么大。这是因为在相同的环境，类库或是框架里，它们各种异步操作都具有相同的模式。例如在Node.js中，基本都是`path.exists`和`fs.readFile`这种模式下的异步操作。因此在实际开发过程中，我们不会为各个异步操作各实现一份绑定方法，而是使用[异步增强模块](./powerpack.html)里的辅助方法，例如：
 
     var Jscex = require("jscex-jit");
-    require("jscex-async").init(Jscex);
-    require("./jscex-async-powerpack").init(Jscex);
+    require("jscex-async").init();
+    require("./jscex-async-powerpack").init();
 
     var path = require("path"),
         fs = require("fs");

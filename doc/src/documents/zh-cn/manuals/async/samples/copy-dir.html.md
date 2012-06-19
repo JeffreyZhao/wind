@@ -158,9 +158,9 @@ Jscex对Node.js提供了直接的支持。本文将通过实现一个目录复�
 并为相关的方法创建Jscex绑定：
 
     var Jscex = require("../../src/jscex");
-    require("../../src/jscex-jit").init(Jscex);
-    require("../../src/jscex-async").init(Jscex);
-    require("../../src/jscex-async-powerpack").init(Jscex);
+    require("../../src/jscex-jit").init();
+    require("../../src/jscex-async").init();
+    require("../../src/jscex-async-powerpack").init();
 
     var Async = Jscex.Async;
     var Task = Async.Task;
