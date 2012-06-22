@@ -7,11 +7,11 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
 ## <a name="import-module"></a>引入Jscex异步模块
 
-如果您要使用Jscex异步模块，首先必须[引入核心组件](../core/)，之后再基于这个对象初始化异步模块。在开发环境里，您还需要[引入Jscex JIT编译器](../jit/)。
+如果您要使用Jscex异步模块，首先必须[引入核心组件](../core/)，之后再基于这个对象初始化异步模块。在开发环境里，您还需要引入[JIT编译器](../jit/)。
 
 ### <a name="import-module-nodejs"></a>Node.js
 
-如果您使用的是Node.js，可以直接使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装最新的jscex-async模块：
+如果您使用的是Node.js，可以直接使用[Node Package Manager](http://npmjs.org/)（即npm命令）安装最新的jscex-async包：
 
     npm install jscex-async
 
@@ -24,7 +24,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
 
     require("jscex-jit").init() // 引入并初始化Jscex JIT编译器
 
-此类方式也适合非[Node.js](http://nodejs.org/)，但实现[CommonJS规范](http://www.commonjs.org/)的JavaScript运行环境。
+此类方式也适合非[Node.js](http://nodejs.org/)，但实现了[CommonJS规范](http://www.commonjs.org/)的JavaScript运行环境。
 
 ### <a name="import-module-browser"></a>浏览器
 
@@ -45,7 +45,11 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
     <!-- JIT编译器模块 -->
     <script src="jscex-jit.js"></script>
     
-由于后两者会显著增加加载体积，因此在生产环境中应该使用[预编译器]处理后并去除这两个模块。这种方式也适合各类**没有**实现CommonJS规范的JavaScript运行环境。
+由于后两者会显著增加加载体积，因此在生产环境中应该使用[预编译器]处理后并去除这两个模块。这种方式也适合各类**没有**实现CommonJS等包加载规范的JavaScript运行环境。
+
+### <a name="import-module-others"></a>其他环境
+
+Jscex自动支持一些其他的包加载规范。假如当前JavaScript运行环境实现了这些规范，则Jscex会自动采用这些规范。详细信息请参考“[包引入](../importing.html)”相关内容。
 
 ## <a name="define-async-method"></a>定义异步方法
 
