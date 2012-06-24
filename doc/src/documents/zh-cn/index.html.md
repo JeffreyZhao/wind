@@ -1,5 +1,6 @@
 ---
 layout: main-zh-cn
+title: 首页
 ---
 
 <script src="/scripts/jscex-async.bundle.min.js"></script>

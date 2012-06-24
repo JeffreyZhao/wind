@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta charset="utf-8"/>
-<title>Jscex - 回归 JavaScript 的异步流程控制</title>
+<title><%= @document.title %> - Jscex - 回归 JavaScript 的异步流程控制</title>
 <link rel="stylesheet" href="http://jeffreyzhao.github.com/jscex/stylesheets/stylesheet.css" />
 <link rel="stylesheet" href="/styles/main.css" />
 <link rel="stylesheet" href="/styles/highlight-vs.css" />
