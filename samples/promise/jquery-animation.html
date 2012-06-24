@@ -12,12 +12,11 @@
     <script src="../../lib/jquery-1.7.2.js"></script>
 
     <script>
-    /*
         Jscex.Promise.create = function (fn) {
             var dfd = new $.Deferred();
             fn(dfd.resolve, dfd.reject);
             return dfd.promise();
-        }*/
+        }
         
         var oneRoundTripAsync = eval(Jscex.compile("promise", function () {
             $await($("#block").animate({ left: "200px" }, 1000).promise());
