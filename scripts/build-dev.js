@@ -19,7 +19,7 @@ var coreName = "jscex-" + Jscex.coreVersion + ".js"
 utils.copySync(path.join(srcDir, "jscex.js"), path.join(devDir, coreName));
 console.log(coreName + " generated.");
 
-var moduleList = [ "parser", "jit", "builderbase", "async", "async-powerpack" ];
+var moduleList = [ "parser", "jit", "builderbase", "async", "async-powerpack", "promise" ];
  
 _.each(moduleList, function (i, module) {
     var fullName = "jscex-" + module;

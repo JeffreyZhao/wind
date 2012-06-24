@@ -55,4 +55,4 @@ var buildAll = eval(Jscex.compile("async", function (modules) {
     }
 }));
 
-buildAll(["", "builderbase", "async", "async-powerpack"]).start();
+buildAll(["", "builderbase", "async", "async-powerpack", "promise"]).start();

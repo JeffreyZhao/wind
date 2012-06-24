@@ -165,7 +165,14 @@
     var loadModules = function (require, modules) {
         if (require) {
             _.each(modules, function (i, name) {
-                require("./jscex-" + name).init();
+                var m;
+                try {
+                    m = require("./jscex-" + name);
+                } catch (ex) {
+                    m = require("jscex-" + name);
+                }
+                
+                m.init();
             });
         } else {
             _.each(modules, function (i, m) {

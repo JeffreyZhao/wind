@@ -104,7 +104,7 @@ var buildAot = function () {
 
 buildOne(); // core
 
-var modules = [ "parser", "jit", "builderbase", "async", "async-powerpack" ];
+var modules = [ "parser", "jit", "builderbase", "async", "async-powerpack", "promise" ];
 _.each(modules, function (name) {
     buildOne(name);
 });
