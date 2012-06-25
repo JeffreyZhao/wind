@@ -3,11 +3,18 @@ layout: manual-zh-cn
 title: 异步模块
 ---
 
+## <a name="introduction"></a>简介
+
 Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持，因为其背后的理论，以及这种理论在C#，F#或是Scala中的实践，都是以异步编程为核心的。异步编程是各个平台都会遇到的问题，而Jscex便是将其他平台针对此类问题所做的探索，支持以及编程模式，引入到传统JavaScript开发过程中。
+
+### <a name="introduction-dependencies"></a>依赖
+
+* 动态依赖：无
+* 静态依赖：[构造器基础模块](../builderbase/)
 
 ## <a name="import-module"></a>引入Jscex异步模块
 
-如果您要使用Jscex异步模块，首先必须[引入核心组件](../core/)，之后再基于这个对象初始化异步模块。在开发环境里，您还需要引入[JIT编译器](../jit/)。
+如果您要使用Jscex异步模块，首先必须引入[核心组件](../core/)，之后再基于这个对象初始化异步模块。在开发环境里，您还需要引入[JIT编译器](../jit/)。
 
 ### <a name="import-module-nodejs"></a>Node.js
 
@@ -45,7 +52,7 @@ Jscex从诞生开始，便注定会在异步编程方面进行全方面的支持
     <!-- JIT编译器模块 -->
     <script src="jscex-jit.js"></script>
     
-由于后两者会显著增加加载体积，因此在生产环境中应该使用[预编译器]处理后并去除这两个模块。这种方式也适合各类**没有**实现CommonJS等包加载规范的JavaScript运行环境。
+由于后两者会显著增加加载体积，因此在生产环境中应该使用[预编译器](../aot/)处理后并去除这两个模块。这种方式也适合各类**没有**实现CommonJS等包加载规范的JavaScript运行环境。
 
 ### <a name="import-module-others"></a>其他环境
 

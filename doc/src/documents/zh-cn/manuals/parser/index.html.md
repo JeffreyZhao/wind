@@ -3,7 +3,14 @@ layout: manual-zh-cn
 title: 解析器模块
 ---
 
+## <a name="introduction"></a>简介
+
 Jscex解析器模块提供了Jscex编译器（如[JIT编译器](../jit/)和[预编译器](../aot/)）所需要的JavaScript语法解析功能，目前使用的是UglifyJS的语法解析器。该模块一般情况下只在开发环境中里使用。
+
+### <a name="introduction-dependencies"></a>依赖
+
+* 动态依赖：无
+* 静态依赖：无
 
 ## <a name="import-module"></a>引入Jscex解析器模块
 

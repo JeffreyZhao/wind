@@ -3,7 +3,14 @@ layout: manual-zh-cn
 title: 构造器基础模块
 ---
 
+## <a name="introduction"></a>简介
+
 Jscex构造器基础模块提供了Jscex各式构造器（如[异步模块](../jit/)中的异步构造器）所需的基本功能。理论上编写一个构造器不需要依赖该基础模块，但使用该基础模块中提供的功能，便可以在几十行代码里完成一个Jscex构造器。
+
+### <a name="introduction-dependencies"></a>依赖
+
+* 动态依赖：无
+* 静态依赖：无
 
 ## <a name="import-module"></a>引入Jscex构造器基础模块
 

@@ -3,7 +3,14 @@ layout: manual-zh-cn
 title: JIT编译器模块
 ---
 
-Jscex的JIT编译器提供了使用Jscex过程中所需的代码变换能力，能将一段带有绑定标志的普通JavaScript方法变为Monad形式。
+## <a name="introduction"></a>简介
+
+Jscex的JIT编译器提供了使用Jscex过程中所需的代码变换能力，能将一段带有绑定标志的普通JavaScript方法变为Monad形式，这便是Jscex最为核心的功能。
+
+### <a name="introduction-dependencies"></a>依赖
+
+* 动态依赖：无
+* 静态依赖：[解析器模块](../parser/)
 
 ## <a name="import-module"></a>引入Jscex编译器模块
 
