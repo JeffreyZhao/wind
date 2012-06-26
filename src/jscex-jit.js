@@ -1674,7 +1674,7 @@
         
         defineModule();
     } else if (isAmd) {
-        require("jscex", function (jscex) {
+        require(["jscex"], function (jscex) {
             Jscex = jscex;
             defineModule();
         });
