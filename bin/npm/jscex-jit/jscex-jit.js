@@ -199,7 +199,7 @@
         if (!compileMethod || compileMethod[0] != "dot" || compileMethod[2] != "compile") return false;
 
         var jscexName = compileMethod[1];
-        if (!jscexName || jscexName[0] != "name" || jscexName[1] != "Jscex") return false;
+        if (!jscexName || jscexName[0] != "name" || jscexName[1] != compile.rootName) return false;
 
         var builder = compileCall[2][0];
         if (!builder || builder[0] != "string") return false;
@@ -711,7 +711,7 @@
             this._codeLine("(function (" + params.join(", ") + ") {")._commentLine("function (" + params.join(", ") + ") {");
             this._bothIndentLevel(1);
 
-            this._codeIndents()._newLine("var " + this._builderVar + " = Jscex.builders[" + stringify(this._builderName) + "];");
+            this._codeIndents()._newLine("var " + this._builderVar + " = " + compile.rootName + ".builders[" + stringify(this._builderName) + "];");
 
             this._codeIndents()._newLine("return " + this._builderVar + ".Start(this,");
             this._codeIndentLevel(1);
@@ -1621,7 +1621,7 @@
     
     var compile = function (builderName, func, separateCodeAndComment) {
         var funcCode = func.toString();
-        var evalCode = "eval(Jscex.compile(" + stringify(builderName) + ", " + funcCode + "))"
+        var evalCode = "eval(" + compile.rootName + ".compile(" + stringify(builderName) + ", " + funcCode + "))"
         var evalCodeAst = Jscex.parse(evalCode);
 
         var codeWriter = new CodeWriter();
@@ -1646,6 +1646,8 @@
         }
     }
 
+    compile.rootName = "Jscex";
+
     // CommonJS
     var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
     // CommonJS AMD
@@ -1654,7 +1656,7 @@
     var defineModule = function () {
         Jscex.define({
             name: "jit",
-            version: "0.6.5",
+            version: "0.6.6",
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             autoloads: [ "parser" ],
@@ -1674,7 +1676,7 @@
         
         defineModule();
     } else if (isAmd) {
-        require("jscex", function (jscex) {
+        require(["jscex"], function (jscex) {
             Jscex = jscex;
             defineModule();
         });

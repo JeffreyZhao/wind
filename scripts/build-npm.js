@@ -87,12 +87,12 @@ var buildAot = function () {
     
     var packageData = _.clone(packageBase);
     packageData.name = "jscexc";
-    packageData.version = "0.1.5";
+    packageData.version = "0.2.0";
     packageData.main = "src/jscexc.js";
     packageData.description = "The AOT compiler for Jscex";
     packageData.dependencies = {
         "jscex": "~0.6.5",
-        "jscex-jit": "~0.6.5",
+        "jscex-jit": "~0.6.6",
         "optimist": "*"
     };
     
