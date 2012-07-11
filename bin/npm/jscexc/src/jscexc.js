@@ -7,6 +7,8 @@ require("jscex-jit").init(Jscex);
 
 Jscex.logger.level = Jscex.Logging.Level.WARN;
 
+var rootName;
+
 var extract = function (ast) {
 
     var results = [];
@@ -25,7 +27,7 @@ var extract = function (ast) {
     var visitCall = function (node) {
         try {
             var isEval = (node.children[0].value == "eval");
-            var isJscexCompile = (node.children[1].children[0].children[0].getSource() == "Jscex.compile");
+            var isJscexCompile = (node.children[1].children[0].children[0].getSource() == rootName + ".compile");
 
             if (isEval && isJscexCompile) {
 
@@ -81,6 +83,7 @@ var extract = function (ast) {
             case "PROPERTY_INIT":
             case "NEW_WITH_ARGS":
             case "UNARY_MINUS":
+            case "FOR_IN":
             case ".":
             case ">":
             case "<":
@@ -188,10 +191,13 @@ if (module.parent) { // command
 } else {
 
     var argv = require("optimist")
-        .usage("Usage: $0 --input <input_file> --output <output_file>")
+        .usage("Usage: $0 [options]")
         .demand("input").alias("input", "i").describe("input", "The input file")
         .demand("output").alias("output", "o").describe("output", "The output file")
+        .default("root-name", "Jscex").describe("root-name", "The name of root")
         .argv;
+
+    Jscex.compile.rootName = rootName = argv["root-name"];
 
     var fs = require("fs");
     var code = fs.readFileSync(argv.input, "utf-8");
