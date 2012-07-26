@@ -6,7 +6,7 @@
         "email": "jeffz@live.com"
     },
     "name": "jscexc",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "main": "src/jscexc.js",
     "description": "The AOT compiler for Jscex",
     "dependencies": {

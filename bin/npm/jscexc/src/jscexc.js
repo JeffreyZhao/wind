@@ -98,6 +98,8 @@ var extract = function (ast) {
             case "*":
             case "/":
             case "?":
+            case "&&":
+            case "||":
                 visitChildren(node);
                 break;
             case "IDENTIFIER":
