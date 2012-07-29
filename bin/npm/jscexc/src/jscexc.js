@@ -14,10 +14,6 @@ var extract = function (ast) {
     var results = [];
     var code = ast.getSource();
 
-    var visitChildren = function (node) {
-        visitAll(node.children);
-    }
-
     var visitAll = function (nodes) {
         for (var i = 0; i < nodes.length; i++) {
             visit(nodes[i]);
@@ -58,7 +54,7 @@ var extract = function (ast) {
             }
         } catch (ex) { }
 
-        visitChildren(node);
+        visitAll(node.children);
     }
 
     var getToken = function (node) {
@@ -83,7 +79,6 @@ var extract = function (ast) {
             case "PROPERTY_INIT":
             case "NEW_WITH_ARGS":
             case "UNARY_MINUS":
-            case "FOR_IN":
             case ".":
             case ">":
             case "<":
@@ -100,18 +95,27 @@ var extract = function (ast) {
             case "?":
             case "&&":
             case "||":
-                visitChildren(node);
+			case "|":
+			case "^":
+			case "&":
+			case "==":
+			case "!=":
+			case "===":
+			case "!==":
+			case "<<":
+			case ">>":
+			case "%":
+			case ">>>":
+			case "~":
+			case "UNARY_PLUS":
+			case "delete":
+			case "instanceof":
+			case "typeof":
+			case "void":
+                visitAll(node.children);
                 break;
             case "IDENTIFIER":
                 visit(node.initializer);
-                break;
-            case "NUMBER":
-            case "STRING":
-            case "break":
-            case "null":
-            case "true":
-            case "false":
-            case "this":
                 break;
             case ";":
                 visit(node.expression);
@@ -124,15 +128,34 @@ var extract = function (ast) {
                 visit(node.block);
                 break;
             case "if":
+				visit(node.condition);
                 visit(node.thenPart);
                 visit(node.elsePart);
                 break;
+			case "FOR_IN":
+				visit(node.object);
+				visit(node.iterator);
+				visit(node.varDecl);
+				visit(node.body);
+				break;
+			case "with":
+				visit(node.object);
+				visit(node.body);
+				break;
             case "for":
                 visit(node.setup);
                 visit(node.condition);
                 visit(node.update);
                 visit(node.body);
                 break;
+			case "switch":
+				visit(node.discriminant);
+				visitAll(node.cases);
+				break;
+			case "case":
+			case "default":
+				visit(node.statements);
+				break;
             case "while":
             case "do":
             case "function":
@@ -142,8 +165,19 @@ var extract = function (ast) {
                 visit(node.value);
                 break;
             case "throw":
-		visit(node.exception);
-		break;
+                visit(node.exception);
+                break;
+            case "NUMBER":
+            case "STRING":
+			case "REGEXP":
+            case "break":
+			case "continue":
+			case "debugger":
+            case "null":
+            case "true":
+            case "false":
+            case "this":
+                break;
             default:
                 throw new Error('"' + token + '" is not currently supported.');
         }
