@@ -3,9 +3,9 @@
     
     var Jscex;
     
-    var codeGenerator = (typeof eval("(function () {})") == "function") ?
+    var codeGenerator = eval("(function () {})") ?
         function (code) { return code; } :
-        function (code) { return "false || " + code; };
+        function (code) { return "0, " + code; };
         
     // support string type only.
     var stringify = (typeof JSON !== "undefined" && JSON.stringify) ?
