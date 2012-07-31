@@ -229,4 +229,50 @@ exports.setupTests = function (Jscex) {
             });
         });
     });
+
+    describe("Binding", function () {
+        
+        var test = function (timeout, args, callback) {
+            if (timeout < 0) {
+                callback.apply(this, args);
+            } else {
+                var _this = this;
+                setTimeout(function () {
+                    callback.apply(_this, args);
+                }, timeout);
+            }
+        }
+
+        var Binding = Jscex.Async.Binding;
+
+        describe("fromCallback", function () {
+
+            it("should return the only result when the callback is called directly", function () {
+                var testAsync = Binding.fromCallback(test);
+                testAsync(-1, [10]).start().result.should.equal(10);
+            });
+
+            it("should return the only result when the callback is called asynchronously", function (done) {
+                var testAsync = Binding.fromCallback(test);
+                testAsync(1, [10]).start().addEventListener("success", function () {
+                    this.result.should.equal(10);
+                    done();
+                });
+            });
+
+            it("should return the first result when the callback is called directly with multiple arguments", function () {
+                var testAsync = Binding.fromCallback(test);
+                testAsync(-1, [10, 20]).start().result.should.equal(10);
+            });
+
+            it("should return the first result when the callback is called asynchronously with moltiple arguments", function (done) {
+                var testAsync = Binding.fromCallback(test);
+                testAsync(1, [10, 20]).start().addEventListener("success", function () {
+                    this.result.should.equal(10);
+                    done();
+                });
+            });
+        });
+
+    });
 }
