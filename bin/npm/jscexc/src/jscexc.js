@@ -112,6 +112,7 @@ var extract = function (ast) {
 			case "instanceof":
 			case "typeof":
 			case "void":
+			case "in":
                 visitAll(node.children);
                 break;
             case "IDENTIFIER":
