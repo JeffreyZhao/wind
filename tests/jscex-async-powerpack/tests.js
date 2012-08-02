@@ -306,6 +306,46 @@ exports.setupTests = function (Jscex) {
                     done();
                 });
             });
+
+            it("should return the only result when the callback is called directly", function () {
+                var testAsync = Binding.fromStandard(test);
+                testAsync(-1, [undefined, 10]).start().result.should.equal(10);
+            });
+
+            it("should return the only result when the callback is called asynchronously", function (done) {
+                var testAsync = Binding.fromStandard(test);
+                testAsync(1, [undefined, 10]).start().addEventListener("success", function () {
+                    this.result.should.equal(10);
+                    done();
+                });
+            });
+
+            it("should return the first result when the callback is called directly with multiple arguments", function () {
+                var testAsync = Binding.fromStandard(test);
+                testAsync(-1, [undefined, 10, 20]).start().result.should.equal(10);
+            });
+
+            it("should return the first result when the callback is called asynchronously with multiple arguments", function (done) {
+                var testAsync = Binding.fromStandard(test);
+                testAsync(1, [undefined, 10, 20]).start().addEventListener("success", function () {
+                    this.result.should.equal(10);
+                    done();
+                });
+            });
+
+            it("should return the correct hash when the callback is called directly with multiple arguments", function () {
+                var testAsync = Binding.fromStandard(test, "a", "b");
+                testAsync(-1, [undefined, 10, 20, 30]).start().result.should.eql({ a: 10, b: 20 });
+            });
+
+            it("should return the correct hash when the callback is called asynchronously with multiple arguments", function (done) {
+                var testAsync = Binding.fromStandard(test, "a", "b");
+                testAsync(1, [undefined, 10, 20, 30]).start().addEventListener("success", function () {
+                    this.result.should.eql({ a: 10, b: 20 });
+                    done();
+                });
+            });
+
         });
     });
 }
