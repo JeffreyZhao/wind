@@ -1,6 +1,6 @@
 (function () {
 
-    var filter = eval(Jscex.compile("seq", function (iter, predicate) {
+    var filter = eval(Wind.compile("seq", function (iter, predicate) {
         while (iter.moveNext()) {
             if (predicate(iter.current)) {
                 $yield(iter.current);
@@ -8,19 +8,19 @@
         }
     }));
     
-    var map = eval(Jscex.compile("seq", function (iter, mapper) {
+    var map = eval(Wind.compile("seq", function (iter, mapper) {
         while (iter.moveNext()) {
             $yield(mapper(iter.current));
         }
     }));
 
-    var zip = eval(Jscex.compile("seq", function (iter1, iter2) {
+    var zip = eval(Wind.compile("seq", function (iter1, iter2) {
         while (iter1.moveNext() && iter2.moveNext()) {
             $yield([iter1.current, iter2.current]);
         }
     }));
 
-    var skip = eval(Jscex.compile("seq", function (iter, n) {
+    var skip = eval(Wind.compile("seq", function (iter, n) {
         for (var i = 0; i < n; i++) {
             if (!iter.moveNext()) {
                 return;
@@ -32,7 +32,7 @@
         }
     }));
 
-    var take = eval(Jscex.compile("seq", function (iter, n) {
+    var take = eval(Wind.compile("seq", function (iter, n) {
         var count = 0;
         while (iter.moveNext()) {
             if (count++ < n) {
@@ -49,7 +49,7 @@
         }
     };
 
-    var p = Jscex.Seq.Iterator.prototype;
+    var p = Wind.Seq.Iterator.prototype;
     p.filter = function (predicate) { return filter(this, predicate); }
     p.map = function (mapper) { return map(this, mapper); }
     p.zip = function (iter) { return zip(this, iter); }

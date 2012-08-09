@@ -3,17 +3,17 @@
 <head>
     <title>Include Samples</title>
     <meta http-equiv="X-UA-Compatible" content="IE=9" />
-    <script type="text/javascript" src="../../src/jscex.js"></script>
-    <script type="text/javascript" src="../../src/jscex-parser.js"></script>
-    <script type="text/javascript" src="../../src/jscex-jit.js"></script>
-    <script type="text/javascript" src="../../src/jscex-builderbase.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async-include.js"></script>
+    <script type="text/javascript" src="../../src/wind.js"></script>
+    <script type="text/javascript" src="../../src/wind-parser.js"></script>
+    <script type="text/javascript" src="../../src/wind-jit.js"></script>
+    <script type="text/javascript" src="../../src/wind-builderbase.js"></script>
+    <script type="text/javascript" src="../../src/wind-async.js"></script>
+    <script type="text/javascript" src="../../src/wind-async-include.js"></script>
 
     <script>
-        var x = eval(Jscex.compile("async", function() {
+        var x = eval(Wind.compile("async", function() {
             debugger;
-            $await(Jscex.Async.include("./my.js"));
+            $await(Wind.Async.include("./my.js"));
             console.log("b");
         }));
         x().start();

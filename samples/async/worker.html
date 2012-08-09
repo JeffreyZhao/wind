@@ -2,21 +2,21 @@
 <html>
  <head>
     <title>Worker example</title>
-    <script type="text/javascript" src="../../src/jscex.js"></script>
-    <script type="text/javascript" src="../../src/jscex-parser.js"></script>
-    <script type="text/javascript" src="../../src/jscex-jit.js"></script>
-    <script type="text/javascript" src="../../src/jscex-builderbase.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
+    <script type="text/javascript" src="../../src/wind.js"></script>
+    <script type="text/javascript" src="../../src/wind-parser.js"></script>
+    <script type="text/javascript" src="../../src/wind-jit.js"></script>
+    <script type="text/javascript" src="../../src/wind-builderbase.js"></script>
+    <script type="text/javascript" src="../../src/wind-async.js"></script>
+    <script type="text/javascript" src="../../src/wind-async-powerpack.js"></script>
  </head>
  <body>
   <script>
-        var x = eval(Jscex.compile("async", function() {
+        var x = eval(Wind.compile("async", function() {
             var worker = new Worker("worker.js");
 
             while(true) {
                 worker.postMessage(1);
-                var e = $await(Jscex.Async.onEvent(worker, "message"));
+                var e = $await(Wind.Async.onEvent(worker, "message"));
                 console.log(e.data);
             }
             console.log("b");

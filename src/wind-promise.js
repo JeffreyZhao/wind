@@ -1,16 +1,16 @@
 (function () {
     "use strict";
 
-    var Jscex;
+    var Wind;
     
     var defaultCreate = function () {
-        throw new Error('Please set "Jscex.Promise.create" to provide a factory method for creating a promise object.');
+        throw new Error('Please set "Wind.Promise.create" to provide a factory method for creating a promise object.');
     }
     
     var PromiseBuilder = function () { }
     PromiseBuilder.prototype = {
         Start: function (_this, task) {
-            return Jscex.Promise.create(function (complete, error) {
+            return Wind.Promise.create(function (complete, error) {
                 task.next(_this, function (type, value, target) {
                     if (type == "normal" || type == "return") {
                         complete(value);
@@ -49,7 +49,7 @@
     var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
 
     var defineModule = function () {
-        Jscex.define({
+        Wind.define({
             name: "promise",
             version: "0.6.5",
             exports: isCommonJS && module.exports,
@@ -57,43 +57,43 @@
             autoloads: [ "builderbase" ],
             dependencies: { builderbase: "~0.6.5" },
             init: function () {
-                Jscex._.each(Jscex.BuilderBase.prototype, function (m, fn) {
+                Wind._.each(Wind.BuilderBase.prototype, function (m, fn) {
                     PromiseBuilder.prototype[m] = fn;
                 });
             
-                if (!Jscex.Promise) {
-                    Jscex.Promise = {};
+                if (!Wind.Promise) {
+                    Wind.Promise = {};
                 }
                 
-                Jscex.Promise.create = defaultCreate;
+                Wind.Promise.create = defaultCreate;
             
-                Jscex.binders["promise"] = "$await";
-                Jscex.builders["promise"] = new PromiseBuilder();
+                Wind.binders["promise"] = "$await";
+                Wind.builders["promise"] = new PromiseBuilder();
             }
         });
     }
 
     if (isCommonJS) {
         try {
-            Jscex = require("./jscex");
+            Wind = require("./wind");
         } catch (ex) {
-            Jscex = require("jscex");
+            Wind = require("wind");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["jscex"], function (jscex) {
-            Jscex = jscex;
+        require(["wind"], function (wind) {
+            Wind = wind;
             defineModule();
         });
     } else {
         var Fn = Function, global = Fn('return this')();
 
-        if (!global.Jscex) {
-            throw new Error('Missing the root object, please load "jscex" component first.');
+        if (!global.Wind) {
+            throw new Error('Missing the root object, please load "wind" component first.');
         }
         
-        Jscex = global.Jscex;
+        Wind = global.Wind;
         defineModule();
     }
 })();

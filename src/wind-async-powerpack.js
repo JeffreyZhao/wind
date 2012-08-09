@@ -1,7 +1,7 @@
 (function () {
     "use strict";
 
-    var Jscex, Task, CanceledError, _;
+    var Wind, Task, CanceledError, _;
     
     var collectCallbackArgNames = function (args) {
         if (args.length <= 1) return null;
@@ -383,7 +383,7 @@
     var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
 
     var defineModule = function () {
-        Jscex.define({
+        Wind.define({
             name: "async-powerpack",
             version: "0.6.5",
             exports: isCommonJS && module.exports,
@@ -391,11 +391,11 @@
             dependencies: { async: "~0.6.5" },
             init: function () {
                 
-                _ = Jscex._;
-                Task = Jscex.Async.Task;
-                CanceledError = Jscex.Async.CanceledError;
+                _ = Wind._;
+                Task = Wind.Async.Task;
+                CanceledError = Wind.Async.CanceledError;
                 
-                var Async = Jscex.Async;
+                var Async = Wind.Async;
                 Async.sleep = sleep;
                 Async.onEvent = onEvent;
                 Async.AggregateError = AggregateError;
@@ -409,7 +409,7 @@
                 }
                 
                 var Binding = Async.Binding;
-                Async.Jscexify = Binding;
+                Async.Windify = Binding;
                 
                 Binding.fromStandard = fromStandard;
                 Binding.fromCallback = fromCallback;
@@ -419,24 +419,24 @@
 
     if (isCommonJS) {
         try {
-            Jscex = require("./jscex");
+            Wind = require("./wind");
         } catch (ex) {
-            Jscex = require("jscex");
+            Wind = require("wind");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["jscex"], function (jscex) {
-            Jscex = jscex;
+        require(["wind"], function (wind) {
+            Wind = wind;
             defineModule();
         });
     } else {
         var Fn = Function, global = Fn('return this')();
-        if (!global.Jscex) {
-            throw new Error('Missing the root object, please load "jscex" component first.');
+        if (!global.Wind) {
+            throw new Error('Missing the root object, please load "wind" component first.');
         }
         
-        Jscex = global.Jscex;
+        Wind = global.Wind;
         defineModule();
     }
 })();

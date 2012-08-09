@@ -4,12 +4,12 @@
     <title>Sorting Animations</title>
     <meta http-equiv="X-UA-Compatible" content="IE=9" />
     
-    <script type="text/javascript" src="../../src/jscex.js"></script>
-    <script type="text/javascript" src="../../src/jscex-parser.js"></script>
-    <script type="text/javascript" src="../../src/jscex-jit.js"></script>
-    <script type="text/javascript" src="../../src/jscex-builderbase.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
+    <script type="text/javascript" src="../../src/wind.js"></script>
+    <script type="text/javascript" src="../../src/wind-parser.js"></script>
+    <script type="text/javascript" src="../../src/wind-jit.js"></script>
+    <script type="text/javascript" src="../../src/wind-builderbase.js"></script>
+    <script type="text/javascript" src="../../src/wind-async.js"></script>
+    <script type="text/javascript" src="../../src/wind-async-powerpack.js"></script>
     
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.1.min.js"></script>
     
@@ -71,32 +71,32 @@
                 }
             }
             
-            var compareAsync = eval(Jscex.compile("async", function (x, y, comparing) {
+            var compareAsync = eval(Wind.compile("async", function (x, y, comparing) {
                 paint(array, null, comparing);
-                $await(Jscex.Async.sleep(compareCost));
+                $await(Wind.Async.sleep(compareCost));
                 return x - y;
             }));
 
-            var swapAsync = eval(Jscex.compile("async", function (array, i, j) {
+            var swapAsync = eval(Wind.compile("async", function (array, i, j) {
                 var t = array[i];
                 array[i] = array[j];
                 array[j] = t;
 
                 paint(array, [i, j]);
-                $await(Jscex.Async.sleep(updateCost));
+                $await(Wind.Async.sleep(updateCost));
             }));
             
-            var assignAsync = eval(Jscex.compile("async", function (array, i, value, updating) {
+            var assignAsync = eval(Wind.compile("async", function (array, i, value, updating) {
                 array[i] = value;
                 paint(array, updating);
-                $await(Jscex.Async.sleep(updateCost));
+                $await(Wind.Async.sleep(updateCost));
             }));
             
             var sortOperations = {
             
-                Quick: eval(Jscex.compile("async", function (array) {
+                Quick: eval(Wind.compile("async", function (array) {
             
-                    var partitionAsync = eval(Jscex.compile("async", function (begin, end) {
+                    var partitionAsync = eval(Wind.compile("async", function (begin, end) {
                         var i = begin;
                         var j = end;
                         var pivot = sharedTemp = array[Math.floor((begin + end) / 2)];
@@ -124,7 +124,7 @@
                         return i;
                     }));
                     
-                    var sortAsync = eval(Jscex.compile("async", function (begin, end) {
+                    var sortAsync = eval(Wind.compile("async", function (begin, end) {
                         var index = $await(partitionAsync(begin, end));
 
                         if (begin < index - 1) 
@@ -137,7 +137,7 @@
                     $await(sortAsync(0, array.length - 1));
                 })),
                 
-                Bubble: eval(Jscex.compile("async", function (array) {
+                Bubble: eval(Wind.compile("async", function (array) {
                     for (var i = 0; i < array.length; i++) {
                         for (var j = 0; j < array.length - i; j++) {
                             var r = $await(compareAsync(array[j], array[j + 1], [j, j + 1]));
@@ -146,7 +146,7 @@
                     }
                 })),
                 
-                Selection: eval(Jscex.compile("async", function (array) {
+                Selection: eval(Wind.compile("async", function (array) {
                     for(var j = 0; j < array.length - 1; j++) {
                         var mi = j;
                         for (var i = j + 1; i < array.length; i++) {
@@ -157,7 +157,7 @@
                     }            
                 })),
                 
-                Shell: eval(Jscex.compile("async", function (array) {
+                Shell: eval(Wind.compile("async", function (array) {
                     var gaps = [701, 301, 132, 57, 23, 10, 4, 1];
  
                     for (var gap = Math.floor(array.length / 2); gap > 0; gap = Math.floor(gap / 2)) {
@@ -189,7 +189,7 @@
             this.names = [];
             for (var m in sortOperations) this.names.push(m);
             
-            this.sortAsync = eval(Jscex.compile("async", function (name, array) {
+            this.sortAsync = eval(Wind.compile("async", function (name, array) {
                 paint(array);
                 $await(sortOperations[name](array));
                 paint(array);

@@ -1,6 +1,6 @@
-require("../../bin/jscex.async.min.js");
+require("../../bin/wind.async.min.js");
 
-var async = Jscex.builders["async"];
+var async = Wind.builders["async"];
 
 var makeTask = function (type, value) {
     return {

@@ -1,14 +1,14 @@
-var Jscex = require("../../src/jscex");
-require("../../src/jscex-jit").init(Jscex);
-require("../../src/jscex-async").init(Jscex);
-require("../../src/jscex-async-powerpack").init(Jscex);
+var Wind = require("../../src/wind");
+require("../../src/wind-jit").init(Wind);
+require("../../src/wind-async").init(Wind);
+require("../../src/wind-async-powerpack").init(Wind);
 
-var fib = eval(Jscex.compile("async", function () {
+var fib = eval(Wind.compile("async", function () {
 
-    $await(Jscex.Async.sleep(1000));
+    $await(Wind.Async.sleep(1000));
     console.log(0);
     
-    $await(Jscex.Async.sleep(1000));
+    $await(Wind.Async.sleep(1000));
     console.log(1);
 
     var a = 0, current = 1;
@@ -17,7 +17,7 @@ var fib = eval(Jscex.compile("async", function () {
         a = current;
         current = a + b;
 
-        $await(Jscex.Async.sleep(1000));
+        $await(Wind.Async.sleep(1000));
         console.log(current);
     }
 }));

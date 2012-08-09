@@ -37,15 +37,15 @@ http.createServer(function(request, response) {
 
 //////////////////////////////////////////////////////////
 
-var Jscex = require("../../src/jscex");
-require("../../src/jscex-jit").init(Jscex);
-require("../../src/jscex-async").init(Jscex);
-require("../../src/jscex-async-powerpack").init(Jscex);
+var Wind = require("../../src/wind");
+require("../../src/wind-jit").init(Wind);
+require("../../src/wind-async").init(Wind);
+require("../../src/wind-async-powerpack").init(Wind);
 
-path.existsAsync = Jscex.Async.Binding.fromCallback(path.exists);
-fs.readFileAsync = Jscex.Async.Binding.fromStandard(fs.readFile);
+path.existsAsync = Wind.Async.Binding.fromCallback(path.exists);
+fs.readFileAsync = Wind.Async.Binding.fromStandard(fs.readFile);
 
-var transferFileAsync = eval(Jscex.compile("async", function (request, response) {
+var transferFileAsync = eval(Wind.compile("async", function (request, response) {
     var uri = url.parse(request.url).pathname;
     var filepath = path.join(process.cwd(), uri);
 

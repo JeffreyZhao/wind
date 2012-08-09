@@ -1,7 +1,7 @@
 (function () {
     "use strict";
     
-    var Jscex;
+    var Wind;
     
     var codeGenerator = (typeof eval("(function () {})") == "function") ?
         function (code) { return code; } :
@@ -186,7 +186,7 @@
         }
     }
     
-    function isJscexPattern(ast) {
+    function isWindPattern(ast) {
         if (ast[0] != "call") return false;
         
         var evalName = ast[1];
@@ -198,8 +198,8 @@
         var compileMethod = compileCall[1];
         if (!compileMethod || compileMethod[0] != "dot" || compileMethod[2] != "compile") return false;
 
-        var jscexName = compileMethod[1];
-        if (!jscexName || jscexName[0] != "name" || jscexName[1] != compile.rootName) return false;
+        var windName = compileMethod[1];
+        if (!windName || windName[0] != "name" || windName[1] != compile.rootName) return false;
 
         var builder = compileCall[2][0];
         if (!builder || builder[0] != "string") return false;
@@ -210,24 +210,24 @@
         return true;
     }
     
-    function compileJscexPattern(ast, seedProvider, codeWriter, commentWriter) {
+    function compileWindPattern(ast, seedProvider, codeWriter, commentWriter) {
 
         var builderName = ast[2][0][2][0][1];
         var funcAst = ast[2][0][2][1];
 
-        var jscexTreeGenerator = new JscexTreeGenerator(builderName, seedProvider);
-        var jscexAst = jscexTreeGenerator.generate(funcAst);
+        var windTreeGenerator = new WindTreeGenerator(builderName, seedProvider);
+        var windAst = windTreeGenerator.generate(funcAst);
 
         commentWriter.write(builderName + " << ");
         var codeGenerator = new CodeGenerator(builderName, seedProvider, codeWriter, commentWriter);
-        codeGenerator.generate(funcAst[2], jscexAst);
+        codeGenerator.generate(funcAst[2], windAst);
     }
         
-    var JscexTreeGenerator = function (builderName, seedProvider) {
-        this._binder = Jscex.binders[builderName];
+    var WindTreeGenerator = function (builderName, seedProvider) {
+        this._binder = Wind.binders[builderName];
         this._seedProvider = seedProvider;
     }
-    JscexTreeGenerator.prototype = {
+    WindTreeGenerator.prototype = {
 
         generate: function (ast) {
 
@@ -474,7 +474,7 @@
                     forInStmt.argName = keyVar;
                     forInStmt.bodyStmts.unshift({
                         type: "raw",
-                        stmt: Jscex.parse(argName + " = " + keyVar + ";")[1][0]
+                        stmt: Wind.parse(argName + " = " + keyVar + ";")[1][0]
                     });
                 }
             
@@ -622,7 +622,7 @@
     
     var CodeGenerator = function (builderName, seedProvider, codeWriter, commentWriter) {
         this._builderName = builderName;
-        this._binder = Jscex.binders[builderName];
+        this._binder = Wind.binders[builderName];
         this._seedProvider = seedProvider;
         
         this._codeWriter = codeWriter;
@@ -704,7 +704,7 @@
             return this;
         },
     
-        generate: function (params, jscexAst) {
+        generate: function (params, windAst) {
             this._normalMode = false;
             this._builderVar = "_builder_$" + this._seedProvider.next("builderId");
             
@@ -718,7 +718,7 @@
 
             this._pos = { };
 
-            this._bothIndents()._visitJscex(jscexAst)._newLine();
+            this._bothIndents()._visitWind(windAst)._newLine();
             this._codeIndentLevel(-1);
 
             this._codeIndents()._newLine(");");
@@ -727,8 +727,8 @@
             this._bothIndents()._code("})")._comment("}");
         },
 
-        _visitJscex: function (ast) {
-            this._jscexVisitors[ast.type].call(this, ast);
+        _visitWind: function (ast) {
+            this._windVisitors[ast.type].call(this, ast);
             return this;
         },
 
@@ -745,16 +745,16 @@
             return this;
         },
 
-        _visitJscexStatements: function (statements) {
+        _visitWindStatements: function (statements) {
             for (var i = 0; i < statements.length; i++) {
                 var stmt = statements[i];
 
                 if (stmt.type == "raw" || stmt.type == "if" || stmt.type == "switch") {
-                    this._bothIndents()._visitJscex(stmt)._newLine();
+                    this._bothIndents()._visitWind(stmt)._newLine();
                 } else if (stmt.type == "delay") {
-                    this._visitJscexStatements(stmt.stmts);
+                    this._visitWindStatements(stmt.stmts);
                 } else {
-                    this._bothIndents()._code("return ")._visitJscex(stmt)._newLine(";");
+                    this._bothIndents()._code("return ")._visitWind(stmt)._newLine(";");
                 }
             }
         },
@@ -808,7 +808,7 @@
             this._bothIndents()._both("}");
         },
         
-        _jscexVisitors: {
+        _windVisitors: {
             "delay": function (ast) {
                 if (ast.stmts.length == 1) {
                     var subStmt = ast.stmts[0];
@@ -823,11 +823,11 @@
                         case "while":
                         case "do":
                         case "try":
-                            this._visitJscex(subStmt);
+                            this._visitWind(subStmt);
                             return;
                         case "return":
                             if (!subStmt.stmt[1]) {
-                                this._visitJscex(subStmt);
+                                this._visitWind(subStmt);
                                 return;
                             }
                     }
@@ -836,7 +836,7 @@
                 this._newLine(this._builderVar + ".Delay(function () {");
                 this._codeIndentLevel(1);
 
-                this._visitJscexStatements(ast.stmts);
+                this._visitWindStatements(ast.stmts);
                 this._codeIndentLevel(-1);
 
                 this._codeIndents()._code("})");
@@ -846,8 +846,8 @@
                 this._newLine(this._builderVar + ".Combine(");
                 this._codeIndentLevel(1);
 
-                this._bothIndents()._visitJscex(ast.first)._newLine(",");
-                this._bothIndents()._visitJscex(ast.second)._newLine();
+                this._bothIndents()._visitWind(ast.first)._newLine(",");
+                this._bothIndents()._visitWind(ast.second)._newLine();
                 this._codeIndentLevel(-1);
 
                 this._codeIndents()._code(")");
@@ -889,7 +889,7 @@
                 }
                 this._bothIndentLevel(1);
                 
-                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine();
+                this._bothIndents()._visitWind(ast.bodyStmt)._newLine();
                 this._bothIndentLevel(-1);
                 
                 this._bothIndents()._code(")")._comment("}");
@@ -903,7 +903,7 @@
                             ._commentLine(") {");
                 this._bothIndentLevel(1);
                 
-                this._visitJscexStatements(ast.bodyStmts);
+                this._visitWindStatements(ast.bodyStmts);
                 this._bothIndentLevel(-1);
                 
                 this._bothIndents()._code("})")._comment("}");
@@ -924,7 +924,7 @@
                 this._codeIndents()._newLine("},");
                 this._bothIndentLevel(1);
                 
-                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine();
+                this._bothIndents()._visitWind(ast.bodyStmt)._newLine();
                 this._bothIndentLevel(-1);
                 
                 this._bothIndents()._code(")")._comment("}");
@@ -934,7 +934,7 @@
                 this._codeLine(this._builderVar + ".Do(")._commentLine("do {");
                 this._bothIndentLevel(1);
                 
-                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine(",");
+                this._bothIndents()._visitWind(ast.bodyStmt)._newLine(",");
                 this._commentIndentLevel(-1);
                 
                 this._codeIndents()._newLine("function () {");
@@ -980,7 +980,7 @@
                             ._visitRaw(info.assignee)._bothLine(" = " + info.argName + ";");
                     }
 
-                    this._visitJscexStatements(ast.stmts);
+                    this._visitWindStatements(ast.stmts);
                 }
                 this._codeIndentLevel(-1);
 
@@ -996,7 +996,7 @@
                     this._both("if (")._visitRaw(stmt.cond)._bothLine(") {");
                     this._bothIndentLevel(1);
 
-                    this._visitJscexStatements(stmt.stmts);
+                    this._visitWindStatements(stmt.stmts);
                     this._bothIndentLevel(-1);
 
                     if (i < ast.conditionStmts.length - 1 || ast.elseStmts) {
@@ -1015,7 +1015,7 @@
                 }
 
                 if (ast.elseStmts) {
-                    this._visitJscexStatements(ast.elseStmts);
+                    this._visitWindStatements(ast.elseStmts);
                 } else {
                     this._codeIndents()
                         ._newLine("return " + this._builderVar + ".Normal();");
@@ -1051,7 +1051,7 @@
                     }
                     this._bothIndentLevel(1);
 
-                    this._visitJscexStatements(caseStmt.stmts);                    
+                    this._visitWindStatements(caseStmt.stmts);                    
                     this._bothIndentLevel(-1);
                 }
 
@@ -1062,7 +1062,7 @@
                 this._codeLine(this._builderVar + ".Try(")._commentLine("try {");
                 this._bothIndentLevel(1);
 
-                this._bothIndents()._visitJscex(ast.bodyStmt)._newLine(",");
+                this._bothIndents()._visitWind(ast.bodyStmt)._newLine(",");
                 this._commentIndentLevel(-1);
                 
                 if (ast.catchStmts) {
@@ -1071,7 +1071,7 @@
                         ._commentLine("} catch (" + ast.exVar + ") {");
                     this._bothIndentLevel(1);
 
-                    this._visitJscexStatements(ast.catchStmts);
+                    this._visitWindStatements(ast.catchStmts);
                     this._bothIndentLevel(-1);
 
                     this._bothIndents()._codeLine("},");
@@ -1086,7 +1086,7 @@
                 
                 if (ast.finallyStmt) {
                     this._commentIndentLevel(1);
-                    this._bothIndents()._visitJscex(ast.finallyStmt)._newLine();
+                    this._bothIndents()._visitWind(ast.finallyStmt)._newLine();
                     this._commentIndentLevel(-1);
                 } else {
                     this._codeIndents()._newLine("null");
@@ -1268,8 +1268,8 @@
 
             "call": function (ast) {
             
-                if (isJscexPattern(ast)) {
-                    compileJscexPattern(ast, this._seedProvider, this._codeWriter, this._commentWriter);
+                if (isWindPattern(ast)) {
+                    compileWindPattern(ast, this._seedProvider, this._codeWriter, this._commentWriter);
                 } else {
                     var caller = ast[1];
                 
@@ -1474,7 +1474,7 @@
                 if (this._pos.inLoop || this._pos.inSwitch) {
                     this._both("break;");
                 } else {
-                    this._code("return ")._visitJscex({ type: "break", stmt: ast })._code(";");
+                    this._code("return ")._visitWind({ type: "break", stmt: ast })._code(";");
                 }
             },
 
@@ -1482,7 +1482,7 @@
                 if (this._pos.inLoop) {
                     this._both("continue;");
                 } else {
-                    this._code("return ")._visitJscex({ type: "continue", stmt: ast })._code(";");
+                    this._code("return ")._visitWind({ type: "continue", stmt: ast })._code(";");
                 }
             },
 
@@ -1493,7 +1493,7 @@
                     if (value) this._both(" ")._visitRaw(value);
                     this._both(";");
                 } else {
-                    this._code("return ")._visitJscex({ type: "return", stmt: ast })._code(";");
+                    this._code("return ")._visitWind({ type: "return", stmt: ast })._code(";");
                 }
             },
 
@@ -1502,7 +1502,7 @@
                 if (pos.inTry || pos.inFunction) {
                     this._both("throw ")._visitRaw(ast[1])._both(";");
                 } else {
-                    this._code("return ")._visitJscex({ type: "throw", stmt: ast })._code(";");
+                    this._code("return ")._visitWind({ type: "throw", stmt: ast })._code(";");
                 }
             },
 
@@ -1622,14 +1622,14 @@
     var compile = function (builderName, func, separateCodeAndComment) {
         var funcCode = func.toString();
         var evalCode = "eval(" + compile.rootName + ".compile(" + stringify(builderName) + ", " + funcCode + "))"
-        var evalCodeAst = Jscex.parse(evalCode);
+        var evalCodeAst = Wind.parse(evalCode);
 
         var codeWriter = new CodeWriter();
         var commentWriter = new CodeWriter();
         
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
         var evalAst = evalCodeAst[1][0][1];
-        compileJscexPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
+        compileWindPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
  
         if (separateCodeAndComment) {
             return {
@@ -1640,13 +1640,13 @@
             };
         } else {
             var newCode = merge(commentWriter.lines, codeWriter.lines);
-            Jscex.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Jscexified: \r\n" + newCode + "\r\n");
+            Wind.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Windified: \r\n" + newCode + "\r\n");
             
             return codeGenerator(newCode);
         }
     }
 
-    compile.rootName = "Jscex";
+    compile.rootName = "Wind";
 
     // CommonJS
     var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
@@ -1654,7 +1654,7 @@
     var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
 
     var defineModule = function () {
-        Jscex.define({
+        Wind.define({
             name: "jit",
             version: "0.6.6",
             exports: isCommonJS && module.exports,
@@ -1662,31 +1662,31 @@
             autoloads: [ "parser" ],
             dependencies: { parser: "~0.6.5" },
             init: function () {
-                Jscex.compile = compile;
+                Wind.compile = compile;
             }
         });
     }
 
     if (isCommonJS) {
         try {
-            Jscex = require("./jscex");
+            Wind = require("./wind");
         } catch (ex) {
-            Jscex = require("jscex");
+            Wind = require("wind");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["jscex"], function (jscex) {
-            Jscex = jscex;
+        require(["wind"], function (wind) {
+            Wind = wind;
             defineModule();
         });
     } else {
         var Fn = Function, global = Fn('return this')();
-        if (!global.Jscex) {
-            throw new Error('Missing the root object, please load "jscex" component first.');
+        if (!global.Wind) {
+            throw new Error('Missing the root object, please load "wind" component first.');
         }
         
-        Jscex = global.Jscex;
+        Wind = global.Wind;
         defineModule();
     }
 })();

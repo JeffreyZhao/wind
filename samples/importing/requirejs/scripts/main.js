@@ -6,23 +6,23 @@
 
 requirejs.config({
     'paths': {
-        'jscex'                 : '../../../../src/jscex',
-        'jscex-async'           : '../../../../src/jscex-async',
-        'jscex-async-powerpack' : '../../../../src/jscex-async-powerpack',
-        'jscex-builderbase'     : '../../../../src/jscex-builderbase',
-        'jscex-jit'             : '../../../../src/jscex-jit',
-        'jscex-parser'          : '../../../../src/jscex-parser',
+        'wind'                 : '../../../../src/wind',
+        'wind-async'           : '../../../../src/wind-async',
+        'wind-async-powerpack' : '../../../../src/wind-async-powerpack',
+        'wind-builderbase'     : '../../../../src/wind-builderbase',
+        'wind-jit'             : '../../../../src/wind-jit',
+        'wind-parser'          : '../../../../src/wind-parser',
         
-        'jscex-all'             : './jscex-all'
+        'wind-all'             : './wind-all'
     }
 });
 
-require(["jscex-all"], function (Jscex) {
-    var printInfiniteAsync = eval(Jscex.compile("async", function () {
+require(["wind-all"], function (Wind) {
+    var printInfiniteAsync = eval(Wind.compile("async", function () {
         var i = 0;
         while (++i) {
             document.write(i + "<br />");
-            $await(Jscex.Async.sleep(1000));
+            $await(Wind.Async.sleep(1000));
         }
     }));
     

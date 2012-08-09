@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Unit Tests in AMD Environment: jscex</title>
+    <title>Unit Tests in AMD Environment: wind</title>
     
     <!-- Mocha -->
     <link rel="stylesheet" href="../../../lib/mocha/mocha.css" />
@@ -28,28 +28,28 @@
             delete define;
 
             loadScript("../../../lib/require.js", function () { 
-                loadScript("../../../src/jscex.js", done);
+                loadScript("../../../src/wind.js", done);
             });
         });
     
         describe("define (AMD)", function () {
             
             it("should support simple module", function (done) {
-                require(['jscex'], function (Jscex) {
-                    Jscex.coreVersion = "0.5.0";
+                require(['wind'], function (Wind) {
+                    Wind.coreVersion = "0.5.0";
                     var initTimes = 0;
                     
-                    Jscex.define({
+                    Wind.define({
                         name: "test",
                         version: "0.5.0",
                         coreDependency: "~0.5.0",
                         init: function () {
                             initTimes++;
-                            Jscex.hello = "world";
+                            Wind.hello = "world";
                         }
                     });
                     
-                    require(["jscex-test"], function (test) {
+                    require(["wind-test"], function (test) {
                         initTimes.should.equal(0);
                         test.name.should.equal("test");
                         test.version.should.equal("0.5.0");
@@ -59,10 +59,10 @@
                         test.init();
                         test.init();
                         
-                        Jscex.hello.should.equal("world");
+                        Wind.hello.should.equal("world");
                         initTimes.should.equal(1);
                         
-                        Jscex.modules["test"].should.eql({
+                        Wind.modules["test"].should.eql({
                             name: "test",
                             version: "0.5.0",
                             coreDependency: "~0.5.0"
@@ -74,18 +74,18 @@
             });
 
             it("should support complicated module", function (done) {
-                require(['jscex'], function (Jscex) {
+                require(['wind'], function (Wind) {
                     var loaded = [];
-                    define("jscex-m0", function () { return { init: function () { loaded.push("m0"); } }; });
-                    define("jscex-m1", function () { return { init: function () { loaded.push("m1"); } }; });
+                    define("wind-m0", function () { return { init: function () { loaded.push("m0"); } }; });
+                    define("wind-m1", function () { return { init: function () { loaded.push("m1"); } }; });
        
-                    Jscex.coreVersion = "0.5.0";
-                    Jscex.modules["d0"] = { version: "0.1.0" };
-                    Jscex.modules["d1"] = { version: "0.2.5" };
+                    Wind.coreVersion = "0.5.0";
+                    Wind.modules["d0"] = { version: "0.1.0" };
+                    Wind.modules["d1"] = { version: "0.2.5" };
                     
                     var initTimes = 0;
                     
-                    Jscex.define({
+                    Wind.define({
                         name: "test",
                         version: "0.8.0",
                         autoloads: ["m0", "m1"],
@@ -93,11 +93,11 @@
                         dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" },
                         init: function () {
                             initTimes++;
-                            Jscex.hello = "world";
+                            Wind.hello = "world";
                         }
                     });
                     
-                    require(["jscex-test"], function (test) {
+                    require(["wind-test"], function (test) {
                         initTimes.should.equal(0);
                         loaded.should.be.empty;
         
@@ -114,8 +114,8 @@
                         loaded.should.eql(["m0", "m1"]);
                         initTimes.should.equal(1);
                         
-                        Jscex.hello.should.equal("world");
-                        Jscex.modules["test"].should.eql({
+                        Wind.hello.should.equal("world");
+                        Wind.modules["test"].should.eql({
                             name: "test",
                             version: "0.8.0",
                             autoloads: [ "m0", "m1" ],
@@ -129,19 +129,19 @@
             });
 
             it("should throw if module required an invalid core version", function (done) {
-                require(['jscex'], function (Jscex) {
-                    Jscex.coreVersion = "0.5.0";
+                require(['wind'], function (Wind) {
+                    Wind.coreVersion = "0.5.0";
                     
                     var initTimes = 0;
                     
-                    Jscex.define({
+                    Wind.define({
                         name: "test",
                         version: "0.9.0",
                         coreDependency: "~0.6.0",
                         init: function () { initTimes++; }
                     });
                     
-                    require(["jscex-test"], function (test) {
+                    require(["wind-test"], function (test) {
                         (function () {
                             test.init();
                         }).should.throw(/expected.*actual/);
@@ -154,12 +154,12 @@
             });
 
             it("should throw if required module is not loaded", function (done) {
-                require(['jscex'], function (Jscex) {
-                    Jscex.coreVersion = "0.5.0";
+                require(['wind'], function (Wind) {
+                    Wind.coreVersion = "0.5.0";
                     
                     var initTimes = 0;
                     
-                    Jscex.define({
+                    Wind.define({
                         name: "test",
                         version: "0.9.0",
                         coreDependency: "~0.5.0",
@@ -167,7 +167,7 @@
                         init: function () { initTimes++; }
                     });
                     
-                    require(["jscex-test"], function (test) {
+                    require(["wind-test"], function (test) {
                         (function () {
                             test.init();
                         }).should.throw(/required.*expected/);
@@ -180,13 +180,13 @@
             });
             
             it("should throw if the required module is loaded but has invalid version", function (done) {
-                require(['jscex'], function (Jscex) {
-                    Jscex.coreVersion = "0.5.0";
-                    Jscex.modules["d0"] = { version: "0.2.0" };
+                require(['wind'], function (Wind) {
+                    Wind.coreVersion = "0.5.0";
+                    Wind.modules["d0"] = { version: "0.2.0" };
                     
                     var initTimes = 0;
                     
-                    Jscex.define({
+                    Wind.define({
                         name: "test",
                         version: "0.9.0",
                         coreDependency: "~0.5.0",
@@ -194,7 +194,7 @@
                         init: function () { initTimes++; }
                     });
                     
-                    require(["jscex-test"], function (test) {
+                    require(["wind-test"], function (test) {
                         (function () {
                             test.init();
                         }).should.throw(/expected.*actual/);

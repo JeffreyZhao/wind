@@ -1,7 +1,7 @@
 (function () {
     "use strict";
     
-    var Jscex;
+    var Wind;
     
     var _ = (function () {
     
@@ -167,9 +167,9 @@
             _.each(modules, function (i, name) {
                 var m;
                 try {
-                    m = require("./jscex-" + name);
+                    m = require("./wind-" + name);
                 } catch (ex) {
-                    m = require("jscex-" + name);
+                    m = require("wind-" + name);
                 }
                 
                 m.init();
@@ -182,9 +182,9 @@
     }
 
     var initModule = function (options) {
-        var existingModule = Jscex.modules[options.name];
+        var existingModule = Wind.modules[options.name];
         if (existingModule && existingModule.version != options.version) {
-            Jscex.logger.warn(_.format(
+            Wind.logger.warn(_.format(
                 'The module "{0}" with version "{1}" has already been initialized, skip version "{2}".',
                 options.name,
                 existingModule.version,
@@ -196,20 +196,20 @@
         
         var module = {};
         exportBasicOptions(module, options);
-        Jscex.modules[options.name] = module;
+        Wind.modules[options.name] = module;
     }
     
     var checkDependencies = function (options) {
-        if (options.coreDependency && !_.testVersion(options.coreDependency, Jscex.coreVersion)) {
+        if (options.coreDependency && !_.testVersion(options.coreDependency, Wind.coreVersion)) {
             throw new Error(_.format(
                 'Version of core component mismatched, expected: "{0}", actual: "{1}".',
                 options.coreDependency,
-                Jscex.coreVersion));
+                Wind.coreVersion));
             
         }
         
         _.each(options.dependencies || [], function (name, expectedVersion) {
-            var module = Jscex.modules[name];
+            var module = Wind.modules[name];
             if (!module) {
                 throw new Error(_.format(
                     'Missing required module: "{0}" (expected version: "{1}").',
@@ -259,9 +259,9 @@
                 initModule(options);
             });
         } else if (isAmd) {
-            var dependencies = _.map(autoloads, function (name) { return "jscex-" + name; });
+            var dependencies = _.map(autoloads, function (name) { return "wind-" + name; });
             
-            define("jscex-" + options.name, dependencies, function () {
+            define("wind-" + options.name, dependencies, function () {
                 var loadedModules = arguments;
                 
                 var exports = {};
@@ -279,39 +279,39 @@
     }
 
     var init = function () {
-        Jscex.coreVersion = "0.6.5";
+        Wind.coreVersion = "0.6.5";
         
-        Jscex.logger = new Logger();
-        Jscex.Logging = {
+        Wind.logger = new Logger();
+        Wind.Logging = {
             Logger: Logger,
             Level: Level
         };
 
-        Jscex._ = _;
-        Jscex.modules = { };
-        Jscex.binders = { };
-        Jscex.builders = { };
-        Jscex.define = defineModule;
+        Wind._ = _;
+        Wind.modules = { };
+        Wind.binders = { };
+        Wind.builders = { };
+        Wind.define = defineModule;
     };
     
     if (isCommonJS) {
-        Jscex = module.exports;
+        Wind = module.exports;
         init();
     } else if (isAmd) {
-        define("jscex", function () {
-            Jscex = { };
+        define("wind", function () {
+            Wind = { };
             init();
-            return Jscex;
+            return Wind;
         });
     } else {
         // Get the global object.
         var Fn = Function, global = Fn('return this')();
     
-        if (global.Jscex) {
-            throw new Error("There's already a Jscex root here, please load the component only once.");
+        if (global.Wind) {
+            throw new Error("There's already a Wind root here, please load the component only once.");
         }
         
-        Jscex = global.Jscex = { };
+        Wind = global.Wind = { };
         init();
     }
 })();

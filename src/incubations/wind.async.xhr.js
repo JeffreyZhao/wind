@@ -17,5 +17,5 @@ XMLHttpRequest.prototype.receiveAsync = function () {
         }
     };
 
-    return new Jscex.Async.Task(delegate);
+    return new Wind.Async.Task(delegate);
 }

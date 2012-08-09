@@ -1,29 +1,29 @@
 <!doctype html>
 <html>
 <head>
-    <title>jQuery Animation - Jscex Sample</title>
+    <title>jQuery Animation - Wind Sample</title>
 
-    <script src="../../src/jscex.js"></script>
-    <script src="../../src/jscex-parser.js"></script>
-    <script src="../../src/jscex-jit.js"></script>
-    <script src="../../src/jscex-builderbase.js"></script>
-    <script src="../../src/jscex-promise.js"></script>
+    <script src="../../src/wind.js"></script>
+    <script src="../../src/wind-parser.js"></script>
+    <script src="../../src/wind-jit.js"></script>
+    <script src="../../src/wind-builderbase.js"></script>
+    <script src="../../src/wind-promise.js"></script>
 
     <script src="../../lib/jquery-1.7.2.js"></script>
 
     <script>
-        Jscex.Promise.create = function (fn) {
+        Wind.Promise.create = function (fn) {
             var dfd = new $.Deferred();
             fn(dfd.resolve, dfd.reject);
             return dfd.promise();
         }
         
-        var oneRoundTripAsync = eval(Jscex.compile("promise", function () {
+        var oneRoundTripAsync = eval(Wind.compile("promise", function () {
             $await($("#block").animate({ left: "200px" }, 1000).promise());
             $await($("#block").animate({ left: "0px" }, 1000).promise());
         }));
         
-        var roundTripsAsync = eval(Jscex.compile("promise", function (n) {
+        var roundTripsAsync = eval(Wind.compile("promise", function (n) {
             for (var i = 0; i < n; i++) {
                 $await(oneRoundTripAsync());
             }

@@ -1,7 +1,7 @@
 (function () {
     "use strict";
 
-    var Jscex;
+    var Wind;
 
     var CanceledErrorTypeID = "670a1076-712b-4edd-9b70-64b152fe1cd9";
     var isCanceledError = function (ex) { return ex._typeId == CanceledErrorTypeID; }
@@ -15,8 +15,8 @@
     var Fn = Function, global = Fn('return this')();
     
     // seed defined in global
-    if (global.__jscex__async__taskIdSeed === undefined) {
-        global.__jscex__async__taskIdSeed = 0;
+    if (global.__wind__async__taskIdSeed === undefined) {
+        global.__wind__async__taskIdSeed = 0;
     }
 
     var isTask = function (t) {
@@ -62,7 +62,7 @@
                 try {
                     handlers[i]();
                 } catch (ex) {
-                    Jscex.logger.warn("[WARNING] Cancellation handler threw an error: " + ex);
+                    Wind.logger.warn("[WARNING] Cancellation handler threw an error: " + ex);
                 }
             }
         },
@@ -75,7 +75,7 @@
     };
     
     var Task = function (delegate) {
-        this.id = (++__jscex__async__taskIdSeed);
+        this.id = (++__wind__async__taskIdSeed);
         this._delegate = delegate;
         this._listeners = { };
         this.status = "ready";
@@ -125,7 +125,7 @@
             this._notify("complete", listeners["complete"]);
             
             if (this.error && !listeners["failure"] && !listeners["complete"]) {
-                Jscex.logger.warn("[WARNING] An unhandled error occurred: " + this.error);
+                Wind.logger.warn("[WARNING] An unhandled error occurred: " + this.error);
             }
         },
 
@@ -230,7 +230,7 @@
     var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
 
     var defineModule = function () {
-        Jscex.define({
+        Wind.define({
             name: "async",
             version: "0.6.5",
             exports: isCommonJS && module.exports,
@@ -239,45 +239,45 @@
             dependencies: { builderbase: "~0.6.5" },
             init: function () {
                 
-                Jscex._.each(Jscex.BuilderBase.prototype, function (m, fn) {
+                Wind._.each(Wind.BuilderBase.prototype, function (m, fn) {
                     AsyncBuilder.prototype[m] = fn;
                 });
             
-                if (!Jscex.Async) {
-                    Jscex.Async = {};
+                if (!Wind.Async) {
+                    Wind.Async = {};
                 }
                 
-                var Async = Jscex.Async;
+                var Async = Wind.Async;
                 Async.CancellationToken = CancellationToken;
                 Async.CanceledError = CanceledError;
                 Async.Task = Task;
                 Async.AsyncBuilder = AsyncBuilder;
             
-                Jscex.binders["async"] = "$await";
-                Jscex.builders["async"] = new AsyncBuilder();
+                Wind.binders["async"] = "$await";
+                Wind.builders["async"] = new AsyncBuilder();
             }
         });
     }
 
     if (isCommonJS) {
         try {
-            Jscex = require("./jscex");
+            Wind = require("./wind");
         } catch (ex) {
-            Jscex = require("jscex");
+            Wind = require("wind");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["jscex"], function (jscex) {
-            Jscex = jscex;
+        require(["wind"], function (wind) {
+            Wind = wind;
             defineModule();
         });
     } else {
-        if (!global.Jscex) {
-            throw new Error('Missing the root object, please load "jscex" component first.');
+        if (!global.Wind) {
+            throw new Error('Missing the root object, please load "wind" component first.');
         }
         
-        Jscex = global.Jscex;
+        Wind = global.Wind;
         defineModule();
     }
 })();

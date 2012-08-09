@@ -3,14 +3,14 @@ var path = require("path");
 var util = require("util");
 var rl = require("readline").createInterface(process.stdin, process.stdout);
 
-var Jscex = require("../../src/jscex");
-require("../../src/jscex-jit").init(Jscex);
-require("../../src/jscex-async").init(Jscex);
-require("../../src/jscex-async-powerpack").init(Jscex);
+var Wind = require("../../src/wind");
+require("../../src/wind-jit").init(Wind);
+require("../../src/wind-async").init(Wind);
+require("../../src/wind-async-powerpack").init(Wind);
 
-Jscex.logger.level = Jscex.Logging.Level.WARN;
+Wind.logger.level = Wind.Logging.Level.WARN;
 
-var Async = Jscex.Async;
+var Async = Wind.Async;
 var Task = Async.Task;
 var Binding = Async.Binding;
 
@@ -32,7 +32,7 @@ fs.openAsync = Binding.fromStandard(fs.open);
 fs.readAsync = Binding.fromStandard(fs.read);
 fs.writeAsync = Binding.fromStandard(fs.write);
 
-var copyFileByLoopAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
+var copyFileByLoopAsync = eval(Wind.compile("async", function (srcFile, targetFile) {
     var fdIn = $await(fs.openAsync(srcFile, "r"));
     var fdOut = $await(fs.openAsync(targetFile, "w"));
 
@@ -51,13 +51,13 @@ var copyFileByLoopAsync = eval(Jscex.compile("async", function (srcFile, targetF
     }
 }));
 
-var copyFileByPumpAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
+var copyFileByPumpAsync = eval(Wind.compile("async", function (srcFile, targetFile) {
     var streamIn = fs.createReadStream(srcFile);
     var streamOut = fs.createWriteStream(targetFile);
     $await(util.pumpAsync(streamIn, streamOut));
 }));
 
-var copyFileByPipeAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
+var copyFileByPipeAsync = eval(Wind.compile("async", function (srcFile, targetFile) {
     var streamIn = fs.createReadStream(srcFile);
     var streamOut = fs.createWriteStream(targetFile);
     streamIn.pipe(streamOut);
@@ -73,7 +73,7 @@ var copyFileByPipeAsync = eval(Jscex.compile("async", function (srcFile, targetF
     }
 }));
 
-var copyFileAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
+var copyFileAsync = eval(Wind.compile("async", function (srcFile, targetFile) {
 
     var exists = $await(path.existsAsync(targetFile));
     if (exists) {
@@ -101,7 +101,7 @@ var copyFileAsync = eval(Jscex.compile("async", function (srcFile, targetFile) {
 
 }));
 
-var copyDirAsync = eval(Jscex.compile("async", function (srcDir, targetDir) {
+var copyDirAsync = eval(Wind.compile("async", function (srcDir, targetDir) {
 
     var exists = $await(path.existsAsync(targetDir));
     if (!exists) {

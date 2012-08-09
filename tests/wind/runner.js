@@ -1,5 +1,5 @@
 "use strict";
 
-var Jscex = require("../../src/jscex");
+var Wind = require("../../src/wind");
 require("chai").should();
-require("./tests").setupTests(Jscex);
+require("./tests").setupTests(Wind);

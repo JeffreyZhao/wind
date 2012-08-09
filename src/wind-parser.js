@@ -1310,41 +1310,41 @@ var isCommonJS = !!(typeof require === "function" && typeof module !== "undefine
 // CommonJS AMD
 var isAmd = !!(typeof require === "function" && typeof define === "function" && define.amd);
 
-var Jscex;
+var Wind;
 
 var defineModule = function () {
-    Jscex.define({
+    Wind.define({
         name: "parser",
         version: "0.6.5",
         exports: isCommonJS && module.exports,
         require: isCommonJS && require,
         coreDependency: "~0.6.5",
         init: function () {
-            Jscex.parse = parse;
+            Wind.parse = parse;
         }
     });
 }
 
 if (isCommonJS) {
     try {
-        Jscex = require("./jscex");
+        Wind = require("./wind");
     } catch (ex) {
-        Jscex = require("jscex");
+        Wind = require("wind");
     }
     
     defineModule();
 } else if (isAmd) {
-    require(["jscex"], function (jscex) {
-        Jscex = jscex;
+    require(["wind"], function (wind) {
+        Wind = wind;
         defineModule();
     });
 } else {
     var Fn = Function, global = Fn('return this')();
-    if (!global.Jscex) {
-        throw new Error('Missing the root object, please load "jscex" component first.');
+    if (!global.Wind) {
+        throw new Error('Missing the root object, please load "wind" component first.');
     }
     
-    Jscex = global.Jscex;
+    Wind = global.Wind;
     defineModule();
 }
 

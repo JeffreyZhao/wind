@@ -2,10 +2,10 @@ require("../lib/narcissus-parser");
 
 module.paths.unshift(__dirname);
 
-var Jscex = require("jscex");
-require("jscex-jit").init(Jscex);
+var Wind = require("wind");
+require("wind-jit").init(Wind);
 
-Jscex.logger.level = Jscex.Logging.Level.WARN;
+Wind.logger.level = Wind.Logging.Level.WARN;
 
 var rootName;
 
@@ -23,16 +23,16 @@ var extract = function (ast) {
     var visitCall = function (node) {
         try {
             var isEval = (node.children[0].value == "eval");
-            var isJscexCompile = (node.children[1].children[0].children[0].getSource() == rootName + ".compile");
+            var isWindCompile = (node.children[1].children[0].children[0].getSource() == rootName + ".compile");
 
-            if (isEval && isJscexCompile) {
+            if (isEval && isWindCompile) {
 
                 /**
                  * Now "node.start" points to the first charactor of the "eval" method call,
                  * but "node.end" points to the next charactor of the function to compile
                  * rather than the end of "eval" calls, like this:
                  *
-                 * var abc = eval(Jscex.compile("xyz", function (args) { ... } )  );
+                 * var abc = eval(Wind.compile("xyz", function (args) { ... } )  );
                  *           ^                                                ^
                  *       node.start                                       node.end
                  *
@@ -195,7 +195,7 @@ function generateCode(inputCode, results) {
 
     for (var i = 0; i < results.length; i++) {
         var item = results[i];
-        var compiledCode = Jscex.compile(item.builderName, item.funcCode);
+        var compiledCode = Wind.compile(item.builderName, item.funcCode);
         codeParts.push(inputCode.substring(lastIndex, item.start));
         codeParts.push(compiledCode);
         lastIndex = item.end + 1;
@@ -211,15 +211,15 @@ function generateCode(inputCode, results) {
 var compile = function (code, binders) {
     binders = binders || { "async": "$await", "seq": "$yield" };
     
-    var oldBinders = Jscex.binders;
-    Jscex.binders = binders;
+    var oldBinders = Wind.binders;
+    Wind.binders = binders;
     
     try {
         var codeAst = Narcissus.parser.parse(code);
         var results = extract(codeAst);
         return generateCode(codeAst.getSource(), results);
     } finally {
-        Jscex.binders = oldBinders;
+        Wind.binders = oldBinders;
     }
 }
 
@@ -231,10 +231,10 @@ if (module.parent) { // command
         .usage("Usage: $0 [options]")
         .demand("input").alias("input", "i").describe("input", "The input file")
         .demand("output").alias("output", "o").describe("output", "The output file")
-        .default("root-name", "Jscex").describe("root-name", "The name of root")
+        .default("root-name", "Wind").describe("root-name", "The name of root")
         .argv;
 
-    Jscex.compile.rootName = rootName = argv["root-name"];
+    Wind.compile.rootName = rootName = argv["root-name"];
 
     var fs = require("fs");
     var code = fs.readFileSync(argv.input, "utf-8");

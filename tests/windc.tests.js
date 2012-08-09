@@ -1,6 +1,6 @@
 "use strict";
 
-var jscexc = require("../src/jscexc");
+var windc = require("../src/windc");
 
 require("should");
 
@@ -9,12 +9,12 @@ describe("simple test", function () {
     it("should work", function () {
 
         var f = function () {
-            eval(Jscex.compile("async", function () {
-                $await(Jscex.Async.sleep(1000));
+            eval(Wind.compile("async", function () {
+                $await(Wind.Async.sleep(1000));
             }));
         }
     
-        var newCode = jscexc.compile("var f = " + f.toString());
+        var newCode = windc.compile("var f = " + f.toString());
         newCode.match(/\$await/g).length.should.equal(1);
     });
 

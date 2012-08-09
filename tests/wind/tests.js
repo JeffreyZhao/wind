@@ -2,11 +2,11 @@
 
 var exports = (typeof window === "undefined") ? module.exports : window;
 
-exports.setupTests = function (Jscex) {
+exports.setupTests = function (Wind) {
 
     describe("underscore", function () {
 
-        var _ = Jscex._;
+        var _ = Wind._;
 
         describe("isArray", function () {
         

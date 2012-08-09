@@ -6,7 +6,7 @@
         }
         
         if (!root.modules["async"]) {
-            throw new Error('Missing essential components, please initialize "jscex-async" module first.');
+            throw new Error('Missing essential components, please initialize "wind-async" module first.');
         }
         
 
@@ -46,18 +46,18 @@
     if (isCommonJS) {
         module.exports.init = init;
     } else if (isWrapping) {
-        define("jscex-async-include", ["jscex-async"], function (require, exports, module) {
+        define("wind-async-include", ["wind-async"], function (require, exports, module) {
             module.exports.init = init;
         });
     } else if (isAmd) {
-        define("jscex-async-include", ["jscex-async"], function () {
+        define("wind-async-include", ["wind-async"], function () {
             return { init: init };
         });
     } else {
-        if (typeof Jscex === "undefined") {
-            throw new Error('Missing the root object, please load "jscex" module first.');
+        if (typeof Wind === "undefined") {
+            throw new Error('Missing the root object, please load "wind" module first.');
         }
     
-        init(Jscex);
+        init(Wind);
     }
 })();

@@ -1,15 +1,15 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-    <title>Jscex Bullet</title>
+    <title>Wind Bullet</title>
     <meta http-equiv="X-UA-Compatible" content="IE=9" />
 
-    <script type="text/javascript" src="../../src/jscex.js"></script>
-    <script type="text/javascript" src="../../src/jscex-parser.js"></script>
-    <script type="text/javascript" src="../../src/jscex-jit.js"></script>
-    <script type="text/javascript" src="../../src/jscex-builderbase.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async.js"></script>
-    <script type="text/javascript" src="../../src/jscex-async-powerpack.js"></script>
+    <script type="text/javascript" src="../../src/wind.js"></script>
+    <script type="text/javascript" src="../../src/wind-parser.js"></script>
+    <script type="text/javascript" src="../../src/wind-jit.js"></script>
+    <script type="text/javascript" src="../../src/wind-builderbase.js"></script>
+    <script type="text/javascript" src="../../src/wind-async.js"></script>
+    <script type="text/javascript" src="../../src/wind-async-powerpack.js"></script>
 </head>
 <body>
     <div id="softTimer">&nbsp;</div>
@@ -79,7 +79,7 @@
 
     var NativeTimer = function () { }
     NativeTimer.prototype.setTimeoutAsync = function (delay) {
-        return Jscex.Async.sleep(delay);
+        return Wind.Async.sleep(delay);
     }
 
     </script>
@@ -239,7 +239,7 @@
             }
         }
 
-        BulletGame.prototype._bulletFlyAsync = eval(Jscex.compile("async", function (f) {
+        BulletGame.prototype._bulletFlyAsync = eval(Wind.compile("async", function (f) {
             var options = this._options;
             var bullet = {pos: {x: 0, y: 0}};
 

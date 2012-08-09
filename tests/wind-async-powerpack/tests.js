@@ -2,11 +2,11 @@
 
 var exports = (typeof window === "undefined") ? module.exports : window;
 
-exports.setupTests = function (Jscex) {
+exports.setupTests = function (Wind) {
 
-    Jscex.logger.level = Jscex.Logging.Level.OFF;
+    Wind.logger.level = Wind.Logging.Level.OFF;
 
-    var Task = Jscex.Async.Task;
+    var Task = Wind.Async.Task;
 
     Task.success = function (result) {
         return Task.create(function (t) {
@@ -243,7 +243,7 @@ exports.setupTests = function (Jscex) {
             }
         }
 
-        var Binding = Jscex.Async.Binding;
+        var Binding = Wind.Async.Binding;
 
         describe("fromCallback", function () {
 

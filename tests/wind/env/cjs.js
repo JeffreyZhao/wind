@@ -1,15 +1,15 @@
 "use strict";
 
-var Jscex = require("../../../src/jscex");
+var Wind = require("../../../src/wind");
 require("chai").should();
 
 describe("define (CommonJS)", function () {
 
     var initialize = function (version) {
-        Jscex.coreVersion = version;
-        Jscex.modules = { };
-        Jscex.binders = { };
-        Jscex.builders = { };
+        Wind.coreVersion = version;
+        Wind.modules = { };
+        Wind.binders = { };
+        Wind.builders = { };
     }
     
     it("should support simple module", function () {
@@ -18,14 +18,14 @@ describe("define (CommonJS)", function () {
         var exports = {};
         var initTimes = 0;
         
-        Jscex.define({
+        Wind.define({
             name: "test",
             version: "0.5.0",
             exports: exports,
             coreDependency: "~0.5.0",
             init: function () { 
                 initTimes++;
-                Jscex.hello = "world";
+                Wind.hello = "world";
             }
         });
         
@@ -39,9 +39,9 @@ describe("define (CommonJS)", function () {
         exports.init();
         exports.init();
         
-        Jscex.hello.should.equal("world");
+        Wind.hello.should.equal("world");
         initTimes.should.equal(1);
-        Jscex.modules["test"].should.eql({
+        Wind.modules["test"].should.eql({
             name: "test",
             version: "0.5.0",
             coreDependency: "~0.5.0"
@@ -59,13 +59,13 @@ describe("define (CommonJS)", function () {
         }
         
         initialize("0.5.0");
-        Jscex.modules["d0"] = { version: "0.1.0" };
-        Jscex.modules["d1"] = { version: "0.2.5" };
+        Wind.modules["d0"] = { version: "0.1.0" };
+        Wind.modules["d1"] = { version: "0.2.5" };
         
         var exports = {};
         var initTimes = 0;
         
-        Jscex.define({
+        Wind.define({
             name: "test",
             version: "0.8.0",
             exports: exports,
@@ -75,7 +75,7 @@ describe("define (CommonJS)", function () {
             dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" },
             init: function (root) {
                 initTimes++;
-                Jscex.hello = "world";
+                Wind.hello = "world";
             }
         });
 
@@ -92,11 +92,11 @@ describe("define (CommonJS)", function () {
         exports.init();
         exports.init();
         
-        loaded.should.eql(["./jscex-m0", "./jscex-m1"]);
+        loaded.should.eql(["./wind-m0", "./wind-m1"]);
         initTimes.should.equal(1);
         
-        Jscex.hello.should.equal("world");
-        Jscex.modules["test"].should.eql({
+        Wind.hello.should.equal("world");
+        Wind.modules["test"].should.eql({
             name: "test",
             version: "0.8.0",
             autoloads: [ "m0", "m1" ],
@@ -111,7 +111,7 @@ describe("define (CommonJS)", function () {
         var exports = {};
         var initTimes = 0;
         
-        Jscex.define({
+        Wind.define({
             name: "test",
             version: "0.9.0",
             exports: exports,
@@ -132,7 +132,7 @@ describe("define (CommonJS)", function () {
         var exports = {};
         var initTimes = 0;
         
-        Jscex.define({
+        Wind.define({
             name: "test",
             version: "0.9.0",
             exports: exports,
@@ -150,12 +150,12 @@ describe("define (CommonJS)", function () {
 
     it("should throw if the required module is loaded but has invalid version", function () {
         initialize("0.5.0");
-        Jscex.modules["d0"] = { version: "0.2.0" };
+        Wind.modules["d0"] = { version: "0.2.0" };
 
         var exports = {};
         var initTimes = 0;
         
-        Jscex.define({
+        Wind.define({
             name: "test",
             version: "0.9.0",
             exports: exports,

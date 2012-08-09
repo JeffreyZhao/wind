@@ -4,10 +4,10 @@
     <title>Fibonacci</title>
     
     <script language="javascript" type="text/javascript" src="../../lib/uglifyjs-parser.js"></script>
-    <script language="javascript" type="text/javascript" src="../../src/jscex.js"></script>
-    <script language="javascript" type="text/javascript" src="../../src/jscex.builderBase.js"></script>
-    <script language="javascript" type="text/javascript" src="../../src/jscex.seq.js"></script>
-    <script language="javascript" type="text/javascript" src="../../src/jscex.seq.powerpack.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/wind.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/wind.builderBase.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/wind.seq.js"></script>
+    <script language="javascript" type="text/javascript" src="../../src/wind.seq.powerpack.js"></script>
 </head>
 <body>
 
@@ -17,13 +17,13 @@
         document.write(s + "<br />");
     }
 
-    var infinite = eval(Jscex.compile("seq", function (start) {
+    var infinite = eval(Wind.compile("seq", function (start) {
         while (true) {
             $yield(start++);
         }
     }));
 
-    var fib = eval(Jscex.compile("seq", function () {
+    var fib = eval(Wind.compile("seq", function () {
         
         $yield(0);
         $yield(1);

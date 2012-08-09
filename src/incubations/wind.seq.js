@@ -1,10 +1,10 @@
-Jscex.Seq = { };
+Wind.Seq = { };
 
 (function () {
 
     var SeqBuilder = function () { }
 
-    var Iterator = Jscex.Seq.Iterator = function (delegate) {
+    var Iterator = Wind.Seq.Iterator = function (delegate) {
         this._delegate = delegate;
     }
     Iterator.prototype.moveNext = function () {
@@ -39,7 +39,7 @@ Jscex.Seq = { };
                 return tempStep;
             }
 
-            return new Jscex.Seq.Iterator(delegate);
+            return new Wind.Seq.Iterator(delegate);
         },
 
         "Bind": function (value, generator) {
@@ -61,10 +61,10 @@ Jscex.Seq = { };
         }
     }
 
-    for (var m in Jscex.builderBase) {
-        SeqBuilder.prototype[m] = Jscex.builderBase[m];
+    for (var m in Wind.builderBase) {
+        SeqBuilder.prototype[m] = Wind.builderBase[m];
     }
 
-    Jscex.builders["seq"] = new SeqBuilder();
+    Wind.builders["seq"] = new SeqBuilder();
 
 })();

@@ -1,8 +1,8 @@
 "use strict";
 
-var Jscex = require("../../src/jscex");
-require("../../src/jscex-async").init();
-require("../../src/jscex-async-powerpack").init();
+var Wind = require("../../src/wind");
+require("../../src/wind-async").init();
+require("../../src/wind-async-powerpack").init();
 
 require("chai").should();
-require("./tests").setupTests(Jscex);
+require("./tests").setupTests(Wind);

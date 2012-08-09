@@ -1,7 +1,7 @@
-var Jscex = require("../../src/jscex");
-require("../../src/jscex-jit").init(Jscex);
-require("../../src/jscex-async").init(Jscex);
-require("../../src/jscex-async-powerpack").init(Jscex);
+var Wind = require("../../src/wind");
+require("../../src/wind-jit").init(Wind);
+require("../../src/wind-async").init(Wind);
+require("../../src/wind-async-powerpack").init(Wind);
 
 var app = require('express').createServer();
 
@@ -37,9 +37,9 @@ var cache = {
     }
 }
 
-db.getKeysAsync = Jscex.Async.Binding.fromCallback(db.getKeys);
-db.getItemAsync = Jscex.Async.Binding.fromCallback(db.getItem);
-cache.getAsync = Jscex.Async.Binding.fromCallback(cache.get);
+db.getKeysAsync = Wind.Async.Binding.fromCallback(db.getKeys);
+db.getItemAsync = Wind.Async.Binding.fromCallback(db.getItem);
+cache.getAsync = Wind.Async.Binding.fromCallback(cache.get);
 
 app.get("/:n", function (req, res) {
     var time = new Date();
@@ -70,7 +70,7 @@ app.get("/:n", function (req, res) {
     });
 });
 
-app.getAsync("/jscex/:n", eval(Jscex.compile("async", function (req, res) {
+app.getAsync("/wind/:n", eval(Wind.compile("async", function (req, res) {
 
     var time = new Date();
 
@@ -89,13 +89,13 @@ app.getAsync("/jscex/:n", eval(Jscex.compile("async", function (req, res) {
     res.send(JSON.stringify(output));
 })));
 
-var getItemAsync = eval(Jscex.compile("async", function (key) {
+var getItemAsync = eval(Wind.compile("async", function (key) {
     var r = $await(cache.getAsync(key));
     if (r) return r;
     return $await(db.getItemAsync(key));
 }));
 
-app.getAsync("/jscex/:n/parallel", eval(Jscex.compile("async", function (req, res) {
+app.getAsync("/wind/:n/parallel", eval(Wind.compile("async", function (req, res) {
 
     var time = new Date();
 
@@ -107,7 +107,7 @@ app.getAsync("/jscex/:n/parallel", eval(Jscex.compile("async", function (req, re
         tasks.push(getItemAsync(keys[i]));
     }
 
-    var items = $await(Jscex.Async.Task.whenAll(tasks));
+    var items = $await(Wind.Async.Task.whenAll(tasks));
     var timePassed = (new Date()) - time;
     var output = { timePassed: timePassed + "ms", items: items };
     res.send(JSON.stringify(output));

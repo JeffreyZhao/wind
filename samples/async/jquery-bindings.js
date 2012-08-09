@@ -1,6 +1,6 @@
 (function ($) {
 
-    var Task = Jscex.Async.Task;
+    var Task = Wind.Async.Task;
     
     $.ajaxAsync = function (options) {
         return Task.create(function (t) {
