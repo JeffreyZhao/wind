@@ -9,13 +9,12 @@
 		'wind':				 '../../src/wind.js',
 		'wind-async-powerpack': '../../src/wind-async-powerpack.js',
 		'wind-async':			 '../../src/wind-async.js',
-		'wind-jit':			 '../../src/wind-jit.js',
+		'wind-compiler':			 '../../src/wind-compiler.js',
 		'wind-builderbase':	 '../../src/wind-builderbase.js',
-		'wind-parser':			 '../../src/wind-parser.js'
 	});
 
-    require(['wind', 'wind-jit', 'wind-async-powerpack', 'wind-async'], function (Wind, jit, asyncPowerPack, async){
-		jit.init(Wind);
+    require(['wind', 'wind-compiler', 'wind-async-powerpack', 'wind-async'], function (Wind, compiler, asyncPowerPack, async){
+		compiler.init(Wind);
         async.init(Wind);
         asyncPowerPack.init(Wind);
 

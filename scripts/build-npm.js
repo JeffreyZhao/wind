@@ -27,8 +27,7 @@ var packageBase = {
 
 var descriptions = {
     "core": "The essential components for Wind.",
-    "parser": "The UglifyJS parser to generate AST from JavaScript souce code.",
-    "jit": "The JIT compiler for Wind, providing the monadic code transformation ability without losing traditional JavaScript programming experience."
+    "compiler": "The compiler for Wind.js, providing the monadic code transformation ability without losing traditional JavaScript programming experience."
 };
 
 var getPackageData = function (name) {
@@ -92,7 +91,7 @@ var buildAot = function () {
     packageData.description = "The AOT compiler for Wind";
     packageData.dependencies = {
         "wind": "~0.6.5",
-        "wind-jit": "~0.6.6",
+        "wind-compiler": "~0.6.6",
         "optimist": "*"
     };
     
@@ -104,7 +103,7 @@ var buildAot = function () {
 
 buildOne(); // core
 
-var modules = [ "parser", "jit", "builderbase", "async", "async-powerpack", "promise" ];
+var modules = [ "compiler", "builderbase", "async", "async-powerpack", "promise" ];
 _.each(modules, function (name) {
     buildOne(name);
 });

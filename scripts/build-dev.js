@@ -19,7 +19,7 @@ var coreName = "wind-" + Wind.coreVersion + ".js"
 utils.copySync(path.join(srcDir, "wind.js"), path.join(devDir, coreName));
 console.log(coreName + " generated.");
 
-var moduleList = [ "parser", "jit", "builderbase", "async", "async-powerpack", "promise" ];
+var moduleList = [ "compiler", "builderbase", "async", "async-powerpack", "promise" ];
  
 _.each(moduleList, function (i, module) {
     var fullName = "wind-" + module;

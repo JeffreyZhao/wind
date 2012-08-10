@@ -1,5 +1,5 @@
 var Wind = require("../../src/wind");
-require("../../src/wind-jit").init(Wind);
+require("../../src/wind-compiler").init(Wind);
 require("../../src/wind-async").init(Wind);
 require("../../src/wind-async-powerpack").init(Wind);
 

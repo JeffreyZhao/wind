@@ -1,17 +1,17 @@
 /**
  * Author: XiNGRZ <chenxingyu92@gmail.com>
  * 
- * Wind loader, returns a prepared Wind object with wind-jit, wind-async, wind-async-powerpack initialized.
+ * Wind loader, returns a prepared Wind object with wind-compiler, wind-async, wind-async-powerpack initialized.
  */
 
 define([
     'wind',
-    'wind-jit',
+    'wind-compiler',
     'wind-async',
     'wind-async-powerpack'
-], function (Wind, jit, async, async_powerpack) {
+], function (Wind, compiler, async, async_powerpack) {
 
-    jit.init();
+    compiler.init();
     async.init();
     async_powerpack.init();
     

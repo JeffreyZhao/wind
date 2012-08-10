@@ -9,8 +9,8 @@
         base: "../../src/"
     });
 
-    seajs.use(["wind", "wind-jit", "wind-async-powerpack", "wind-async"], function (Wind, jit, asyncPowerPack, async) {
-        jit.init(Wind);
+    seajs.use(["wind", "wind-compiler", "wind-async-powerpack", "wind-async"], function (Wind, compiler, asyncPowerPack, async) {
+        compiler.init(Wind);
         async.init(Wind);
         asyncPowerPack.init(Wind);
         
