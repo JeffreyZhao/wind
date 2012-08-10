@@ -5,7 +5,7 @@
         "url": "https://github.com/JeffreyZhao/wind/issues",
         "email": "jeffz@live.com"
     },
-    "name": "wind-parser",
-    "version": "0.6.5",
-    "main": "wind-parser.js"
+    "name": "wind-compiler",
+    "version": "0.7.0",
+    "main": "wind-compiler.js"
 }

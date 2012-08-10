@@ -91,7 +91,7 @@ var buildAot = function () {
     packageData.description = "The AOT compiler for Wind";
     packageData.dependencies = {
         "wind": "~0.6.5",
-        "wind-compiler": "~0.6.6",
+        "wind-compiler": "~0.7.0",
         "optimist": "*"
     };
     
