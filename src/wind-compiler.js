@@ -2966,6 +2966,7 @@
             version: "0.7.0",
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
+            coreDependency: "~0.6.5",
             init: function () {
                 Wind.parse = parse;
                 Wind.compile = compile;
