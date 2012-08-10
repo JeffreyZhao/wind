@@ -1,19 +1,17 @@
 /**
  * Author: XiNGRZ <chenxingyu92@gmail.com>
  * 
- * Wind loader, returns a prepared Wind object with wind-compiler, wind-async, wind-async-powerpack initialized.
+ * Wind loader, returns a prepared Wind object with wind-compiler and wind-async initialized.
  */
 
 define([
     'wind',
     'wind-compiler',
     'wind-async',
-    'wind-async-powerpack'
-], function (Wind, compiler, async, async_powerpack) {
+], function (Wind, compiler, async) {
 
     compiler.init();
     async.init();
-    async_powerpack.init();
     
     return Wind;
 });

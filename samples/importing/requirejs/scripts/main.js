@@ -8,10 +8,8 @@ requirejs.config({
     'paths': {
         'wind'                 : '../../../../src/wind',
         'wind-async'           : '../../../../src/wind-async',
-        'wind-async-powerpack' : '../../../../src/wind-async-powerpack',
         'wind-builderbase'     : '../../../../src/wind-builderbase',
-        'wind-compiler'             : '../../../../src/wind-compiler',
-        
+        'wind-compiler'        : '../../../../src/wind-compiler',
         'wind-all'             : './wind-all'
     }
 });

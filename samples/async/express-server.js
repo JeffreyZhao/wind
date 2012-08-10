@@ -1,7 +1,6 @@
 var Wind = require("../../src/wind");
 require("../../src/wind-compiler").init(Wind);
 require("../../src/wind-async").init(Wind);
-require("../../src/wind-async-powerpack").init(Wind);
 
 var app = require('express').createServer();
 

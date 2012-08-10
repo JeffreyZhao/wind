@@ -40,7 +40,6 @@ http.createServer(function(request, response) {
 var Wind = require("../../src/wind");
 require("../../src/wind-compiler").init(Wind);
 require("../../src/wind-async").init(Wind);
-require("../../src/wind-async-powerpack").init(Wind);
 
 path.existsAsync = Wind.Async.Binding.fromCallback(path.exists);
 fs.readFileAsync = Wind.Async.Binding.fromStandard(fs.readFile);

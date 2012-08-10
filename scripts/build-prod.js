@@ -55,4 +55,4 @@ var buildAll = eval(Wind.compile("async", function (modules) {
     }
 }));
 
-buildAll(["", "builderbase", "async", "async-powerpack", "promise"]).start();
+buildAll(["", "builderbase", "async", "promise"]).start();

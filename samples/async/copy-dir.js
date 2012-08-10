@@ -6,7 +6,6 @@ var rl = require("readline").createInterface(process.stdin, process.stdout);
 var Wind = require("../../src/wind");
 require("../../src/wind-compiler").init(Wind);
 require("../../src/wind-async").init(Wind);
-require("../../src/wind-async-powerpack").init(Wind);
 
 Wind.logger.level = Wind.Logging.Level.WARN;
 

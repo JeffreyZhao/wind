@@ -7,16 +7,14 @@
 <script type="text/javascript">
 	require.config({
 		'wind':				 '../../src/wind.js',
-		'wind-async-powerpack': '../../src/wind-async-powerpack.js',
 		'wind-async':			 '../../src/wind-async.js',
 		'wind-compiler':			 '../../src/wind-compiler.js',
 		'wind-builderbase':	 '../../src/wind-builderbase.js',
 	});
 
-    require(['wind', 'wind-compiler', 'wind-async-powerpack', 'wind-async'], function (Wind, compiler, asyncPowerPack, async){
+    require(['wind', 'wind-compiler', 'wind-async'], function (Wind, compiler, async){
 		compiler.init(Wind);
         async.init(Wind);
-        asyncPowerPack.init(Wind);
 
 		var printEverySecond = eval(Wind.compile("async", function (texts) {
 			for (var i = 0; i < texts.length; i++) {
