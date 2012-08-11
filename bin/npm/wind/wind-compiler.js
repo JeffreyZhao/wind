@@ -2711,14 +2711,18 @@
             },
 
             "block": function (ast) {
-                this._bothLine("{")
-                this._bothIndentLevel(1);
+                if (ast.length > 1) {            
+                    this._bothLine("{")
+                    this._bothIndentLevel(1);
 
-                this._visitRawStatements(ast[1]);
-                this._bothIndentLevel(-1);
+                    this._visitRawStatements(ast[1]);
+                    this._bothIndentLevel(-1);
 
-                this._bothIndents()
-                    ._both("}");
+                    this._bothIndents()
+                        ._both("}");
+                } else {
+                    this._both(";");
+                }
             },
 
             "while": function (ast) {
