@@ -1,6 +1,6 @@
 "use strict";
 
-var windc = require("../src/windc");
+var windc = require("../../src/windc");
 
 require("should");
 
