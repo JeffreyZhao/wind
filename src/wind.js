@@ -51,6 +51,10 @@
                 return newObj;
             }
         }
+
+        var clone = function (obj) {
+            return map(obj);
+        }
         
         var v2n = function (version) {
             var value = 0;
@@ -118,6 +122,7 @@
             isArray: isArray,
             each: each,
             map: map,
+            clone: clone,
             v2n: v2n,
             testVersion: testVersion,
             format: format,

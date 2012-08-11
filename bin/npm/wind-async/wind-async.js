@@ -285,7 +285,7 @@
             });
 
             // start all the tasks
-            _.each(taskKeys, function (id, key) {
+            _.each(taskKeys, function (key) {
                 var task = inputTasks[key];
                 if (task.status === "ready") {
                     task.start();
@@ -296,7 +296,7 @@
                 var results = _.isArray(inputTasks) ? new Array(inputTasks.length) : { };
                 var errors = [];
 
-                _.each(taskKeys, function (id, key) {
+                _.each(taskKeys, function (key) {
                     var task = inputTasks[key];
                     if (task.error) {
                         errors.push(task.error);
@@ -314,7 +314,7 @@
 
             var runningNumber = 0;
             
-            _.each(taskKeys, function (id, key) {
+            _.each(taskKeys, function (key) {
                 var task = inputTasks[key];
                 
                 if (task.status == "running") {
@@ -631,7 +631,7 @@
                 
                 _ = Wind._;
                 
-                Wind._.each(Wind.BuilderBase.prototype, function (m, fn) {
+                _.each(Wind.BuilderBase.prototype, function (m, fn) {
                     AsyncBuilder.prototype[m] = fn;
                 });
                 
