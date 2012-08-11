@@ -13,7 +13,7 @@ var prodDir = path.join(__dirname, "../bin/prod");
 var srcDir = path.join(__dirname, "../src");
 var gccPath = path.join(__dirname, "../tools/compiler.jar");
 
-if (path.existsSync(prodDir)) {
+if (fs.existsSync(prodDir)) {
     utils.rmdirSync(prodDir);
 }
 

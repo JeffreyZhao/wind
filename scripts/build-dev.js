@@ -9,7 +9,7 @@ var path = require("path"),
 var devDir = path.join(__dirname, "../bin/dev");
 var srcDir = path.join(__dirname, "../src");
 
-if (path.existsSync(devDir)) {
+if (fs.existsSync(devDir)) {
     utils.rmdirSync(devDir);
 }
 

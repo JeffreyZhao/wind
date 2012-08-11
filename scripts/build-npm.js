@@ -10,7 +10,7 @@ var npmDir = path.join(__dirname, "../bin/npm");
 var srcDir = path.join(__dirname, "../src");
 var libDir = path.join(__dirname, "../lib");
 
-if (path.existsSync(npmDir)) {
+if (fs.existsSync(npmDir)) {
     utils.rmdirSync(npmDir);
 }
 
