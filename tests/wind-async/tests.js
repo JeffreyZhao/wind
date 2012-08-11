@@ -230,6 +230,67 @@ exports.setupTests = function (Wind) {
                 });
             });
         });
+    
+        describe("whenAny", function () {
+        
+            var whenAny = Task.whenAny;
+            
+            it("should directly fail with an empty array or hash input", function () {
+                whenAny().start().status.should.equal("faulted");
+                whenAny([]).start().status.should.equal("faulted");
+                whenAny({}).start().status.should.equal("faulted");
+            });
+            
+            it("should directly return the task in the array if it's already failed", function () {
+                var t0 = delay(10, "also failed!");
+                var t1 = failure("failed!");
+                
+                var result = whenAny(t0, t1).start().result;
+                result.key.should.equal(1);
+                result.task.should.equal(t1);
+                
+                t0.status.should.equal("running");
+            });
+            
+            it("should directly return the task in the hash if it's already succeeded", function () {
+                var t0 = delay(10, "also failed!");
+                var t1 = failure("failed!");
+                
+                var result = whenAny({"0": t0, "1": t1}).start().result;
+                result.key.should.equal("1");
+                result.task.should.equal(t1);
+                
+                t0.status.should.equal("running");
+            });
+            
+            it("should return the task in the array which succeeded first", function (done) {
+                var t0 = delay(5, null, "succeeded!");
+                var t1 = delay(10, "failed!");
+                
+                whenAny(t0, t1).start().addEventListener("success", function () {
+                    var result = this.result;
+                    result.key.should.equal(0);
+                    result.task.should.equal(t0);
+                    
+                    t1.status.should.equal("running");
+                    done();
+                });
+            });
+            
+            it("should return the task in the hash which failed first", function (done) {
+                var t0 = delay(5, "failed");
+                var t1 = delay(10, null, "succeeded!");
+                
+                whenAny({"0": t0, "1": t1}).start().addEventListener("success", function () {
+                    var result = this.result;
+                    result.key.should.equal("0");
+                    result.task.should.equal(t0);
+                    
+                    t1.status.should.equal("running");
+                    done();
+                });
+            });
+        });
     });
 
     describe("Binding", function () {

@@ -319,12 +319,14 @@
     var whenAny = Task.whenAny = function () {
 
         var inputTasks = { };
+        var isArray = true;
 
         if (arguments.length == 1) {
             var arg = arguments[0];
             if (isTask(arg)) {
                 inputTasks[0] = arg;
             } else {
+                isArray = _.isArray(arg);
                 _.each(arg, function (key, task) {
                     if (isTask(task)) {
                         inputTasks[key] = task;
@@ -340,6 +342,10 @@
             }
         }
         
+        var processKey = isArray
+            ? function (key) { return parseInt(key, 10); }
+            : function (key) { return key; }
+        
         return create(function (taskWhenAny) {
             if (_.isEmpty(inputTasks)) {
                 return taskWhenAny.complete("failure", "There's no valid input tasks.");
@@ -353,7 +359,7 @@
             
             var result = _.each(inputTasks, function (key, task) {
                 if (task.status !== "running") {
-                    return { key: key, task: t };
+                    return { key: processKey(key), task: task };
                 }
             });
             
@@ -365,7 +371,7 @@
                 var taskCompleted = this;
                 _.each(inputTasks, function (key, task) {
                     if (task == taskCompleted) {
-                        taskWhenAny.complete("success", { key: key, task: task });
+                        taskWhenAny.complete("success", { key: processKey(key), task: task });
                     } else {
                         task.removeEventListener("complete", onComplete);
                     }
