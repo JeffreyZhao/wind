@@ -2,15 +2,8 @@
     "use strict";
 
     var Wind, _;
-
-    var Fn = Function, global = Fn('return this')();
     
     var Async = { };
-    
-    // seed defined in global
-    if (global.__wind__async__taskIdSeed === undefined) {
-        global.__wind__async__taskIdSeed = 0;
-    }
     
     /***********************************************************************
       Errors
@@ -103,7 +96,6 @@
      ***********************************************************************/
     
     var Task = Async.Task = function (delegate) {
-        this.id = (++__wind__async__taskIdSeed);
         this._delegate = delegate;
         this._listeners = { };
         this.status = "ready";
@@ -249,7 +241,11 @@
         }
     };
     
-    Task.create = function (delegate) {
+    var isTask = Task.isTask = function (t) {
+        return t && (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
+    };
+    
+    var create = Task.create = function (delegate) {
         return new Task(delegate);
     }
     
@@ -258,8 +254,7 @@
 
         if (arguments.length == 1) {
             var arg = arguments[0];
-
-        if (Task.isTask(arg)) { // a single task
+            if (isTask(arg)) { // a single task
                 inputTasks = [arg];
             } else {
                 inputTasks = arg;
@@ -271,33 +266,13 @@
             }
         }
     
-        return Task.create(function (taskWhenAll) {
-            var taskKeys = {};
-    
-            _.each(inputTasks, function (key, task) {
-                if (!task) return;
-                
-                if (!Task.isTask(task)) {
-                    inputTasks[key] = task = whenAll(task);
-                }
-                
-                taskKeys[task.id] = key;
-            });
-
-            // start all the tasks
-            _.each(taskKeys, function (key) {
-                var task = inputTasks[key];
-                if (task.status === "ready") {
-                    task.start();
-                }
-            });
+        return create(function (taskWhenAll) {
 
             var done = function () {
                 var results = _.isArray(inputTasks) ? new Array(inputTasks.length) : { };
                 var errors = [];
 
-                _.each(taskKeys, function (key) {
-                    var task = inputTasks[key];
+                _.each(inputTasks, function (key, task) {
                     if (task.error) {
                         errors.push(task.error);
                     } else {
@@ -313,13 +288,20 @@
             }
 
             var runningNumber = 0;
-            
-            _.each(taskKeys, function (key) {
-                var task = inputTasks[key];
+
+            _.each(inputTasks, function (key, task) {
+                if (!task) return;
                 
-                if (task.status == "running") {
+                if (!isTask(task)) {
+                    inputTasks[key] = task = whenAll(task);
+                }
+                
+                if (task.status === "ready") {
+                    task.start();
+                }
+                
+                if (task.status === "running") {
                     runningNumber++;
-                    
                     task.addEventListener("complete", function () {
                         if (--runningNumber == 0) {
                             done();
@@ -335,68 +317,72 @@
     };
     
     var whenAny = Task.whenAny = function () {
-    
-        var tasks = { };
+
+        var inputTasks = { };
+        var isArray = true;
 
         if (arguments.length == 1) {
             var arg = arguments[0];
-            if (Task.isTask(arg)) {
-                tasks[0] = arg;
+            if (isTask(arg)) {
+                inputTasks[0] = arg;
             } else {
-                tasks = arg;
+                isArray = _.isArray(arg);
+                _.each(arg, function (key, task) {
+                    if (isTask(task)) {
+                        inputTasks[key] = task;
+                    }
+                });
             }
         } else {
-            for (var i = 0; i < arguments.length; i++)
-                tasks[i] = arguments[i];
+            for (var i = 0; i < arguments.length; i++) {
+                var task = arguments[i];
+                if (isTask(task)) {
+                    inputTasks[i] = task;
+                }
+            }
         }
         
-        return Task.create(function (taskWhenAny) {
-            var taskKeys = {};
-            for (var key in tasks) {
-                if (tasks.hasOwnProperty(key)) {
-                    var t = tasks[key];
-                    if (Task.isTask(t)) {
-                        taskKeys[t.id] = key;
-                    }
-                }
-            }
+        var processKey = isArray
+            ? function (key) { return parseInt(key, 10); }
+            : function (key) { return key; }
         
-            // start all the tasks
-            for (var id in taskKeys) {
-                var t = tasks[taskKeys[id]];
-                if (t.status == "ready") {
-                    t.start();
+        return create(function (taskWhenAny) {
+            if (_.isEmpty(inputTasks)) {
+                return taskWhenAny.complete("failure", "There's no valid input tasks.");
+            }
+            
+            _.each(inputTasks, function (key, task) {
+                if (task.status == "ready") {
+                    task.start();
                 }
-            }
+            });
             
-            // if there's a task already failed/succeeded, then return
-            for (var id in taskKeys) {
-                var key = taskKeys[id];
-                var t = tasks[key];
-                if (t.error || t.status == "succeeded") {
-                    taskWhenAny.complete("success", { key: key, task: t });
-                    return;
+            var result = _.each(inputTasks, function (key, task) {
+                if (task.status !== "running") {
+                    return { key: processKey(key), task: task };
                 }
+            });
+            
+            if (result) {
+                return taskWhenAny.complete("success", result);
             }
             
-            var onComplete = function (t) {
-                for (var id in taskKeys) {
-                    tasks[taskKeys[id]].removeEventListener("complete", onComplete);
-                }
-            
-                taskWhenAny.complete("success", { key: taskKeys[this.id], task: this });
+            var onComplete = function () {
+                var taskCompleted = this;
+                _.each(inputTasks, function (key, task) {
+                    if (task == taskCompleted) {
+                        taskWhenAny.complete("success", { key: processKey(key), task: task });
+                    } else {
+                        task.removeEventListener("complete", onComplete);
+                    }
+                });
             }
             
-            // now all the tasks are in "running" status.
-            for (var id in taskKeys) {
-                tasks[taskKeys[id]].addEventListener("complete", onComplete);
-            }
+            _.each(inputTasks, function (task) {
+                task.addEventListener("complete", onComplete);
+            });
         });
     }
-    
-    var isTask = Task.isTask = function (t) {
-        return (typeof t.start === "function") && (typeof t.addEventListener) === "function" && (typeof t.removeEventListener) === "function" && (typeof t.complete) === "function";
-    };
 
     /***********************************************************************
       Async helpers
@@ -657,6 +643,8 @@
             defineModule();
         });
     } else {
+        var Fn = Function, global = Fn('return this')();
+    
         if (!global.Wind) {
             throw new Error('Missing the root object, please load "wind" component first.');
         }

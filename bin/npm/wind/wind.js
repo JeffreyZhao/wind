@@ -27,6 +27,14 @@
             }
         }
         
+        var isEmpty = function (obj) {
+            if (isArray(obj)) {
+                return obj.length === 0;
+            }
+            
+            return !(_.each(obj, function (v) { return true; }));
+        }
+        
         var map = function (obj, mapper, valueMapper) {
             if (isArray(obj)) {
                 var array = new Array(obj.length);
@@ -121,6 +129,7 @@
         return {
             isArray: isArray,
             each: each,
+            isEmpty: isEmpty,
             map: map,
             clone: clone,
             v2n: v2n,
