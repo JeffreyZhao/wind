@@ -1,8 +1,5 @@
-var Wind = require("../../src/wind-core");
-require("../../src/wind-compiler").init(Wind);
-require("../../src/wind-async").init(Wind);
-
-var app = require('express').createServer();
+var Wind = require("../../src/wind"),
+    app = require('express').createServer();
 
 app.getAsync = function (path, handler) {
     app.get(path, function (req, res) {

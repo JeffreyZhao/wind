@@ -3,9 +3,7 @@ var path = require("path");
 var util = require("util");
 var rl = require("readline").createInterface(process.stdin, process.stdout);
 
-var Wind = require("../../src/wind-core");
-require("../../src/wind-compiler").init(Wind);
-require("../../src/wind-async").init(Wind);
+var Wind = require("../../src/wind");
 
 Wind.logger.level = Wind.Logging.Level.WARN;
 
