@@ -1,14 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-    <title>Wind Quick Start</title>
+    <title>Quick Start - Wind.js Sample</title>
     
-    <script type="text/javascript" src="../../src/wind-core.js"></script>
-    <script type="text/javascript" src="../../src/wind-compiler.js"></script>
-    <script type="text/javascript" src="../../src/wind-builderbase.js"></script>
-    <script type="text/javascript" src="../../src/wind-async.js"></script>
+    <script src="../../../src/wind-core.js"></script>
+    <script src="../../../src/wind-compiler.js"></script>
+    <script src="../../../src/wind-builderbase.js"></script>
+    <script src="../../../src/wind-async.js"></script>
     
-    <script type="text/javascript">
+    <script>
         var fib = eval(Wind.compile("async", function () {
 
             $await(Wind.Async.sleep(1000));
