@@ -180,25 +180,19 @@
         }
     };
 
-    var loadModules = function (require, modules) {
-        if (require) {
-            _.each(modules, function (name) {
-                var m;
-                try {
-                    m = require("./wind-" + name);
-                } catch (ex) {
-                    m = require("wind-" + name);
-                }
-                
-                m.init();
-            });
-        } else {
-            _.each(modules, function (m) {
-                m.init();
-            });
+    var exportBasicOptions = function (exports, options) {
+        exports.name = options.name;
+        exports.version = options.version;
+        
+        if (options.autoloads) {
+            exports.autoloads = options.autoloads;
+        }
+        
+        if (options.dependencies) {
+            exports.dependencies = options.dependencies;
         }
     }
-
+    
     var initModule = function (options) {
         var existingModule = Wind.modules[options.name];
         if (existingModule && existingModule.version != options.version) {
@@ -208,7 +202,7 @@
                 existingModule.version,
                 options.version));
         }
-    
+
         checkDependencies(options);
         options.init();
         
@@ -236,19 +230,6 @@
             }
         });
     }
-    
-    var exportBasicOptions = function (exports, options) {
-        exports.name = options.name;
-        exports.version = options.version;
-        
-        if (options.autoloads) {
-            exports.autoloads = options.autoloads;
-        }
-        
-        if (options.dependencies) {
-            exports.dependencies = options.dependencies;
-        }
-    }
 
     // CommonJS
     var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
@@ -259,25 +240,28 @@
         var autoloads = options.autoloads || [];
 
         if (isCommonJS) {
-            exportBasicOptions(options.exports, options);
-            options.exports.init = _.once(function () {
-                loadModules(options.require, autoloads);
-                initModule(options);
+            var require = options.require;
+            _.each(autoloads, function (name) {
+                try {
+                    require("./wind-" + name);
+                } catch (ex) {
+                    require("wind-" + name);
+                }
             });
+            
+            initModule(options);
         } else if (isAmd) {
             var dependencies = _.map(autoloads, function (name) { return "wind-" + name; });
-            
             define("wind-" + options.name, dependencies, function () {
-                var loadedModules = arguments;
-                
-                var exports = {};
-                exportBasicOptions(exports, options);
-                exports.init = _.once(function () {
-                    loadModules(null, loadedModules);
+                if (options.onerror) {
+                    try {
+                        initModule(options);
+                    } catch (ex) {
+                        options.onerror(ex);
+                    }
+                } else {
                     initModule(options);
-                });
-
-                return exports;
+                }
             });
         } else {
             initModule(options);
@@ -292,7 +276,7 @@
         };
 
         Wind._ = _;
-        Wind.modules = { "core": { name: "core", version: "0.7.0" } };
+        Wind.modules = { core: { name: "core", version: "0.7.0" } };
         Wind.binders = { };
         Wind.builders = { };
         Wind.define = defineModule;

@@ -4,8 +4,8 @@
  ***********************************************************************/
  
 var Wind = require("./wind-core");
-require("./wind-compiler").init();
-require("./wind-async").init();
-require("./wind-promise").init();
+require("./wind-compiler");
+require("./wind-async");
+require("./wind-promise");
 
 module.exports = Wind;

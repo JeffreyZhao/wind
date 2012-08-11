@@ -300,7 +300,6 @@
         Wind.define({
             name: "builderbase",
             version: "0.7.0",
-            exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             dependencies: { core: "~0.7.0" },
             init: function () {
