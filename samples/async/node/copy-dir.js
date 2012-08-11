@@ -3,16 +3,13 @@ var path = require("path");
 var util = require("util");
 var rl = require("readline").createInterface(process.stdin, process.stdout);
 
-var Wind = require("../../src/wind");
+var Wind = require("../../../src/wind");
 
 Wind.logger.level = Wind.Logging.Level.WARN;
 
 var Async = Wind.Async;
 var Task = Async.Task;
 var Binding = Async.Binding;
-
-// path bindings
-path.existsAsync = Binding.fromCallback(path.exists);
 
 // util bindings
 util.pumpAsync = Binding.fromStandard(util.pump);
@@ -21,6 +18,7 @@ util.pumpAsync = Binding.fromStandard(util.pump);
 rl.questionAsync = Binding.fromCallback(rl.question);
 
 // fs bindings
+fs.existsAsync = Binding.fromCallback(fs.exists);
 fs.mkdirAsync = Binding.fromStandard(fs.mkdir);
 fs.readdirAsync = Binding.fromStandard(fs.readdir);
 fs.statAsync = Binding.fromStandard(fs.stat);
@@ -72,7 +70,7 @@ var copyFileByPipeAsync = eval(Wind.compile("async", function (srcFile, targetFi
 
 var copyFileAsync = eval(Wind.compile("async", function (srcFile, targetFile) {
 
-    var exists = $await(path.existsAsync(targetFile));
+    var exists = $await(fs.existsAsync(targetFile));
     if (exists) {
         var message = util.format('File "%s" exists, overwirte? (yes/no) > ', targetFile);
         while (true) {
@@ -100,7 +98,7 @@ var copyFileAsync = eval(Wind.compile("async", function (srcFile, targetFile) {
 
 var copyDirAsync = eval(Wind.compile("async", function (srcDir, targetDir) {
 
-    var exists = $await(path.existsAsync(targetDir));
+    var exists = $await(fs.existsAsync(targetDir));
     if (!exists) {
         $await(fs.mkdirAsync(targetDir));
     }

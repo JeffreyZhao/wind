@@ -1,4 +1,4 @@
-var Wind = require("../../src/wind"),
+var Wind = require("../../../src/wind"),
     app = require('express').createServer();
 
 app.getAsync = function (path, handler) {

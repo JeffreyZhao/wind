@@ -39,7 +39,7 @@ http.createServer(function(request, response) {
   The Wind.js version
  ***********************************************************************/
 
-var Wind = require("../../src/wind");
+var Wind = require("../../../src/wind");
 
 fs.existsAsync = Wind.Async.Binding.fromCallback(fs.exists);
 fs.readFileAsync = Wind.Async.Binding.fromStandard(fs.readFile);

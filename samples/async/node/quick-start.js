@@ -1,6 +1,4 @@
-var Wind = require("../../src/wind-core");
-require("../../src/wind-compiler").init(Wind);
-require("../../src/wind-async").init(Wind);
+var Wind = require("../../../src/wind");
 
 var fib = eval(Wind.compile("async", function () {
 
