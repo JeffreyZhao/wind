@@ -15,11 +15,7 @@ if (path.existsSync(devDir)) {
 
 fs.mkdirSync(devDir);
 
-var coreName = "wind-" + Wind.coreVersion + ".js"
-utils.copySync(path.join(srcDir, "wind.js"), path.join(devDir, coreName));
-console.log(coreName + " generated.");
-
-var moduleList = [ "compiler", "builderbase", "async", "promise" ];
+var moduleList = [ "core", "compiler", "builderbase", "async", "promise" ];
  
 _.each(moduleList, function (module) {
     var fullName = "wind-" + module;

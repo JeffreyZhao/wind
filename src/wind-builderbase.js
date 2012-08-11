@@ -299,10 +299,10 @@
     var defineModule = function () {
         Wind.define({
             name: "builderbase",
-            version: "0.6.5",
+            version: "0.7.0",
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
-            coreDependency: "~0.6.5",
+            dependencies: { core: "~0.7.0" },
             init: function () {
                 Wind.BuilderBase = BuilderBase;
             }

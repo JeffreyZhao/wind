@@ -9,6 +9,6 @@
     "version": "0.7.0",
     "main": "wind-async.js",
     "dependencies": {
-        "wind-builderbase": "~0.6.5"
+        "wind-builderbase": "~0.7.0"
     }
 }

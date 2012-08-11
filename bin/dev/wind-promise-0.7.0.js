@@ -51,11 +51,11 @@
     var defineModule = function () {
         Wind.define({
             name: "promise",
-            version: "0.6.5",
+            version: "0.7.0",
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
-            dependencies: { builderbase: "~0.6.5" },
+            dependencies: { builderbase: "~0.7.0" },
             init: function () {
                 Wind._.each(Wind.BuilderBase.prototype, function (m, fn) {
                     PromiseBuilder.prototype[m] = fn;
@@ -75,14 +75,14 @@
 
     if (isCommonJS) {
         try {
-            Wind = require("./wind");
+            Wind = require("./wind-core");
         } catch (ex) {
-            Wind = require("wind");
+            Wind = require("wind-core");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["wind"], function (wind) {
+        require(["wind-core"], function (wind) {
             Wind = wind;
             defineModule();
         });

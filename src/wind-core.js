@@ -218,14 +218,6 @@
     }
     
     var checkDependencies = function (options) {
-        if (options.coreDependency && !_.testVersion(options.coreDependency, Wind.coreVersion)) {
-            throw new Error(_.format(
-                'Version of core component mismatched, expected: "{0}", actual: "{1}".',
-                options.coreDependency,
-                Wind.coreVersion));
-            
-        }
-        
         _.each(options.dependencies || [], function (name, expectedVersion) {
             var module = Wind.modules[name];
             if (!module) {
@@ -251,10 +243,6 @@
         
         if (options.autoloads) {
             exports.autoloads = options.autoloads;
-        }
-        
-        if (options.coreDependency) {
-            exports.coreDependency = options.coreDependency;
         }
         
         if (options.dependencies) {
@@ -297,8 +285,6 @@
     }
 
     var init = function () {
-        Wind.coreVersion = "0.6.5";
-        
         Wind.logger = new Logger();
         Wind.Logging = {
             Logger: Logger,
@@ -306,7 +292,7 @@
         };
 
         Wind._ = _;
-        Wind.modules = { };
+        Wind.modules = { "core": { name: "core", version: "0.7.0" } };
         Wind.binders = { };
         Wind.builders = { };
         Wind.define = defineModule;

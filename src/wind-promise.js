@@ -51,11 +51,11 @@
     var defineModule = function () {
         Wind.define({
             name: "promise",
-            version: "0.6.5",
+            version: "0.7.0",
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
-            dependencies: { builderbase: "~0.6.5" },
+            dependencies: { builderbase: "~0.7.0" },
             init: function () {
                 Wind._.each(Wind.BuilderBase.prototype, function (m, fn) {
                     PromiseBuilder.prototype[m] = fn;

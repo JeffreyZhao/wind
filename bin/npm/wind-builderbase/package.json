@@ -6,6 +6,6 @@
         "email": "jeffz@live.com"
     },
     "name": "wind-builderbase",
-    "version": "0.6.5",
+    "version": "0.7.0",
     "main": "wind-builderbase.js"
 }

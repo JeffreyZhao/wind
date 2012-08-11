@@ -2966,7 +2966,7 @@
             version: "0.7.0",
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
-            coreDependency: "~0.6.5",
+            dependencies: { core: "~0.7.0" },
             init: function () {
                 Wind.parse = parse;
                 Wind.compile = compile;
@@ -2976,14 +2976,14 @@
 
     if (isCommonJS) {
         try {
-            Wind = require("./wind");
+            Wind = require("./wind-core");
         } catch (ex) {
-            Wind = require("wind");
+            Wind = require("wind-core");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["wind"], function (wind) {
+        require(["wind-core"], function (wind) {
             Wind = wind;
             defineModule();
         });

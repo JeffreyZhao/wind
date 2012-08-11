@@ -20,14 +20,8 @@ if (path.existsSync(prodDir)) {
 fs.mkdirSync(prodDir);
 
 var buildOne = eval(Wind.compile("async", function (module) {
-    var fullName, version;
-    if (!module) {
-        fullName = "wind";
-        version = Wind.coreVersion;
-    } else {
-        fullName = "wind-" + module;
-        version = Wind.modules[module].version;
-    }
+    var fullName = "wind-" + module;
+    var version = Wind.modules[module].version;
     
     var inputFile = fullName + ".js";
     var outputFile = fullName + "-" + version + ".min.js";
@@ -55,4 +49,4 @@ var buildAll = eval(Wind.compile("async", function (modules) {
     }
 }));
 
-buildAll(["", "builderbase", "async", "promise"]).start();
+buildAll(["core", "builderbase", "async", "promise"]).start();

@@ -612,7 +612,7 @@
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
-            dependencies: { builderbase: "~0.6.5" },
+            dependencies: { builderbase: "~0.7.0" },
             init: function () {
                 
                 _ = Wind._;

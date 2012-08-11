@@ -10,7 +10,7 @@
     "main": "src/windc.js",
     "description": "The AOT compiler for Wind",
     "dependencies": {
-        "wind": "~0.6.5",
+        "wind": "~0.7.0",
         "wind-compiler": "~0.7.0",
         "optimist": "*"
     }

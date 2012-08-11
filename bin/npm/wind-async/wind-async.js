@@ -612,7 +612,7 @@
             exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
-            dependencies: { builderbase: "~0.6.5" },
+            dependencies: { builderbase: "~0.7.0" },
             init: function () {
                 
                 _ = Wind._;
@@ -631,14 +631,14 @@
 
     if (isCommonJS) {
         try {
-            Wind = require("./wind");
+            Wind = require("./wind-core");
         } catch (ex) {
-            Wind = require("wind");
+            Wind = require("wind-core");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["wind"], function (wind) {
+        require(["wind-core"], function (wind) {
             Wind = wind;
             defineModule();
         });

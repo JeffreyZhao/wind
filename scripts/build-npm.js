@@ -31,24 +31,18 @@ var descriptions = {
 };
 
 var getPackageData = function (name) {
+    var options = Wind.modules[name];
     var packageData = _.clone(packageBase);
     
-    var options = name && Wind.modules[name];
-    if (options === undefined) {
-        packageData.name = "wind";
-        packageData.version = Wind.coreVersion;
-        packageData.main = "wind.js";
-    } else {
-        packageData.name = "wind-" + options.name;
-        packageData.version = Wind.modules[options.name].version;
-        packageData.main = "wind-" + options.name + ".js";
-        
-        if (options.autoloads) {
-            packageData.dependencies = {};
-            _.each(options.autoloads, function (name) {
-                packageData.dependencies["wind-" + name] = options.dependencies[name];
-            });
-        }
+    packageData.name = "wind-" + options.name;
+    packageData.version = Wind.modules[options.name].version;
+    packageData.main = "wind-" + options.name + ".js";
+    
+    if (options.autoloads) {
+        packageData.dependencies = {};
+        _.each(options.autoloads, function (name) {
+            packageData.dependencies["wind-" + name] = options.dependencies[name];
+        });
     }
     
     return packageData;
@@ -59,19 +53,17 @@ var json2str = function (json) {
 }
 
 var buildOne = function (name) {
-    var isCore = (name === undefined);
-    
-    var dir = path.join(npmDir, isCore ? "wind" : "wind-" + name);
+    var dir = path.join(npmDir, "wind-" + name);
     fs.mkdirSync(dir);
 
-    var filename = isCore ? "wind.js" : "wind-" + name + ".js";
+    var filename = "wind-" + name + ".js";
     utils.copySync(path.join(srcDir, filename), path.join(dir, filename));
     
     var packageData = getPackageData(name);
     var packageContent = json2str(packageData);
     fs.writeFileSync(path.join(dir, "package.json"), packageContent, "utf8");
     
-    console.log((isCore ? "wind" : "wind-" + name) + " generated.");
+    console.log("wind-" + name + " generated.");
 }
 
 var buildAot = function () {
@@ -90,7 +82,7 @@ var buildAot = function () {
     packageData.main = "src/windc.js";
     packageData.description = "The AOT compiler for Wind";
     packageData.dependencies = {
-        "wind": "~0.6.5",
+        "wind": "~0.7.0",
         "wind-compiler": "~0.7.0",
         "optimist": "*"
     };
@@ -101,9 +93,8 @@ var buildAot = function () {
     console.log("windc generated.");
 }
 
-buildOne(); // core
+var modules = [ "core", "compiler", "builderbase", "async", "promise" ];
 
-var modules = [ "compiler", "builderbase", "async", "promise" ];
 _.each(modules, function (name) {
     buildOne(name);
 });
