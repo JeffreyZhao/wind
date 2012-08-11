@@ -27,6 +27,14 @@
             }
         }
         
+        var isEmpty = function (obj) {
+            if (isArray(obj)) {
+                return obj.length === 0;
+            }
+            
+            return !!(_.each(obj, function (v) { return true; }));
+        }
+        
         var map = function (obj, mapper, valueMapper) {
             if (isArray(obj)) {
                 var array = new Array(obj.length);
