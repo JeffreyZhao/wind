@@ -3,7 +3,6 @@ require("../lib/narcissus-parser");
 module.paths.unshift(__dirname);
 
 var Wind = require("wind");
-require("wind-compiler").init(Wind);
 
 Wind.logger.level = Wind.Logging.Level.WARN;
 

@@ -25,48 +25,52 @@ var packageBase = {
     }
 };
 
-var descriptions = {
-    "core": "The essential components for Wind.",
-    "compiler": "The compiler for Wind.js, providing the monadic code transformation ability without losing traditional JavaScript programming experience."
-};
-
-var getPackageData = function (name) {
-    var options = Wind.modules[name];
-    var packageData = _.clone(packageBase);
-    
-    packageData.name = "wind-" + options.name;
-    packageData.version = Wind.modules[options.name].version;
-    packageData.main = "wind-" + options.name + ".js";
-    
-    if (options.autoloads) {
-        packageData.dependencies = {};
-        _.each(options.autoloads, function (name) {
-            packageData.dependencies["wind-" + name] = options.dependencies[name];
-        });
-    }
-    
-    return packageData;
-}
-
 var json2str = function (json) {
     return JSON.stringify(json, null, 4);
 }
 
-var buildOne = function (name) {
-    var dir = path.join(npmDir, "wind-" + name);
-    fs.mkdirSync(dir);
-
-    var filename = "wind-" + name + ".js";
-    utils.copySync(path.join(srcDir, filename), path.join(dir, filename));
+var getVersion = function () {
+    var total = 0;
     
-    var packageData = getPackageData(name);
-    var packageContent = json2str(packageData);
-    fs.writeFileSync(path.join(dir, "package.json"), packageContent, "utf8");
+    _.each(Wind.modules, function (options) {
+        var version = options.version;
+        var lastDot = version.lastIndexOf(".");
+        total += parseInt(version.substring(lastDot + 1), 10);
+    });
     
-    console.log("wind-" + name + " generated.");
+    return "0.7." + total;
 }
 
-var buildAot = function () {
+var buildWind = function () {
+    var dir = path.join(npmDir, "wind");
+    fs.mkdirSync(dir);
+    
+    var files = [
+        "wind",
+        "wind-core",
+        "wind-compiler",
+        "wind-builderbase",
+        "wind-async",
+        "wind-promise"
+    ];
+    
+    _.each(files, function (f) {
+        var filename = f + ".js";
+        utils.copySync(path.join(srcDir, filename), path.join(dir, filename));
+    });
+    
+    
+    var packageData = _.clone(packageBase);
+    packageData.name = "wind";
+    packageData.version = getVersion();
+    packageData.main = "wind.js";
+    packageData.description = "Wind.js is an advanced library which enable us to control flow with plain JavaScript for asynchronous programming (and more) without additional pre-compiling steps.";
+    fs.writeFileSync(path.join(dir, "package.json"), json2str(packageData), "utf8");
+    
+    console.log("wind generated.");
+}
+
+var buildWindC = function () {
     var dir = path.join(npmDir, "windc");
     fs.mkdirSync(dir);
     
@@ -78,12 +82,11 @@ var buildAot = function () {
     
     var packageData = _.clone(packageBase);
     packageData.name = "windc";
-    packageData.version = "0.2.3";
+    packageData.version = "0.7.0";
     packageData.main = "src/windc.js";
-    packageData.description = "The AOT compiler for Wind";
+    packageData.description = "The AOT compiler for Wind.js";
     packageData.dependencies = {
         "wind": "~0.7.0",
-        "wind-compiler": "~0.7.0",
         "optimist": "*"
     };
     
@@ -93,10 +96,6 @@ var buildAot = function () {
     console.log("windc generated.");
 }
 
-var modules = [ "core", "compiler", "builderbase", "async", "promise" ];
+buildWind();
 
-_.each(modules, function (name) {
-    buildOne(name);
-});
-
-buildAot();
+buildWindC();
