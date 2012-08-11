@@ -24,12 +24,18 @@ exports.setupTests = function (Wind) {
         
         describe("each", function () {
         
-            it("should iterate all array items", function () {
+            it("should iterate all array items with index and value by an action with two arguments", function () {
                 var obj = {};
-                
                 _.each([1, 2, 3], function (i, v) { obj["i" + i] = v; });
                 
                 obj.should.eql({ i0: 1, i1: 2, i2: 3 });
+            });
+            
+            it("should iterate all the array items with value with by an action with single argument", function () {
+                var obj = {};
+                _.each([1, 2, 3], function (v) { obj["i" + v] = v; });
+                
+                obj.should.eql({ i1: 1, i2: 2, i3: 3 });
             });
             
             it("should break the array iteration when get a value", function () {
@@ -44,12 +50,18 @@ exports.setupTests = function (Wind) {
                 obj.should.eql({ i0: 1, i1: 2, i2: 3 });
             });
             
-            it("should iterate all map items", function () {
+            it("should iterate all hash items with key and value by an action with two arguments", function () {
                 var obj = {};
-                
                 _.each({ a: 1, b: 2, c: 3 }, function (k, v) { obj["k" + k] = v; });
                 
                 obj.should.eql({ ka: 1, kb: 2, kc: 3 });
+            });
+            
+            it("should iterate all hash items with key and value by an action with single argument", function () {
+                var obj = {};
+                _.each({ a: 1, b: 2, c: 3 }, function (v) { obj["k" + v] = v; });
+                
+                obj.should.eql({ k1: 1, k2: 2, k3: 3 });
             });
             
             it("should break the map iteration when get a value", function () {
@@ -64,7 +76,7 @@ exports.setupTests = function (Wind) {
                 obj.should.eql({ ka: 1, kb: 2, kc: 3 });
             });
             
-            it("should treat return as continue in loop", function () {
+            it("should consider undefined as continue in loop", function () {
                 var obj = {};
                 
                 _.each({ a: 1, b: 2, c: 3, d: 4 }, function (k, v) {
@@ -82,7 +94,7 @@ exports.setupTests = function (Wind) {
                 result.should.eql([10, 20, 30]);
             });
             
-            it("should convert all map key and values if both mappers are provided", function () {
+            it("should convert all hash key and values if both mappers are provided", function () {
                 var obj = _.map(
                     { a: 1, b: 2, c: 3 }, 
                     function (key) { return key + "0"; },
@@ -91,7 +103,15 @@ exports.setupTests = function (Wind) {
                 obj.should.eql({ a0: 10, b0: 20, c0: 30 });
             });
             
-            it("should keep the same map (but different instance) if neither mappers are provided", function () {
+            it("should convert all hash values if only one mappers are provided", function () {
+                var obj = _.map(
+                    { a: 1, b: 2, c: 3 },
+                    function (value) { return value * 10; });
+                
+                obj.should.eql({ a: 10, b: 20, c: 30 });
+            });
+            
+            it("should keep the same hash (but different instance) if neither mappers are provided", function () {
                 var obj = { a: 1, b: 2, c: 3 };
                 var newObj = _.map(obj);
                 

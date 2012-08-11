@@ -12,14 +12,14 @@
         var each = function (obj, action) {
             if (isArray(obj)) {
                 for (var i = 0, len = obj.length; i < len; i++) {
-                    var value = action(i, obj[i]);
+                    var value = action.length === 1 ? action(obj[i]) : action(i, obj[i]);
                     if (value !== undefined)
                         return value;
                 }
             } else {
                 for (var key in obj) {
                     if (obj.hasOwnProperty(key)) {
-                        var value = action(key, obj[key]);
+                        var value = action.length === 1 ? action(obj[key]) : action(key, obj[key]);
                         if (value !== undefined)
                             return value;
                     }
@@ -35,15 +35,19 @@
                 }
                 return array;
             } else {
+                var keyMapper = valueMapper ? mapper : null;
+                valueMapper = valueMapper || mapper;
+                
                 var newObj = {};
                 for (var key in obj) {
                     if (obj.hasOwnProperty(key)) {
                         var value = obj[key];
-                        var newKey = mapper ? mapper(key) : key;
+                        var newKey = keyMapper ? keyMapper(key) : key;
                         var newValue = valueMapper ? valueMapper(value) : value;
                         newObj[newKey] = newValue;
                     }
                 }
+
                 return newObj;
             }
         }
@@ -164,7 +168,7 @@
 
     var loadModules = function (require, modules) {
         if (require) {
-            _.each(modules, function (i, name) {
+            _.each(modules, function (name) {
                 var m;
                 try {
                     m = require("./wind-" + name);
@@ -175,7 +179,7 @@
                 m.init();
             });
         } else {
-            _.each(modules, function (i, m) {
+            _.each(modules, function (m) {
                 m.init();
             });
         }

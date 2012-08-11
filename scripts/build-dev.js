@@ -21,7 +21,7 @@ console.log(coreName + " generated.");
 
 var moduleList = [ "compiler", "builderbase", "async", "promise" ];
  
-_.each(moduleList, function (i, module) {
+_.each(moduleList, function (module) {
     var fullName = "wind-" + module;
     var version = Wind.modules[module].version;
     var outputName = fullName + "-" + version + ".js";

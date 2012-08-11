@@ -4,7 +4,7 @@ var path = require("path"),
     fs = require("fs"),
     utils = require("../lib/utils"),
     Wind = utils.Wind,
-    _ = require("underscore");
+    _ = Wind._;
 
 var npmDir = path.join(__dirname, "../bin/npm");
 var srcDir = path.join(__dirname, "../src");
