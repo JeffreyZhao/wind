@@ -47,7 +47,7 @@
                   disclaimer in the documentation and/or other materials
                   provided with the distribution.
 
-            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER ¡°AS IS¡± AND ANY
+            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY
             EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
             IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
             PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
@@ -2964,7 +2964,6 @@
         Wind.define({
             name: "compiler",
             version: "0.7.0",
-            exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             dependencies: { core: "~0.7.0" },
             init: function () {

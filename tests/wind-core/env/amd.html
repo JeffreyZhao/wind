@@ -35,37 +35,25 @@
         describe("define (AMD)", function () {
             
             it("should support simple module", function (done) {
-                require(['wind'], function (Wind) {
-                    Wind.coreVersion = "0.5.0";
-                    var initTimes = 0;
+                require(['wind-core'], function (Wind) {
+                    Wind.modules["core"].version = "0.5.0";
                     
+                    var initTimes = 0;
                     Wind.define({
                         name: "test",
                         version: "0.5.0",
-                        coreDependency: "~0.5.0",
-                        init: function () {
-                            initTimes++;
-                            Wind.hello = "world";
-                        }
+                        dependencies: { core: "~0.5.0" },
+                        init: function () { initTimes++; }
                     });
                     
-                    require(["wind-test"], function (test) {
-                        initTimes.should.equal(0);
-                        test.name.should.equal("test");
-                        test.version.should.equal("0.5.0");
-                        test.coreDependency.should.equal("~0.5.0");
+                    require(["wind-test"], function () {
                         
-                        test.init();
-                        test.init();
-                        test.init();
-                        
-                        Wind.hello.should.equal("world");
                         initTimes.should.equal(1);
                         
                         Wind.modules["test"].should.eql({
                             name: "test",
                             version: "0.5.0",
-                            coreDependency: "~0.5.0"
+                            dependencies: { core: "~0.5.0" }
                         });
                         
                         done();
@@ -74,12 +62,12 @@
             });
 
             it("should support complicated module", function (done) {
-                require(['wind'], function (Wind) {
+                require(['wind-core'], function (Wind) {
                     var loaded = [];
-                    define("wind-m0", function () { return { init: function () { loaded.push("m0"); } }; });
-                    define("wind-m1", function () { return { init: function () { loaded.push("m1"); } }; });
+                    define("wind-m0", function () { loaded.push("m0"); });
+                    define("wind-m1", function () { loaded.push("m1"); });
        
-                    Wind.coreVersion = "0.5.0";
+                    Wind.modules["core"].version = "0.5.0";
                     Wind.modules["d0"] = { version: "0.1.0" };
                     Wind.modules["d1"] = { version: "0.2.5" };
                     
@@ -89,38 +77,28 @@
                         name: "test",
                         version: "0.8.0",
                         autoloads: ["m0", "m1"],
-                        coreDependency: "~0.5.0",
-                        dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" },
-                        init: function () {
-                            initTimes++;
-                            Wind.hello = "world";
-                        }
+                        dependencies: {
+                            core: "~0.5.0",
+                            d0: "~0.1.0",
+                            d1: "~0.2.0"
+                        },
+                        init: function () { initTimes++; }
                     });
                     
-                    require(["wind-test"], function (test) {
-                        initTimes.should.equal(0);
-                        loaded.should.be.empty;
-        
-                        test.name.should.equal("test");
-                        test.version.should.equal("0.8.0");
-                        test.autoloads.should.eql([ "m0", "m1" ]);
-                        test.coreDependency.should.equal("~0.5.0");
-                        test.dependencies.should.eql({ "d0": "~0.1.0", "d1": "~0.2.0" });
-                    
-                        test.init();
-                        test.init();
-                        test.init();
+                    require(["wind-test"], function () {
                         
-                        loaded.should.eql(["m0", "m1"]);
+                        loaded.should.eql([ "m0", "m1" ]);
                         initTimes.should.equal(1);
                         
-                        Wind.hello.should.equal("world");
                         Wind.modules["test"].should.eql({
                             name: "test",
                             version: "0.8.0",
                             autoloads: [ "m0", "m1" ],
-                            coreDependency: "~0.5.0",
-                            dependencies: { "d0": "~0.1.0", "d1": "~0.2.0" }
+                            dependencies: {
+                                core: "~0.5.0",
+                                d0: "~0.1.0",
+                                d1: "~0.2.0"
+                            }
                         });
                         
                         done();
@@ -129,80 +107,93 @@
             });
 
             it("should throw if module required an invalid core version", function (done) {
-                require(['wind'], function (Wind) {
-                    Wind.coreVersion = "0.5.0";
+                require(['wind-core'], function (Wind) {
+                    Wind.modules["core"].version = "0.5.0";
                     
                     var initTimes = 0;
                     
-                    Wind.define({
-                        name: "test",
-                        version: "0.9.0",
-                        coreDependency: "~0.6.0",
-                        init: function () { initTimes++; }
-                    });
-                    
-                    require(["wind-test"], function (test) {
+                    var onerror = function (err) {
                         (function () {
-                            test.init();
-                        }).should.throw(/expected.*actual/);
+                            throw err;
+                        }).should.throw(/core.*expected.*actual/);
                         
                         initTimes.should.equal(0);
                         
                         done();
+                    }
+
+                    Wind.define({
+                        name: "test",
+                        version: "0.9.0",
+                        dependencies: { core: "~0.6.0" },
+                        onerror: onerror,
+                        init: function () { initTimes++; }
                     });
+                    
+                    require([ "wind-test" ]);
                 });
             });
 
             it("should throw if required module is not loaded", function (done) {
-                require(['wind'], function (Wind) {
-                    Wind.coreVersion = "0.5.0";
+                require(['wind-core'], function (Wind) {
+                    Wind.modules["core"].version = "0.5.0";
                     
                     var initTimes = 0;
                     
-                    Wind.define({
-                        name: "test",
-                        version: "0.9.0",
-                        coreDependency: "~0.5.0",
-                        dependencies: { "d0": "~0.1.0" },
-                        init: function () { initTimes++; }
-                    });
-                    
-                    require(["wind-test"], function (test) {
+                    var onerror = function (err) {
                         (function () {
-                            test.init();
-                        }).should.throw(/required.*expected/);
+                            throw err;
+                        }).should.throw(/required.*d0.*expected/);
                         
                         initTimes.should.equal(0);
                         
                         done();
-                    });
-                });
-            });
-            
-            it("should throw if the required module is loaded but has invalid version", function (done) {
-                require(['wind'], function (Wind) {
-                    Wind.coreVersion = "0.5.0";
-                    Wind.modules["d0"] = { version: "0.2.0" };
-                    
-                    var initTimes = 0;
+                    };
                     
                     Wind.define({
                         name: "test",
                         version: "0.9.0",
-                        coreDependency: "~0.5.0",
-                        dependencies: { "d0": "~0.1.0" },
+                        dependencies: {
+                            core: "~0.5.0",
+                            d0: "~0.1.0"
+                        },
+                        onerror: onerror,
                         init: function () { initTimes++; }
                     });
                     
-                    require(["wind-test"], function (test) {
+                    require([ "wind-test" ]);
+                });
+            });
+            
+            it("should throw if the required module is loaded but has invalid version", function (done) {
+                require(['wind-core'], function (Wind) {
+                    Wind.modules["core"].version = "0.5.0";
+                    Wind.modules["d0"] = { version: "0.2.0" };
+                    
+                    var initTimes = 0;
+                    
+                    var onerror = function (err) {
                         (function () {
-                            test.init();
-                        }).should.throw(/expected.*actual/);
+                            throw err;
+                        }).should.throw(/d0.*expected.*actual/);
                         
                         initTimes.should.be.equal(0);
                         
                         done();
+                    }
+                    
+                    Wind.define({
+                        name: "test",
+                        version: "0.9.0",
+                        dependencies: {
+                            core: "~0.5.0",
+                            d0: "~0.1.0"
+                        },
+                        onerror: onerror,
+                        init: function () { initTimes++; }
                     });
+                    
+                    require([ "wind-test" ]);
                 });
             });
         });

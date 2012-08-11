@@ -1,8 +1,8 @@
-/**
- * Author: XiNGRZ <chenxingyu92@gmail.com>
- * 
- * Require.js paths configuration, application initialization.
- */
+/***********************************************************************
+  Author: XiNGRZ <chenxingyu92@gmail.com>
+
+  Require.js paths configuration, application initialization.
+ ***********************************************************************/
 
 requirejs.config({
     'paths': {
@@ -10,7 +10,8 @@ requirejs.config({
         'wind-async'           : '../../../../src/wind-async',
         'wind-builderbase'     : '../../../../src/wind-builderbase',
         'wind-compiler'        : '../../../../src/wind-compiler',
-        'wind-all'             : './wind-all'
+        'wind-promise'         : '../../../../src/wind-promise',
+        'wind'                 : './wind'
     }
 });
 

@@ -52,7 +52,6 @@
         Wind.define({
             name: "promise",
             version: "0.7.0",
-            exports: isCommonJS && module.exports,
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
             dependencies: { builderbase: "~0.7.0" },

@@ -1,17 +1,16 @@
-/**
- * Author: XiNGRZ <chenxingyu92@gmail.com>
- * 
- * Wind loader, returns a prepared Wind object with wind-compiler and wind-async initialized.
- */
+/***********************************************************************
+  Author: XiNGRZ <chenxingyu92@gmail.com>
+
+  Load all the Wind.js modules (core, compiler, async, promise - 
+  builderbase would also be loaded implicitly) and returns the root
+  object get from the core module.
+ ***********************************************************************/
 
 define([
     'wind-core',
     'wind-compiler',
     'wind-async',
-], function (Wind, compiler, async) {
-
-    compiler.init();
-    async.init();
-    
+    'wind-promise'
+], function (Wind) {
     return Wind;
 });
