@@ -1,6 +1,6 @@
 "use strict";
 
-var Wind = require("../../../src/wind");
+var Wind = require("../../../src/wind-core");
 require("chai").should();
 
 describe("define (CommonJS)", function () {

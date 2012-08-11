@@ -316,7 +316,7 @@
         Wind = module.exports;
         init();
     } else if (isAmd) {
-        define("wind", function () {
+        define("wind-core", function () {
             Wind = { };
             init();
             return Wind;

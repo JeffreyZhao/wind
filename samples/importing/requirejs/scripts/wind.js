@@ -5,7 +5,7 @@
  */
 
 define([
-    'wind',
+    'wind-core',
     'wind-compiler',
     'wind-async',
 ], function (Wind, compiler, async) {

@@ -311,14 +311,14 @@
 
     if (isCommonJS) {
         try {
-            Wind = require("./wind");
+            Wind = require("./wind-core");
         } catch (ex) {
-            Wind = require("wind");
+            Wind = require("wind-core");
         }
         
         defineModule();
     } else if (isAmd) {
-        require(["wind"], function (wind) {
+        require(["wind-core"], function (wind) {
             Wind = wind;
             defineModule();
         });

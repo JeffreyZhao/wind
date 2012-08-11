@@ -6,7 +6,7 @@
 
 requirejs.config({
     'paths': {
-        'wind'                 : '../../../../src/wind',
+        'wind-core'            : '../../../../src/wind-core',
         'wind-async'           : '../../../../src/wind-async',
         'wind-builderbase'     : '../../../../src/wind-builderbase',
         'wind-compiler'        : '../../../../src/wind-compiler',
@@ -14,7 +14,7 @@ requirejs.config({
     }
 });
 
-require(["wind-all"], function (Wind) {
+require(["wind"], function (Wind) {
     var printInfiniteAsync = eval(Wind.compile("async", function () {
         var i = 0;
         while (++i) {
