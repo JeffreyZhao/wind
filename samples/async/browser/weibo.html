@@ -1,0 +1,66 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Weibo - Wind.js Sample</title>
+
+    <script src="../../../src/wind-core.js"></script>
+    <script src="../../../src/wind-compiler.js"></script>
+    <script src="../../../src/wind-builderbase.js"></script>
+    <script src="../../../src/wind-async.js"></script>
+
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.1.min.js"></script>
+    <script src="jquery-bindings.js"></script>
+
+    <script>
+        /*
+        $(document).ready(function () {
+            $("#btnSearch").click(function (){
+                
+                $("#result").empty();
+                var keyword = encodeURIComponent($("#txtKeyword").val());
+
+                $.ajax({
+                    url: "http://api.t.sina.com.cn/trends/statuses.json?trend_name=" + keyword + "&source=3355748460",
+                    dataType: "jsonp",
+                    success: function (data) {
+                        $.each(data, function () {
+                            $("#result").append("<li>" + this.text + "</li>");
+                        });
+                    }
+                });
+            });
+        });
+        */
+        
+        var goAsync = eval(Wind.compile("async", function () {
+            $await($(document).readyAsync());
+            
+            while (true) {
+            
+                $await(Wind.Async.onEvent($("#btnSearch").get(0), "click"));
+                
+                $('#result').empty();
+                var keyword = encodeURIComponent($("#txtKeyword").val());
+                
+                var result = $await($.ajaxAsync({
+                    url: 'http://api.t.sina.com.cn/trends/statuses.json?trend_name=' + keyword + '&source=3355748460',
+                    dataType: "jsonp"
+                }));
+
+                $.each(result.data, function () {
+                    $('#result').append('<li>' + this.text + '</li>');
+                });
+            }
+        }));
+        
+        goAsync().start();
+    </script>
+</head>
+<body>
+    <input type="text" value="Wind.js" id="txtKeyword" />
+    <input type="button" value="Search" id="btnSearch" />
+
+    <ul id="result"></ul>
+</body>
+</html>
+

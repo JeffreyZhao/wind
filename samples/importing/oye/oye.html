@@ -1,27 +1,24 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-<title>OYE Loader - Jscex Sample</title>
+<title>OYE Loader - Wind Sample</title>
 <!-- Load OYE module loader -->
 <script type="text/javascript" src="oye.js"></script>
 <script type="text/javascript">
 	require.config({
-		'jscex':				 '../../src/jscex.js',
-		'jscex-async-powerpack': '../../src/jscex-async-powerpack.js',
-		'jscex-async':			 '../../src/jscex-async.js',
-		'jscex-jit':			 '../../src/jscex-jit.js',
-		'jscex-builderbase':	 '../../src/jscex-builderbase.js',
-		'jscex-parser':			 '../../src/jscex-parser.js'
+		'wind-core':				 '../../src/wind-core.js',
+		'wind-async':			 '../../src/wind-async.js',
+		'wind-compiler':			 '../../src/wind-compiler.js',
+		'wind-builderbase':	 '../../src/wind-builderbase.js',
 	});
 
-    require(['jscex', 'jscex-jit', 'jscex-async-powerpack', 'jscex-async'], function (Jscex, jit, asyncPowerPack, async){
-		jit.init(Jscex);
-        async.init(Jscex);
-        asyncPowerPack.init(Jscex);
+    require(['wind', 'wind-compiler', 'wind-async'], function (Wind, compiler, async){
+		compiler.init(Wind);
+        async.init(Wind);
 
-		var printEverySecond = eval(Jscex.compile("async", function (texts) {
+		var printEverySecond = eval(Wind.compile("async", function (texts) {
 			for (var i = 0; i < texts.length; i++) {
-				$await(Jscex.Async.sleep(1000));
+				$await(Wind.Async.sleep(1000));
 				console.log(texts[i]);
 			}
 		}));

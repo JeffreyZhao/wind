@@ -1,6 +1,6 @@
+.DS_Store
 node_modules
-tools/compiler.jar
+compiler.jar
 *.swp
-doc/out
 *~
 _*

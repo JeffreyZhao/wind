@@ -3,31 +3,25 @@
 var path = require("path"),
     fs = require("fs"),
     utils = require("../lib/utils"),
-    Jscex = utils.Jscex,
-    execAsync = Jscex.Async.Binding.fromCallback(require('child_process').exec, "_ignored_", "stdout", "stderr"),
-    _ = Jscex._;
+    Wind = utils.Wind,
+    execAsync = Wind.Async.Binding.fromCallback(require('child_process').exec, "_ignored_", "stdout", "stderr"),
+    _ = Wind._;
 
-Jscex.logger.level = Jscex.Logging.Level.INFO;
+Wind.logger.level = Wind.Logging.Level.INFO;
 
 var prodDir = path.join(__dirname, "../bin/prod");
 var srcDir = path.join(__dirname, "../src");
 var gccPath = path.join(__dirname, "../tools/compiler.jar");
 
-if (path.existsSync(prodDir)) {
+if (fs.existsSync(prodDir)) {
     utils.rmdirSync(prodDir);
 }
 
 fs.mkdirSync(prodDir);
 
-var buildOne = eval(Jscex.compile("async", function (module) {
-    var fullName, version;
-    if (!module) {
-        fullName = "jscex";
-        version = Jscex.coreVersion;
-    } else {
-        fullName = "jscex-" + module;
-        version = Jscex.modules[module].version;
-    }
+var buildOne = eval(Wind.compile("async", function (module) {
+    var fullName = "wind-" + module;
+    var version = Wind.modules[module].version;
     
     var inputFile = fullName + ".js";
     var outputFile = fullName + "-" + version + ".min.js";
@@ -49,10 +43,10 @@ var buildOne = eval(Jscex.compile("async", function (module) {
     }
 }));
 
-var buildAll = eval(Jscex.compile("async", function (modules) {
+var buildAll = eval(Wind.compile("async", function (modules) {
     for (var i = 0; i < modules.length; i++) {
         $await(buildOne(modules[i]));
     }
 }));
 
-buildAll(["", "builderbase", "async", "async-powerpack", "promise"]).start();
+buildAll(["core", "builderbase", "async", "promise"]).start();

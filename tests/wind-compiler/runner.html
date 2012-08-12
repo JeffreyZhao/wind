@@ -1,0 +1,27 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Unit Tests Runner: wind-compiler</title>
+    
+    <!-- Mocha -->
+    <link rel="stylesheet" href="../../lib/mocha/mocha.css" />
+    <script src="../../lib/mocha/mocha.js"></script>
+    <script>mocha.setup('bdd');</script>
+    
+    <!-- Chai -->
+    <script src="../../lib/chai.js"></script>
+    <script>chai.Should();</script>
+</head>
+<body>
+    <div id="mocha"></div>
+
+    <script src="../../src/wind-core.js"></script>
+    <script src="../../src/wind-compiler.js"></script>
+    
+    <script src="tests.js"></script>
+    <script>
+        window.setupTests(Wind);
+        mocha.run();
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-<title>SeaJS Loader - Jscex Sample</title>
+<title>SeaJS Loader - Wind Sample</title>
 <!-- Load OYE module loader -->
 <script type="text/javascript" src="sea-debug.js"></script>
 <script type="text/javascript">
@@ -9,14 +9,13 @@
         base: "../../src/"
     });
 
-    seajs.use(["jscex", "jscex-jit", "jscex-async-powerpack", "jscex-async"], function (Jscex, jit, asyncPowerPack, async) {
-        jit.init(Jscex);
-        async.init(Jscex);
-        asyncPowerPack.init(Jscex);
+    seajs.use(["wind", "wind-compiler", "wind-async"], function (Wind, compiler, async) {
+        compiler.init(Wind);
+        async.init(Wind);
         
-        var printEverySecond = eval(Jscex.compile("async", function (texts) {
+        var printEverySecond = eval(Wind.compile("async", function (texts) {
 			for (var i = 0; i < texts.length; i++) {
-				$await(Jscex.Async.sleep(1000));
+				$await(Wind.Async.sleep(1000));
 				console.log(texts[i]);
 			}
 		}));

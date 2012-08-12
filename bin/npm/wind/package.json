@@ -1,0 +1,12 @@
+{
+    "author": "Jeffrey Zhao <jeffz@live.com> (http://zhaojie.me/)",
+    "homepage": "https://github.com/JeffreyZhao/wind",
+    "bugs": {
+        "url": "https://github.com/JeffreyZhao/wind/issues",
+        "email": "jeffz@live.com"
+    },
+    "name": "wind",
+    "version": "0.7.0",
+    "main": "wind.js",
+    "description": "Wind.js is an advanced library which enable us to control flow with plain JavaScript for asynchronous programming (and more) without additional pre-compiling steps."
+}

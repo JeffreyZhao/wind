@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Modal Dialog - Wind.js Sample</title>
+
+    <script src="../../../src/wind-core.js"></script>
+    <script src="../../../src/wind-compiler.js"></script>
+    <script src="../../../src/wind-builderbase.js"></script>
+    <script src="../../../src/wind-async.js"></script>
+
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.1.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.16/jquery-ui.min.js"></script>
+    <script src="jquery-bindings.js"></script>
+
+    <link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.16/themes/black-tie/jquery-ui.css" type="text/css" rel="stylesheet" />
+
+    <script>
+        var emptyAsync = eval(Wind.compile("async", function () {
+        
+            var ok = false;            
+            $await($("#dialog-confirm").dialogAsync({
+                modal: true,
+                buttons: {
+                    "OK": function () {
+                        ok = true;
+                        $(this).dialog("close");
+                    },
+                    "Cancel": function () {
+                        $(this).dialog("close");
+                    }
+                }
+            }));
+
+            if (ok) {
+                // simulate an ajax call
+                var response = $await($.ajaxAsync({
+                    url: "modal-dialog.html",
+                    dataType: "text"
+                }));
+                
+                $("#emptyLength").text(response.data.length);
+                $await($("#dialog-emptied").dialogAsync({ modal: true }));
+            } else {
+                $await($("#dialog-canceled").dialogAsync({ modal: true }));
+            }
+
+            console.log("done");
+        }))
+    </script>
+</head>
+<body>
+    <input type="button" value="Empty" onclick="emptyAsync().start();" />
+
+    <ol>
+        <li>Click "Empty", then popup a confirmation dialog.</li>
+        <li>User choose "OK" or "Cancel".
+            <ul>
+                <li>OK -
+                    <ol>
+                        <li>Send an AJAX request, when finished,</li>
+                        <li>Show a message dialog.</li>
+                    </ol>
+                </li>
+                <li>Cancel - Show a message dialog</li>
+            </ul>
+        </li>
+    </ol>
+
+    <div style="display:none;">
+
+        <div id="dialog-confirm" title="Empty the recycle bin?">
+            <p>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+        </div>
+
+        <div id="dialog-canceled" title="Canceled">
+            <p>You can still empty the recycle bin anytime you want.</p>
+        </div>
+
+        <div id="dialog-emptied" title="Emptied">
+            <p>You've emptied your recycle bin (<span id="emptyLength"></span> bytes received).</p>
+        </div>
+
+    </div>
+</body>
+</html>
+
