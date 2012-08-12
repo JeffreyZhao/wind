@@ -19,10 +19,8 @@
             var ctx = canvas.getContext ? canvas.getContext("2d") : null;
             
             var lineWidth = 9;
-            var updateCost = 100;
-            var compareCost = 100;
-            
-            var sharedTemp = -1;
+            var updateCost = 50;
+            var compareCost = 30;
             
             var randomArray = function () {
                 var array = [];
@@ -36,7 +34,7 @@
                 return array;
             }
             
-            var paint = function (array, updating, comparing) {
+            var paint = function (array, updating) {
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.lineWidth = lineWidth;
@@ -48,16 +46,8 @@
                     
                     ctx.beginPath();
                     
-                    if (sharedTemp == array[i]) {
-                        if (updating) {
-                            ctx.strokeStyle = "red";
-                        } else if (comparing) {
-                            ctx.strokeStyle = "green";
-                        }
-                    } else if (updating && updating.indexOf(i) >= 0) {
+                    if (updating && updating.indexOf(i) >= 0) {
                         ctx.strokeStyle = "red";
-                    } else if (comparing && comparing.indexOf(i) >= 0) {
-                        ctx.strokeStyle = "green";
                     } else {
                         ctx.strokeStyle = "black";
                     }
@@ -69,8 +59,7 @@
                 }
             }
             
-            var compareAsync = eval(Wind.compile("async", function (x, y, comparing) {
-                paint(array, null, comparing);
+            var compareAsync = eval(Wind.compile("async", function (x, y) {
                 $await(Wind.Async.sleep(compareCost));
                 return x - y;
             }));
@@ -92,21 +81,30 @@
             
             var sortOperations = {
             
+                Bubble: eval(Wind.compile("async", function (array) {
+                    for (var i = 0; i < array.length; i++) {
+                        for (var j = 0; j < array.length - i - 1; j++) {
+                            var r = $await(compareAsync(array[j], array[j + 1]));
+                            if (r > 0) $await(swapAsync(array, j, j + 1));
+                        }
+                    }
+                })),
+                
                 Quick: eval(Wind.compile("async", function (array) {
             
                     var partitionAsync = eval(Wind.compile("async", function (begin, end) {
                         var i = begin;
                         var j = end;
-                        var pivot = sharedTemp = array[Math.floor((begin + end) / 2)];
+                        var pivot = array[Math.floor((begin + end) / 2)];
 
                         while (i <= j) {
                             while (true) {
-                                var r = $await(compareAsync(array[i], pivot, [i]));
+                                var r = $await(compareAsync(array[i], pivot));
                                 if (r < 0) { i++; } else { break; }
                             }
 
                             while (true) {
-                                var r = $await(compareAsync(array[j], pivot, [j]));
+                                var r = $await(compareAsync(array[j], pivot));
                                 if (r > 0) { j--; } else { break; }
                             }
 
@@ -116,8 +114,6 @@
                                 j--;
                             }
                         }
-
-                        sharedTemp = -1;
                         
                         return i;
                     }));
@@ -135,22 +131,14 @@
                     $await(sortAsync(0, array.length - 1));
                 })),
                 
-                Bubble: eval(Wind.compile("async", function (array) {
-                    for (var i = 0; i < array.length; i++) {
-                        for (var j = 0; j < array.length - i; j++) {
-                            var r = $await(compareAsync(array[j], array[j + 1], [j, j + 1]));
-                            if (r > 0) $await(swapAsync(array, j, j + 1));
-                        }
-                    }
-                })),
-                
                 Selection: eval(Wind.compile("async", function (array) {
                     for(var j = 0; j < array.length - 1; j++) {
                         var mi = j;
                         for (var i = j + 1; i < array.length; i++) {
-                            var r = $await(compareAsync(array[i], array[mi], [i, mi]));
+                            var r = $await(compareAsync(array[i], array[mi]));
                             if (r < 0) { mi = i; }
                         }
+
                         $await(swapAsync(array, mi, j));
                     }            
                 })),
@@ -160,13 +148,13 @@
  
                     for (var gap = Math.floor(array.length / 2); gap > 0; gap = Math.floor(gap / 2)) {
                         for (var i = gap; i < array.length; i++) {
-                            var temp = sharedTemp = array[i];
+                            var temp = array[i];
                             
                             var j;
                             for (j = i; j >= gap; j -= gap) {
-                                var r = $await(compareAsync(temp, array[j - gap], [j - gap]));
+                                var r = $await(compareAsync(temp, array[j - gap]));
                                 if (r < 0) {
-                                    $await(assignAsync(array, j, array[j - gap], [j, j - gap]));
+                                    $await(assignAsync(array, j, array[j - gap]));
                                 } else {
                                     break;
                                 }
@@ -175,8 +163,6 @@
                             $await(assignAsync(array, j, temp, [j]));
                         }
                     }
-                    
-                    sharedTemp = -1;
                 }))
             };
 
