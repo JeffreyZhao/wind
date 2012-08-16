@@ -6,7 +6,7 @@
         "email": "jeffz@live.com"
     },
     "name": "wind",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "main": "wind.js",
     "description": "Wind.js is an advanced library which enable us to control flow with plain JavaScript for asynchronous programming (and more) without additional pre-compiling steps."
 }
