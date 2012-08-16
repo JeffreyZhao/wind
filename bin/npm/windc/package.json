@@ -6,7 +6,7 @@
         "email": "jeffz@live.com"
     },
     "name": "windc",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "main": "src/windc.js",
     "description": "The AOT compiler for Wind.js",
     "dependencies": {
