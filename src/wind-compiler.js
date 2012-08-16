@@ -2978,7 +2978,7 @@
     var defineModule = function () {
         Wind.define({
             name: "compiler",
-            version: "0.7.0",
+            version: "0.7.1",
             require: isCommonJS && require,
             dependencies: { core: "~0.7.0" },
             init: function () {
