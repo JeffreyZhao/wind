@@ -239,10 +239,10 @@ if (module.parent) { // command
         .usage("Usage: $0 [options]")
         .demand("input").alias("input", "i").describe("input", "The input file")
         .demand("output").alias("output", "o").describe("output", "The output file")
-        .default("root-name", "Wind").describe("root-name", "The name of root")
+        .default("root", "Wind").describe("root", "The name of root")
         .argv;
 
-    Wind.compile.rootName = rootName = argv["root-name"];
+    Wind.compile.rootName = rootName = argv.root;
 
     var fs = require("fs");
     var code = fs.readFileSync(argv.input, "utf-8");
