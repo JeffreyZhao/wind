@@ -312,7 +312,7 @@
   wind-compiler-0.7.0.js
  ***********************************************************************/
 
-﻿(function () {
+(function () {
     "use strict";
 
     var parse = (function () {
