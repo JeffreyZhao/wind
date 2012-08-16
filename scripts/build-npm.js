@@ -82,7 +82,7 @@ var buildWindC = function () {
     
     var packageData = _.clone(packageBase);
     packageData.name = "windc";
-    packageData.version = "0.7.0";
+    packageData.version = "0.7.1";
     packageData.main = "src/windc.js";
     packageData.description = "The AOT compiler for Wind.js";
     packageData.dependencies = {
