@@ -2924,7 +2924,10 @@
             
             buffer.push(comment);
             buffer.push(code.substring(comment.length));
-            buffer.push("\n");
+            
+            if (i != length - 1) {
+                buffer.push("\n");
+            }
         }
         
         return buffer.join("");
