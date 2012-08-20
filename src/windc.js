@@ -252,15 +252,6 @@ var compile = function (code, binders) {
     }
 }
 
-var fixUTF8andWindowsNewLine = function(code) {
-	if(!code)
-		return code;
-	if (code.charCodeAt(0) === 65279)
-		code = code.substr(1);
-	code = code.replace(/\r/g,"");
-	return code;
-}
-
 if (module.parent) { // command
     exports.compile = compile;
 } else {
@@ -276,7 +267,6 @@ if (module.parent) { // command
 
     var fs = require("fs");
     var code = fs.readFileSync(argv.input, "utf-8");
-	code = fixUTF8andWindowsNewLine(code);
     var newCode = compile(code);
     fs.writeFileSync(argv.output, newCode, "utf-8");
 }
