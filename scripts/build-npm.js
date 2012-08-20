@@ -86,7 +86,7 @@ var buildWindC = function () {
     packageData.main = "src/windc.js";
     packageData.description = "The AOT compiler for Wind.js";
     packageData.dependencies = {
-        "wind": "~0.7.0",
+        "wind": "~0.7.1",
         "optimist": "*"
     };
     

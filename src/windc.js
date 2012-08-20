@@ -1,203 +1,233 @@
-require("../lib/narcissus-parser");
+var Wind;
 
-module.paths.unshift(__dirname);
+try {
+    Wind = require("./wind");
+} catch (ex) {
+    Wind = require("wind");
+}
 
-var Wind = require("wind");
+var _ = Wind._;
+
+var esprima = require("esprima");
 
 Wind.logger.level = Wind.Logging.Level.WARN;
 
 var rootName;
 
-var extract = function (ast) {
+var isSubset = function (full, partial) {
+    if (full === partial) return true;
+    
+    if (typeof full !== typeof partial) return false
+    switch (typeof full) {
+        case "string":
+        case "number":
+        case "boolean":
+        case "undefined":
+            return full === partial;
+    }
+    
+    if (full === null && partial !== null) return false;
+    if (full !== null && partial === null) return false;
 
-    var results = [];
-    var code = ast.getSource();
+    if (_.isArray(full)) {
+        if (!_.isArray(partial)) return false;
+        if (full.length != partial.length) return false;
 
-    var visitAll = function (nodes) {
-        for (var i = 0; i < nodes.length; i++) {
-            visit(nodes[i]);
+        for (var i = 0; i < full.length; i++) {
+            if (!isSubset(full[i], partial[i])) return false;
         }
+
+        return true;
     }
+    
+    if (_.isArray(partial)) return false;
+    
+    var result = _.each(partial, function (key, value) {
+        if (!(key in full)) return false;
+        if (!isSubset(full[key], value)) return false;
+    });
+    
+    if (result === false) return false
+    
+    return true;
+};
 
-    var visitCall = function (node) {
-        try {
-            var isEval = (node.children[0].value == "eval");
-            var isWindCompile = (node.children[1].children[0].children[0].getSource() == rootName + ".compile");
+var extract = function (codeAst) {
+    var results = [];
 
-            if (isEval && isWindCompile) {
+    var windPattern = {
+        "type": "CallExpression",
+        "callee": { "type": "Identifier", "name": "eval" },
+        "arguments": [ {
+            "type": "CallExpression",
+            "callee": {
+                "type": "MemberExpression",
+                "computed": false,
+                "object": { "type": "Identifier", "name": "Wind" },
+                "property": { "type": "Identifier", "name": "compile" }
+            },
+            "arguments": [ { "type": "Literal" }, { "type": "FunctionExpression" } ]
+        } ]
+    };
 
-                /**
-                 * Now "node.start" points to the first charactor of the "eval" method call,
-                 * but "node.end" points to the next charactor of the function to compile
-                 * rather than the end of "eval" calls, like this:
-                 *
-                 * var abc = eval(Wind.compile("xyz", function (args) { ... } )  );
-                 *           ^                                                ^
-                 *       node.start                                       node.end
-                 *
-                 * That should be a bug of Narcissus, but currently we can only find out the
-                 * two following right bracket after "node.end".
-                 */
-                var end = node.end - 1;
-                while (code[++end] != ')');
-                while (code[++end] != ')');
+    var tryExtractWindMethod = function (ast) {
+        if (!isSubset(ast, windPattern)) return false;
 
-                results.push({
-                    start: node.start,
-                    end: end,
-                    builderName: node.children[1].children[0].children[1].children[0].value,
-                    funcCode: node.children[1].children[0].children[1].children[1].getSource()
-                });
+        var builderName = ast.arguments[0].arguments[0].value;
+        if (typeof builderName !== "string") return false;
+            
+        results.push({
+            builderName: builderName,
+            patternRange: ast.range,
+            funcRange: ast.arguments[0].arguments[1].range
+        });
 
-                return;
-            }
-        } catch (ex) { }
+        return true;
+    };
 
-        visitAll(node.children);
-    }
-
-    var getToken = function (node) {
-        return Narcissus.definitions.tokens[node.type];
-    }
-
-    var visit = function (node) {
-        if (!node) return;
-
-        var token = getToken(node);
-        switch (token) {
-            case "CALL":
-                visitCall(node);
+    var visitAll = function (array) {
+        for (var i = 0; i < array.length; i++) {
+            visit(array[i]);
+        }
+    };
+    
+    var visit = function (ast) {
+        switch (ast.type) {
+            case "Program":
+            case "BlockStatement":
+                visitAll(ast.body);
                 break;
-            case "SCRIPT":
-            case "LIST":
-            case "var":
-            case "BLOCK":
-            case "INDEX":
-            case "OBJECT_INIT":
-            case "ARRAY_INIT":
-            case "PROPERTY_INIT":
-            case "NEW_WITH_ARGS":
-            case "UNARY_MINUS":
-            case ".":
-            case ">":
-            case "<":
-            case ">=":
-            case "<=":
-            case "=":
-            case "++":
-            case "--":
-            case "!":
-            case "+":
-            case "-":
-            case "*":
-            case "/":
-            case "?":
-            case "&&":
-            case "||":
-			case "|":
-			case "^":
-			case "&":
-			case "==":
-			case "!=":
-			case "===":
-			case "!==":
-			case "<<":
-			case ">>":
-			case "%":
-			case ">>>":
-			case "~":
-			case "UNARY_PLUS":
-			case "delete":
-			case "instanceof":
-			case "typeof":
-			case "void":
-			case "in":
-                visitAll(node.children);
+            case "ExpressionStatement":
+                visit(ast.expression);
                 break;
-            case "IDENTIFIER":
-                visit(node.initializer);
+            case "MemberExpression":
+                visit(ast.object);
+                visit(ast.property);
                 break;
-            case ";":
-                visit(node.expression);
+            case "BinaryExpression":
+            case "AssignmentExpression":
+            case "LogicalExpression":
+                visit(ast.left);
+                visit(ast.right);
                 break;
-            case "try":
-                visit(node.tryBlock);
-                visitAll(node.catchClauses);
+            case "VariableDeclarator":
+                if (ast.init) visit(ast.init);
                 break;
-            case "catch":
-                visit(node.block);
+            case "VariableDeclaration":
+                visitAll(ast.declarations);
                 break;
-            case "if":
-				visit(node.condition);
-                visit(node.thenPart);
-                visit(node.elsePart);
+            case "ReturnStatement":
+                if (ast.argument) visit(ast.argument);
                 break;
-			case "FOR_IN":
-				visit(node.object);
-				visit(node.iterator);
-				visit(node.varDecl);
-				visit(node.body);
-				break;
-			case "with":
-				visit(node.object);
-				visit(node.body);
-				break;
-            case "for":
-                visit(node.setup);
-                visit(node.condition);
-                visit(node.update);
-                visit(node.body);
+            case "UnaryExpression":
+            case "ThrowStatement":
+                visit(ast.argument);
                 break;
-			case "switch":
-				visit(node.discriminant);
-				visitAll(node.cases);
-				break;
-			case "case":
-			case "default":
-				visit(node.statements);
-				break;
-            case "while":
-            case "do":
-            case "function":
-                visit(node.body);
+            case "NewExpression":
+                visit(ast.callee);
+                visitAll(ast.arguments);
                 break;
-            case "return":
-                visit(node.value);
+            case "ConditionalExpression":
+                visit(ast.test);
+                visit(ast.consequent);
+                visit(ast.alternate);
                 break;
-            case "throw":
-                visit(node.exception);
+            case "IfStatement":
+                visit(ast.test);
+                visit(ast.consequent);
+                if (ast.alternate) visit(ast.alternate);
                 break;
-            case "NUMBER":
-            case "STRING":
-			case "REGEXP":
-            case "break":
-			case "continue":
-			case "debugger":
-            case "null":
-            case "true":
-            case "false":
-            case "this":
+            case "ObjectExpression":
+                visitAll(ast.properties);
+                break;
+            case "Property":
+                visit(ast.value);
+                break;
+            case "ArrayExpression":
+                visitAll(ast.elements);
+                break;
+            case "ForStatement":
+                if (ast.init) visit(ast.init);
+                if (ast.test) visit(ast.test);
+                if (ast.update) visit(ast.update);
+                visit(ast.body);
+                break;
+            case "ForInStatement":
+                visit(ast.right);
+                visit(ast.body);
+                break;
+            case "CallExpression":
+                if (!tryExtractWindMethod(ast)) {
+                    visit(ast.callee);
+                    visitAll(ast.arguments);
+                }
+                break;
+            case "TryStatement":
+                visit(ast.block);
+                visitAll(ast.handlers);
+                if (ast.finalizer) visit(ast.finalizer);
+                break;
+            case "CatchClause":
+            case "FunctionExpression":
+            case "FunctionDeclaration":
+            case "LabeledStatement":
+                visit(ast.body);
+                break;
+            case "WhileStatement":
+            case "DoWhileStatement":
+                visit(ast.test);
+                visit(ast.body);
+                break;
+            case "SequenceExpression":
+                visitAll(ast.expressions);
+                break;
+            case "SwitchStatement":
+                visit(ast.discriminant);
+                visitAll(ast.cases);
+                break;
+            case "SwitchCase":
+                if (ast.test) visit(ast.test);
+                visitAll(ast.consequent);
+                break;
+            case "WithStatement":
+                visit(ast.object);
+                visit(ast.body);
+                break;
+            case "Identifier":
+            case "Literal":
+            case "UpdateExpression":
+            case "ThisExpression":
+            case "ContinueStatement":
+            case "BreakStatement":
+            case "EmptyStatement":
+            case "DebuggerStatement":
                 break;
             default:
-                throw new Error('"' + token + '" is not currently supported.');
+                console.log(ast);
+                throw ast.type;
         }
-    }
-
-    visit(ast);
-
+    };
+    
+    visit(codeAst);
+    
     return results;
-}
+};
 
 function generateCode(inputCode, results) {
     var codeParts = [];
     var lastIndex = 0;
 
     for (var i = 0; i < results.length; i++) {
-        var item = results[i];
-        var compiledCode = Wind.compile(item.builderName, item.funcCode);
-        codeParts.push(inputCode.substring(lastIndex, item.start));
+        var item = results[i],
+            patternRange = item.patternRange,
+            funcRange = item.funcRange;
+        
+        var originalCode = inputCode.substring(funcRange[0], funcRange[1] + 1);
+        var compiledCode = Wind.compile(item.builderName, originalCode, { noSourceUrl: true });
+        
+        codeParts.push(inputCode.substring(lastIndex, patternRange[0]));
         codeParts.push(compiledCode);
-        lastIndex = item.end + 1;
+        lastIndex = patternRange[1] + 1;
     }
 
     if (lastIndex < inputCode.length) {
@@ -214,9 +244,9 @@ var compile = function (code, binders) {
     Wind.binders = binders;
     
     try {
-        var codeAst = Narcissus.parser.parse(code);
+        var codeAst = esprima.parse(code, { range: true });
         var results = extract(codeAst);
-        return generateCode(codeAst.getSource(), results);
+        return generateCode(code, results);
     } finally {
         Wind.binders = oldBinders;
     }
@@ -250,4 +280,3 @@ if (module.parent) { // command
     var newCode = compile(code);
     fs.writeFileSync(argv.output, newCode, "utf-8");
 }
-
