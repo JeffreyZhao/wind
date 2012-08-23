@@ -22,7 +22,7 @@ exports.setupTests = function (Wind) {
 
     var delay = function (timeout, error, result) {
         return Task.create(function (t) {
-            return setTimeout(function () {
+            setTimeout(function () {
                 if (error) {
                     t.complete("failure", error);
                 } else {
@@ -32,8 +32,155 @@ exports.setupTests = function (Wind) {
         });
     }
 
+    should.be.constructor.prototype.nothing = function (value) {
+        if (value === undefined) return;
+        throw new Error("expected " + JSON.stringify(value) + " to be undefined");
+    }
+
     describe("Task", function () {
 
+        describe("start", function () {
+
+            // Setup unobservedTimeout
+            var defaultUnobservedTimeout = Task.unobservedTimeout;
+
+            before(function () {
+                Task.unobservedTimeout = 5;
+            });
+
+            after(function () {
+                Task.unobservedTimeout = defaultUnobservedTimeout;
+            });
+
+            // unobservedError event listener
+            var unobservedErrorListener;
+
+            var handler = function () {
+                unobservedErrorListener.apply(this, arguments);
+            }
+
+            beforeEach(function () {
+                unobservedErrorListener = function () {
+                    new Error("Shouldn't reach here.");
+                };
+
+                Task.on("unobservedError", handler);
+            });
+
+            afterEach(function () {
+                Task.off("unobservedError", handler);
+                unobservedErrorListener = null;
+            });
+                    
+            it("won't throw but work as normal error with failed delegate", function () {
+                var error = new Error();
+                var task = new Task(function () { throw error; });
+                
+                var obj = { };
+                task.on("success", function () { obj.success = true; });
+                task.on("failure", function () { obj.failure = true; });
+                task.on("complete", function () { obj.complete = true; });
+                
+                task.start().status.should.equal("faulted");
+                task.error.should.equal(error);
+
+                should.be.nothing(obj.success); 
+                obj.failure.should.equal(true);
+                obj.complete.should.equal(true);
+            });
+            
+            it("won't throw but print warning when the task is complete then failed immediately", function () {
+                var task = new Task(function (t) {
+                    t.complete("success", 10);
+                    throw new Error();
+                });
+
+                var logLevel = "";
+                Wind.logger.log = function (level, msg) { logLevel = level; }
+
+                try {
+                    task.start().status.should.equal("succeeded");
+                    task.result.should.equal(10);
+                    logLevel.should.equal(Wind.Logging.Level.WARN);
+                } finally {
+                    delete Wind.logger.log;
+                }
+            });
+
+            it("throws if the error of task is not observed by complete event and unobservedError event", function (done) {
+                var error = new Error("the error");
+
+                var completeFired = false;
+
+                var task = Task.create(function (t) {
+                    setTimeout(function () {
+                        t.complete("failure", error);
+                    }, 0);
+                });
+
+                task.on("complete", function () {
+                    completeFired = true;
+                });
+
+                unobservedErrorListener = function (args) {
+                    args.task.should.equal(task);
+                    args.error.should.equal(error);
+
+                    completeFired.should.equal(true);
+
+                    task.status.should.equal("faulted");
+                    task.error.should.equal(error);
+
+                    args.observed = true;
+
+                    done();
+                };
+                
+                task.start();
+            });
+
+            it("won't trigger unobservedError event if the error is observed by complete event", function (done) {
+                var error = new Error();
+
+                var task = Task.create(function (t) {
+                    setTimeout(function () {
+                        t.complete("failure", error);
+                    }, 0);
+                });
+
+                task.on("complete", function () {
+                    this.status.should.equal("faulted");
+                    this.error.should.equal(error);
+
+                    setTimeout(done, 10);
+                });
+
+                task.start();
+            });
+
+            it("triggers unobservedError event to provide the last chance to observe the error of task", function (done) {
+                var error = new Error();
+
+                var task = Task.create(function (t) {
+                    setTimeout(function () {
+                        t.complete("failure", error);
+                    }, 0);
+                });
+
+                unobservedErrorListener = function (args) {
+                    this.should.equal(Task);
+                    args.task.should.equal(task);
+                    args.error.should.equal(error);
+
+                    args.observed = true;
+
+                    done();
+                };
+
+                task.start();
+            });
+        });
+        
         describe("whenAll", function () {
 
             var whenAll = Task.whenAll;
@@ -230,20 +377,38 @@ exports.setupTests = function (Wind) {
                 });
             });
         });
-    
+
         describe("whenAny", function () {
         
             var whenAny = Task.whenAny;
             
+            var defaultUnobservedTimeout = Task.unobservedTimeout;
+
+            before(function () {
+                Task.unobservedTimeout = 20;
+                Task.prototype.handleError = function () {
+                    this.on("failure", function () {
+                        return this.error;
+                    });
+
+                    return this;
+                };
+            });
+
+            after(function () {
+                delete Task.prototype.handleError;
+                Task.unobservedTimeout = defaultUnobservedTimeout;
+            });
+            
             it("should directly fail with an empty array or hash input", function () {
-                whenAny().start().status.should.equal("faulted");
-                whenAny([]).start().status.should.equal("faulted");
-                whenAny({}).start().status.should.equal("faulted");
+                whenAny().handleError().start().status.should.equal("faulted");
+                whenAny([]).handleError().start().status.should.equal("faulted");
+                whenAny({}).handleError().start().status.should.equal("faulted");
             });
             
             it("should directly return the task in the array if it's already failed", function () {
-                var t0 = delay(10, "also failed!");
-                var t1 = failure("failed!");
+                var t0 = delay(5, "also failed!").handleError();
+                var t1 = failure("failed!").handleError();
                 
                 var result = whenAny(t0, t1).start().result;
                 result.key.should.equal(1);
@@ -253,8 +418,8 @@ exports.setupTests = function (Wind) {
             });
             
             it("should directly return the task in the hash if it's already succeeded", function () {
-                var t0 = delay(10, "also failed!");
-                var t1 = failure("failed!");
+                var t0 = delay(5, "also failed!").handleError();
+                var t1 = failure("failed!").handleError();
                 
                 var result = whenAny({"0": t0, "1": t1}).start().result;
                 result.key.should.equal("1");
@@ -265,8 +430,8 @@ exports.setupTests = function (Wind) {
             
             it("should return the task in the array which succeeded first", function (done) {
                 var t0 = delay(5, null, "succeeded!");
-                var t1 = delay(10, "failed!");
-                
+                var t1 = delay(10, "failed!").handleError();
+
                 whenAny(t0, t1).start().addEventListener("success", function () {
                     var result = this.result;
                     result.key.should.equal(0);
@@ -278,7 +443,7 @@ exports.setupTests = function (Wind) {
             });
             
             it("should return the task in the hash which failed first", function (done) {
-                var t0 = delay(5, "failed");
+                var t0 = delay(5, "failed").handleError();
                 var t1 = delay(10, null, "succeeded!");
                 
                 whenAny({"0": t0, "1": t1}).start().addEventListener("success", function () {
