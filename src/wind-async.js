@@ -101,7 +101,7 @@
                 try {
                     handlers[i]();
                 } catch (ex) {
-                    Wind.logger.warn("[WARNING] Cancellation handler threw an error: " + ex);
+                    Wind.logger.warn("Cancellation handler threw an error: " + ex);
                 }
             }
         },
@@ -136,7 +136,7 @@
             if (!eventListeners) {
                 eventListeners = this._listeners[name] = [];
             }
-            
+
             eventListeners.push(listener);
         },
         
@@ -218,16 +218,26 @@
             this._eventManager = null;
             
             if (type === "success") {
-                this.result = value;
                 this.status = "succeeded";
+                
+                if (supportDefineProperty) {
+                    this._result = value;
+                } else {
+                    this.result = value;
+                }
+
                 eventManager.fire("success", this);
             } else {
-                this._error = value;
-
                 if (isCanceledError(value)) {
                     this.status = "canceled";
                 } else {
                     this.status = "faulted";
+                }
+                
+                if (supportDefineProperty) {
+                    this._error = value;
+                } else {
+                    this.error = value;
                 }
                 
                 eventManager.fire("failure", this);
@@ -236,18 +246,26 @@
             eventManager.fire("complete", this);
             
             if (type !== "failure") return;
+            if (!supportDefineProperty) return;
+            if (this._errorObserved) return;
             
-            if (!supportDefineProperty) {
-                this.error = value;
-                return;
+            var self = this;
+            this._unobservedTimeoutToken = setTimeout(function () {
+                self._handleUnobservedError(value);
+            }, Task.unobservedTimeout);
+        },
+        
+        observeError: function () {
+            if (!supportDefineProperty) return this.error;
+        
+            var token = this._unobservedTimeoutToken;
+            if (token) {
+                clearTimeout(token);
+                this._unobservedTimeoutToken = null;
             }
             
-            if (!this._errorObserved) {
-                var self = this;
-                this._unobservedTimeoutToken = setTimeout(function () {
-                    self._handleUnobservedError(value);
-                }, Task.unobservedTimeout);
-            }
+            this._errorObserved = true;
+            return this._error;
         },
         
         _handleUnobservedError: function (error) {
@@ -340,17 +358,21 @@
     if (supportDefineProperty) {
         Object.defineProperty(Task.prototype, "error", {
             get: function () {
-                var token = this._unobservedTimeoutToken;
-                if (token) {
-                    clearTimeout(token);
-                    this._unobservedTimeoutToken = null;
-                }
-
-                this._errorObserved = true;
-                return this._error;
+                return this.observeError();
+            }
+        });
+        
+        Object.defineProperty(Task.prototype, "result", {
+            get: function () {
+                var error = this.observeError();
+                if (error) throw error;
+                
+                return this._result;
             }
         });
     }
+    
+    var observeErrorListener = function () { this.observeError(); };
     
     Task.on = Task.addEventListener = function () {
         taskEventManager.add.apply(taskEventManager, arguments);
@@ -419,7 +441,7 @@
                 if (task.status === "running") {
                     runningNumber++;
                     task.addEventListener("complete", function () {
-                        if (this.error) {
+                        if (this.status !== "succeeded") {
                             if (!errors) errors = [];
                             errors.push(this.error);
                         }
@@ -475,31 +497,49 @@
                 return taskWhenAny.complete("failure", "There's no valid input tasks.");
             }
             
+            var result;
+            
             _.each(inputTasks, function (key, task) {
-                if (task.status == "ready") {
+                if (task.status === "ready") {
                     task.start();
                 }
-            });
-            
-            var result = _.each(inputTasks, function (key, task) {
+                
                 if (task.status !== "running") {
-                    return { key: processKey(key), task: task };
+                    task.observeError();
+                    
+                    if (!result) {
+                        result = { key: processKey(key), task: task };
+                    }
                 }
             });
             
             if (result) {
+                _.each(inputTasks, function (key, task) {
+                    if (task.status === "running") {
+                        task.on("failure", observeErrorListener);
+                    }
+                });
+
                 return taskWhenAny.complete("success", result);
             }
             
             var onComplete = function () {
+                this.observeError();
+                
                 var taskCompleted = this;
+                var keyCompleted;
+                
                 _.each(inputTasks, function (key, task) {
-                    if (task == taskCompleted) {
-                        taskWhenAny.complete("success", { key: processKey(key), task: task });
-                    } else {
-                        task.removeEventListener("complete", onComplete);
+                    if (taskCompleted === task) {
+                        keyCompleted = key;
+                        return;
                     }
+
+                    task.off("complete", onComplete);
+                    task.on("failure", observeErrorListener);
                 });
+
+                taskWhenAny.complete("success", { key: processKey(keyCompleted), task: this });
             }
             
             _.each(inputTasks, function (task) {

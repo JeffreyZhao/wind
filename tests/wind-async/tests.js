@@ -4,7 +4,7 @@ var exports = (typeof window === "undefined") ? module.exports : window;
 
 exports.setupTests = function (Wind) {
 
-    Wind.logger.level = Wind.Logging.Level.OFF;
+    Wind.logger.level = Wind.Logging.Level.WARN;
 
     var Task = Wind.Async.Task;
 
@@ -37,40 +37,50 @@ exports.setupTests = function (Wind) {
         throw new Error("expected " + JSON.stringify(value) + " to be undefined");
     }
 
+    // Setup unobservedTimeout
+    var defaultUnobservedTimeout = Task.unobservedTimeout;
+
+    before(function () {
+        Task.unobservedTimeout = 10;
+        Task.prototype.handleError = function () {
+            this.on("failure", function () {
+                return this.error;
+            });
+
+            return this;
+        };
+    });
+
+    after(function () {
+        Task.unobservedTimeout = defaultUnobservedTimeout;
+        delete Task.prototype.handleError;
+    });
+
+    // unobservedError event listener
+    var unobservedErrorListener;
+
+    var handler = function () {
+        unobservedErrorListener.apply(this, arguments);
+    }
+
+    beforeEach(function () {
+        unobservedErrorListener = function () {
+            throw new Error("The unobservedError event listener shouldn't be called.");
+        };
+
+        Task.on("unobservedError", handler);
+    });
+
+    afterEach(function () {
+        Task.off("unobservedError", handler);
+        unobservedErrorListener = null;
+    });
+
+
     describe("Task", function () {
 
         describe("start", function () {
 
-            // Setup unobservedTimeout
-            var defaultUnobservedTimeout = Task.unobservedTimeout;
-
-            before(function () {
-                Task.unobservedTimeout = 5;
-            });
-
-            after(function () {
-                Task.unobservedTimeout = defaultUnobservedTimeout;
-            });
-
-            // unobservedError event listener
-            var unobservedErrorListener;
-
-            var handler = function () {
-                unobservedErrorListener.apply(this, arguments);
-            }
-
-            beforeEach(function () {
-                unobservedErrorListener = function () {
-                    new Error("Shouldn't reach here.");
-                };
-
-                Task.on("unobservedError", handler);
-            });
-
-            afterEach(function () {
-                Task.off("unobservedError", handler);
-                unobservedErrorListener = null;
-            });
                     
             it("won't throw but work as normal error with failed delegate", function () {
                 var error = new Error();
@@ -381,25 +391,7 @@ exports.setupTests = function (Wind) {
         describe("whenAny", function () {
         
             var whenAny = Task.whenAny;
-            
-            var defaultUnobservedTimeout = Task.unobservedTimeout;
 
-            before(function () {
-                Task.unobservedTimeout = 20;
-                Task.prototype.handleError = function () {
-                    this.on("failure", function () {
-                        return this.error;
-                    });
-
-                    return this;
-                };
-            });
-
-            after(function () {
-                delete Task.prototype.handleError;
-                Task.unobservedTimeout = defaultUnobservedTimeout;
-            });
-            
             it("should directly fail with an empty array or hash input", function () {
                 whenAny().handleError().start().status.should.equal("faulted");
                 whenAny([]).handleError().start().status.should.equal("faulted");
@@ -407,8 +399,8 @@ exports.setupTests = function (Wind) {
             });
             
             it("should directly return the task in the array if it's already failed", function () {
-                var t0 = delay(5, "also failed!").handleError();
-                var t1 = failure("failed!").handleError();
+                var t0 = delay(5, "also failed!");
+                var t1 = failure("failed!");
                 
                 var result = whenAny(t0, t1).start().result;
                 result.key.should.equal(1);
@@ -418,8 +410,8 @@ exports.setupTests = function (Wind) {
             });
             
             it("should directly return the task in the hash if it's already succeeded", function () {
-                var t0 = delay(5, "also failed!").handleError();
-                var t1 = failure("failed!").handleError();
+                var t0 = delay(5, "also failed!");
+                var t1 = failure("failed!");
                 
                 var result = whenAny({"0": t0, "1": t1}).start().result;
                 result.key.should.equal("1");
@@ -430,21 +422,21 @@ exports.setupTests = function (Wind) {
             
             it("should return the task in the array which succeeded first", function (done) {
                 var t0 = delay(5, null, "succeeded!");
-                var t1 = delay(10, "failed!").handleError();
+                var t1 = delay(8, "failed!");
 
                 whenAny(t0, t1).start().addEventListener("success", function () {
                     var result = this.result;
                     result.key.should.equal(0);
                     result.task.should.equal(t0);
-                    
+
                     t1.status.should.equal("running");
                     done();
                 });
             });
             
             it("should return the task in the hash which failed first", function (done) {
-                var t0 = delay(5, "failed").handleError();
-                var t1 = delay(10, null, "succeeded!");
+                var t0 = delay(5, "failed");
+                var t1 = delay(8, null, "succeeded!");
                 
                 whenAny({"0": t0, "1": t1}).start().addEventListener("success", function () {
                     var result = this.result;
