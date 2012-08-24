@@ -114,7 +114,7 @@
     };
 
     /***********************************************************************
-      Task when helpers
+      Task
      ***********************************************************************/
     
     var EventManager = function () {
@@ -391,6 +391,10 @@
     var create = Task.create = function (delegate) {
         return new Task(delegate);
     }
+    
+    /***********************************************************************
+      Task helpers
+     ***********************************************************************/
     
     var whenAll = Task.whenAll = function () {
         var inputTasks;
