@@ -344,6 +344,7 @@
         }
         
         eventManager.add.apply(eventManager, arguments);
+        return this;
     };
     
     Task.prototype.off = Task.prototype.removeEventListener = function () {
@@ -353,6 +354,7 @@
         }
         
         eventManager.remove.apply(eventManager, arguments);
+        return this;
     };
     
     if (supportDefineProperty) {
