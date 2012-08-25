@@ -81,8 +81,7 @@ exports.setupTests = function (Wind) {
 
         describe("start", function () {
 
-                    
-            it("won't throw but work as normal error with failed delegate", function () {
+            it("shouldn't throw but work as normal error with failed delegate", function () {
                 var error = new Error();
                 var task = new Task(function () { throw error; });
                 
@@ -99,7 +98,7 @@ exports.setupTests = function (Wind) {
                 obj.complete.should.equal(true);
             });
             
-            it("won't throw but print warning when the task is complete then failed immediately", function () {
+            it("shouldn't throw but print warning when the task is complete then failed immediately", function () {
                 var task = new Task(function (t) {
                     t.complete("success", 10);
                     throw new Error();
@@ -117,7 +116,7 @@ exports.setupTests = function (Wind) {
                 }
             });
 
-            it("throws if the error of task is not observed by complete event and unobservedError event", function (done) {
+            it("should throw if the error of task is not observed by complete event and unobservedError event", function (done) {
                 var error = new Error("the error");
 
                 var completeFired = false;
@@ -149,7 +148,7 @@ exports.setupTests = function (Wind) {
                 task.start();
             });
 
-            it("won't trigger unobservedError event if the error is observed by complete event", function (done) {
+            it("shouldn't trigger unobservedError event if the error is observed by complete event", function (done) {
                 var error = new Error();
 
                 var task = Task.create(function (t) {
@@ -446,6 +445,29 @@ exports.setupTests = function (Wind) {
                     t1.status.should.equal("running");
                     done();
                 });
+            });
+        });
+
+        describe("observeError", function () {
+
+            it("should throw error when the task is not started", function () {
+                (function () {
+                    delay(5, undefined, 10).observeError();
+                }).should.throw();                
+            });
+
+            it("should throw error when the task is running", function () {
+                (function () {
+                    delay(5, undefined, 10).start().observeError();
+                }).should.throw();
+            });
+
+            it("should return the error when it's faulted", function () {
+                failure("hello").start().observeError().should.equal("hello");
+            });
+
+            it("should return undefined when it's succeeded", function () {
+                should.be.nothing(success("hello").start().observeError());
             });
         });
     });

@@ -256,6 +256,10 @@
         },
         
         observeError: function () {
+            if (this.status === "ready" || this.status === "running") {
+                throw new Error("The method could only be called when it's completed.");
+            }
+        
             if (!supportDefineProperty) return this.error;
         
             var token = this._unobservedTimeoutToken;
