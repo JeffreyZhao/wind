@@ -2939,7 +2939,17 @@
     
     var sourceUrlSeed = 0;
     
-    var compile = function (builderName, func, separateCodeAndComment) {
+    var getOptions = function (options) {
+        options = options || { };
+        options.root = options.root || "Wind";
+        options.noSourceUrl = options.noSourceUrl || false;
+        
+        return options;
+    }
+    
+    var compile = function (builderName, func, options) {
+        options = getOptions(options);
+        
         var funcCode = func.toString();
         var evalCode = "eval(" + compile.rootName + ".compile(" + stringify(builderName) + ", " + funcCode + "))"
         var evalCodeAst = parse(evalCode);
@@ -2950,22 +2960,15 @@
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
         var evalAst = evalCodeAst[1][0][1];
         var funcName = compileWindPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
- 
-        if (separateCodeAndComment) {
-            return {
-                code: codeWriter.lines.join("\n"),
-                codeLines: codeWriter.lines,
-                comment: commentWriter.lines.join("\n"),
-                commentLines: commentWriter.lines
-            };
-        } else {
-            var sourceUrl = "wind/" + (sourceUrlSeed++) + "_" + (funcName || "anonymous") + ".js";
-            var newCode = merge(commentWriter.lines, codeWriter.lines) + "\n//@ sourceURL=" + sourceUrl;
-            
-            Wind.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Compiled: \r\n" + newCode + "\r\n");
-            
-            return codeGenerator(newCode);
+        
+        var newCode = merge(commentWriter.lines, codeWriter.lines);
+        if (!options.noSourceUrl) {
+            newCode += ("\n//@ sourceURL=wind/" + (sourceUrlSeed++) + "_" + (funcName || "anonymous") + ".js");
         }
+        
+        Wind.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Compiled: \r\n" + newCode + "\r\n");
+        
+        return codeGenerator(newCode);
     }
 
     compile.rootName = "Wind";

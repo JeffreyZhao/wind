@@ -8,7 +8,6 @@ var path = require("path"),
 
 var npmDir = path.join(__dirname, "../bin/npm");
 var srcDir = path.join(__dirname, "../src");
-var libDir = path.join(__dirname, "../lib");
 
 if (fs.existsSync(npmDir)) {
     utils.rmdirSync(npmDir);
@@ -73,21 +72,18 @@ var buildWind = function () {
 var buildWindC = function () {
     var dir = path.join(npmDir, "windc");
     fs.mkdirSync(dir);
-    
-    fs.mkdirSync(path.join(dir, "lib"));
-    utils.copySync(path.join(libDir, "narcissus-parser.js"), path.join(dir, "lib/narcissus-parser.js"));
-    
-    fs.mkdirSync(path.join(dir, "src"));
-    utils.copySync(path.join(srcDir, "windc.js"), path.join(dir, "src/windc.js"));
+
+    utils.copySync(path.join(srcDir, "windc.js"), path.join(dir, "windc.js"));
     
     var packageData = _.clone(packageBase);
     packageData.name = "windc";
     packageData.version = "0.7.1";
-    packageData.main = "src/windc.js";
+    packageData.main = "windc.js";
     packageData.description = "The AOT compiler for Wind.js";
     packageData.dependencies = {
         "wind": "~0.7.1",
-        "optimist": "*"
+        "optimist": "*",
+        "esprima": "*"
     };
     
     var packageContent = json2str(packageData);
