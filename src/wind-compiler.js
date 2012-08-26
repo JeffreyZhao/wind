@@ -1527,7 +1527,11 @@
 
         commentWriter.write(builderName + " << ");
         var codeGenerator = new CodeGenerator(builderName, seedProvider, codeWriter, commentWriter);
-        codeGenerator.generate(funcAst[2], windAst);
+        
+        var funcName = funcAst[1] || "";
+        codeGenerator.generate(funcName, funcAst[2], windAst);
+        
+        return funcName;
     }
         
     var WindTreeGenerator = function (builderName, seedProvider) {
@@ -2011,11 +2015,11 @@
             return this;
         },
     
-        generate: function (params, windAst) {
+        generate: function (name, params, windAst) {
             this._normalMode = false;
             this._builderVar = "_builder_$" + this._seedProvider.next("builderId");
             
-            this._codeLine("(function (" + params.join(", ") + ") {")._commentLine("function (" + params.join(", ") + ") {");
+            this._codeLine("(function " + name + "(" + params.join(", ") + ") {")._commentLine("function (" + params.join(", ") + ") {");
             this._bothIndentLevel(1);
 
             this._codeIndents()._newLine("var " + this._builderVar + " = " + compile.rootName + ".builders[" + stringify(this._builderName) + "];");
@@ -2933,7 +2937,19 @@
         return buffer.join("");
     }
     
-    var compile = function (builderName, func, separateCodeAndComment) {
+    var sourceUrlSeed = 0;
+    
+    var getOptions = function (options) {
+        options = options || { };
+        options.root = options.root || "Wind";
+        options.noSourceUrl = options.noSourceUrl || false;
+        
+        return options;
+    }
+    
+    var compile = function (builderName, func, options) {
+        options = getOptions(options);
+        
         var funcCode = func.toString();
         var evalCode = "eval(" + compile.rootName + ".compile(" + stringify(builderName) + ", " + funcCode + "))"
         var evalCodeAst = parse(evalCode);
@@ -2943,21 +2959,16 @@
         
         // [ "toplevel", [ [ "stat", [ "call", ... ] ] ] ]
         var evalAst = evalCodeAst[1][0][1];
-        compileWindPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
- 
-        if (separateCodeAndComment) {
-            return {
-                code: codeWriter.lines.join("\n"),
-                codeLines: codeWriter.lines,
-                comment: commentWriter.lines.join("\n"),
-                commentLines: commentWriter.lines
-            };
-        } else {
-            var newCode = merge(commentWriter.lines, codeWriter.lines);
-            Wind.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Windified: \r\n" + newCode + "\r\n");
-            
-            return codeGenerator(newCode);
+        var funcName = compileWindPattern(evalAst, new SeedProvider(), codeWriter, commentWriter);
+        
+        var newCode = merge(commentWriter.lines, codeWriter.lines);
+        if (!options.noSourceUrl) {
+            newCode += ("\n//@ sourceURL=wind/" + (sourceUrlSeed++) + "_" + (funcName || "anonymous") + ".js");
         }
+        
+        Wind.logger.debug("// Original: \r\n" + funcCode + "\r\n\r\n// Compiled: \r\n" + newCode + "\r\n");
+        
+        return codeGenerator(newCode);
     }
 
     compile.rootName = "Wind";
@@ -2970,7 +2981,7 @@
     var defineModule = function () {
         Wind.define({
             name: "compiler",
-            version: "0.7.0",
+            version: "0.7.1",
             require: isCommonJS && require,
             dependencies: { core: "~0.7.0" },
             init: function () {
