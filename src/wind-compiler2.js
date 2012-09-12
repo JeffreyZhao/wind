@@ -212,13 +212,13 @@
         }
     }
     
-    var FunctionAstGenerator = function (builderName, seedProvider) {
+    var WindAstGenerator = function (builderName, seedProvider) {
         this._builderName = builderName;
         this._binder = Wind.binders[builderName];
         this._seedProvider = seedProvider || new SeedProvider();
         this._currentStatements = null;
     };
-    FunctionAstGenerator.prototype = {
+    WindAstGenerator.prototype = {
         generate: function (funcAst) {
             var rootAst = {
                 type: "Function",
@@ -231,12 +231,11 @@
             return rootAst;
         },
         
-        _createBindAst: function (isReturn, argName, assignee, expression) {
+        _createBindAst: function (isReturn, name, expression) {
             return {
                 type: "Bind",
                 isReturn: isReturn,
-                argName: argName,
-                assignee: assignee,
+                name: name,
                 expression: expression,
                 following: []
             };
@@ -256,7 +255,7 @@
                 var args = ast.expression.arguments;
                 if (args.length != 1) return;
                 
-                return this._createBindAst(false, "", null, args[0]);
+                return this._createBindAst(false, "", args[0]);
             };
             
             // var a = $await(xxx);
@@ -282,8 +281,74 @@
                 var args = declarator.init.arguments;
                 if (args.length != 1) return;
 
-                return this._createBindAst(false, declarator.id.name, null, args[0]);
+                return this._createBindAst(false, declarator.id.name, args[0]);
             };
+            
+            // a.b = $await(xxx)
+            var assignStyle = {
+                type: "ExpressionStatement",
+                expression: {
+                    type: "AssignmentExpression",
+                    operator: "=",
+                    right: {
+                        type: "CallExpression",
+                        callee: {
+                            type: "Identifier",
+                            name: this._binder
+                        }
+                    }
+                }
+            };
+            
+            if (isSubset(ast, assignStyle)) {
+                var assignExpr = ast.expression;
+                var args = assignExpr.right.arguments;
+                if (args.length != 1) return;
+                
+                var bindAst = this._createBindAst(false, "_$result$_", args[0]);
+                bindAst.following.push({
+                    type: "ExpressionStatement",
+                    expression: {
+                        type: "AssignmentExpression",
+                        operator: "=",
+                        left: assignExpr.left,
+                        right: {
+                            type: "Identifier",
+                            name: "_$result$_"
+                        }
+                    }
+                });
+                
+                return bindAst;
+            }
+            
+            // return $await(xxx);
+            var returnStyle = {
+                type: "ReturnStatement",
+                argument: {
+                    type: "CallExpression",
+                    callee: {
+                        "type": "Identifier",
+                        "name": "$await"
+                    }
+                }
+            };
+            
+            if (isSubset(ast, returnStyle)) {
+                var args = ast.argument.arguments
+                if (args.length != 1) return;
+                
+                var bindAst = this._createBindAst(true, "_$result$_", args[0]);
+                bindAst.following.push({
+                    type: "ReturnStatement",
+                    argument: {
+                        type: "Identifier",
+                        name: "_$result$_"
+                    }
+                });
+                
+                return bindAst;
+            }
         },
         
         _generateStatements: function (statements, index, children) {
@@ -504,7 +569,10 @@
     var compile = function (builderName, fn) {
         var esprima = (typeof require === "function") ? require("esprima") : global.esprima;
         var inputAst = esprima.parse("(" + fn.toString() + ")");
-        var windAst = (new FunctionAstGenerator(builderName)).generate(inputAst.body[0].expression);
+        var windAst = (new WindAstGenerator(builderName)).generate(inputAst.body[0].expression);
+        
+        
+        
         return windAst;
     };
     
