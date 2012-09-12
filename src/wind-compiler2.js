@@ -320,7 +320,7 @@
             
             var combineAst = {
                 type: "Combine",
-                first: children.pop(), // remove the last one
+                first: { type: "Delay", children: [ children.pop() /* replace the last */ ] },
                 second: { type: "Delay", children: [] }
             };
             
