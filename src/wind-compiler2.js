@@ -219,13 +219,12 @@
     };
     WindAstGenerator.prototype = {
         generate: function (ast) {
-            // var rootAst = { type: "Delay", children: [] };
+            var rootAst = { type: "Delay", children: [] };
             var funcAst = ast.body[0].expression;
 
-            var body = [];
-            this._generateStatements(funcAst.body.body, 0, body);
+            this._generateStatements(funcAst.body.body, 0, rootAst.children);
             
-            return body;
+            return rootAst;
         },
         
         _createBindAst: function (isReturn, argName, assignee, expression) {
@@ -310,6 +309,25 @@
                     return;
             }
             
+            this._generateAst(currStmt, children);
+            
+            if (index === statements.length - 1) return;
+            
+            if (children[children.length - 1].type === "Raw") {
+                this._generateStatements(statements, index + 1, children);
+                return;
+            }
+            
+            var combineAst = {
+                type: "Combine",
+                first: children.pop(), // remove the last one
+                second: { type: "Delay", children: [] }
+            };
+            
+            children.push(combineAst);
+            this._generateStatements(statements, index + 1, combineAst.second.children);
+            
+            /*
             var windAst = this._transform(currStmt);
 
             if (windAst.type === "Raw") {
@@ -325,12 +343,13 @@
             
             var combineAst = {
                 type: "Combine",
-                start: windAst,
-                following: []
+                first: windAst,
+                second: { type: "Delay", children: [] }
             };
             
             children.push(combineAst);
-            this._generateStatements(statements, index + 1, combineAst.following);
+            this._generateStatements(statements, index + 1, combineAst.second.children);
+            */
         },
         
         _noBinding: function (children) {
@@ -353,65 +372,81 @@
             return children;
         },
         
-        _transform: function (ast) {
-            var transformer = this._transformers[ast.type];
-            if (!transformer) {
-                return { type: "Raw", statement: ast };
+        _generateAst: function (ast, children) {
+            var generator = this._astGenerators[ast.type];
+            if (!generator) {
+                children.push({ type: "Raw", statement: ast });
+                return;
             }
             
-            return transformer.call(this, ast);
+            generator.call(this, ast, children);
         },
         
-        _transformers: {
-            "WhileStatement": function (ast) {
-                var body = this._generateBodyStatements(ast.body);
-                if (this._noBinding(body))
-                    return { type: "Raw", statement: ast };
+        _astGenerators: {
+            "WhileStatement": function (ast, children) {
+                var bodyChildren = this._generateBodyStatements(ast.body);
+                if (this._noBinding(bodyChildren)) {
+                    children.push({ type: "Raw", statement: ast });
+                    return;
+                }
                 
-                return {
+                children.push({
                     type: "While",
                     test: ast.test,
-                    body: body
-                };
+                    body: { type: "Delay", children: bodyChildren }
+                });
             },
             
-            "ForStatement": function (ast) {
-                var body = this._generateBodyStatements(ast.body);
-                if (this._noBinding(body))
-                    return { type: "Raw", statement: ast };
+            "ForStatement": function (ast, children) {
+                var bodyChildren = this._generateBodyStatements(ast.body);
+                if (this._noBinding(bodyChildren)) {
+                    children.push({ type: "Raw", statement: ast });
+                    return;
+                }
                     
-                return {
+                if (ast.init) {
+                    children.push({ type: "Raw", statement: ast.init });
+                }
+                
+                children.push({
                     type: "For",
-                    init: ast.init,
-                    test: ast.text,
+                    test: ast.test,
                     update: ast.update,
-                    body: body
-                };
+                    body: { type: "Delay", children: bodyChildren }
+                });
             },
             
-            "IfStatement": function (ast) {
+            "IfStatement": function (ast, children) {
                 var consequent = this._generateBodyStatements(ast.consequent);
                 var alternate = ast.alternate ? this._generateBodyStatements(ast.alternate) : null;
                 
-                if (this._noBinding(consequent) && this._noBinding(alternate))
-                    return { type: "Raw", statement: ast };
+                if (this._noBinding(consequent) && this._noBinding(alternate)) {
+                    children.push({ type: "Raw", statement: ast });
+                    return;
+                }
                 
-                return {
+                children.push({
                     type: "If",
                     test: ast.test,
                     consequent: consequent,
                     alternate: alternate
-                };
+                });
             }
         }
     };
     
+    var Fn = Function, global = Fn('return this')();
+    
     var compile = function (builderName, fn) {
-        var inputAst = require("esprima").parse("(" + fn.toString() + ")");
+        var esprima = (typeof require === "function") ? require("esprima") : global.esprima;
+        var inputAst = esprima.parse("(" + fn.toString() + ")");
         var binder = Wind.binders[builderName];
         var windAst = (new WindAstGenerator(binder)).generate(inputAst);
         return windAst;
     };
+    
+    // CommonJS
+    var isCommonJS = !!(typeof require === "function" && typeof module !== "undefined" && module.exports);
 
     var defineModule = function () {
         _ = Wind._;
@@ -427,8 +462,6 @@
         });
     };
     
-    var isCommonJS = true;
-    
     if (isCommonJS) {
         try {
             Wind = require("./wind-core");
@@ -436,6 +469,13 @@
             Wind = require("wind-core");
         }
         
+        defineModule();
+    } else {
+        if (!global.Wind) {
+            throw new Error('Missing the root object, please load "wind" component first.');
+        }
+        
+        Wind = global.Wind;
         defineModule();
     }
 })();
