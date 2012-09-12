@@ -216,13 +216,13 @@
         this._builderName = builderName;
         this._binder = Wind.binders[builderName];
         this._seedProvider = seedProvider || new SeedProvider();
-        this._currentStatements = null;
     };
     WindAstGenerator.prototype = {
         generate: function (funcAst) {
             var rootAst = {
                 type: "Function",
                 name: funcAst.id ? funcAst.id.name : null,
+                params: funcAst.params,
                 body: { type: "Delay", children: [] }
             };
 
@@ -231,11 +231,12 @@
             return rootAst;
         },
         
-        _createBindAst: function (isReturn, name, expression) {
+        _createBindAst: function (isReturn, name, assignee, expression) {
             return {
                 type: "Bind",
                 isReturn: isReturn,
                 name: name,
+                assignee: assignee,
                 expression: expression,
                 following: []
             };
@@ -255,7 +256,7 @@
                 var args = ast.expression.arguments;
                 if (args.length != 1) return;
                 
-                return this._createBindAst(false, "", args[0]);
+                return this._createBindAst(false, "", null, args[0]);
             };
             
             // var a = $await(xxx);
@@ -281,7 +282,7 @@
                 var args = declarator.init.arguments;
                 if (args.length != 1) return;
 
-                return this._createBindAst(false, declarator.id.name, args[0]);
+                return this._createBindAst(false, declarator.id.name, null, args[0]);
             };
             
             // a.b = $await(xxx)
@@ -305,21 +306,7 @@
                 var args = assignExpr.right.arguments;
                 if (args.length != 1) return;
                 
-                var bindAst = this._createBindAst(false, "_$result$_", args[0]);
-                bindAst.following.push({
-                    type: "ExpressionStatement",
-                    expression: {
-                        type: "AssignmentExpression",
-                        operator: "=",
-                        left: assignExpr.left,
-                        right: {
-                            type: "Identifier",
-                            name: "_$result$_"
-                        }
-                    }
-                });
-                
-                return bindAst;
+                return this._createBindAst(false, "_$result$_", assignExpr.left, args[0]);
             }
             
             // return $await(xxx);
@@ -338,25 +325,22 @@
                 var args = ast.argument.arguments
                 if (args.length != 1) return;
                 
-                var bindAst = this._createBindAst(true, "_$result$_", args[0]);
-                bindAst.following.push({
-                    type: "ReturnStatement",
-                    argument: {
-                        type: "Identifier",
-                        name: "_$result$_"
-                    }
-                });
-                
-                return bindAst;
+                return this._createBindAst(true, "_$result$_", null, args[0]);
             }
         },
         
         _generateStatements: function (statements, index, children) {
             if (index >= statements.length) {
+                children.push({ type: "Normal" });
                 return;
             }
             
             var currStmt = statements[index];
+            if (currStmt.type === "EmptyStatement") {
+                this._generateStatements(statements, index + 1, children);
+                return;
+            }
+            
             var bindAst = this._getBindAst(currStmt);
             
             if (bindAst) {
@@ -402,10 +386,12 @@
             if (children.length <= 0) return true;
             
             switch (children[children.length - 1].type) {
-                case "Raw": return true;
+                case "Raw":
+                case "Normal":
+                    return true;
+                default:
+                    return false;
             }
-            
-            return false;
         },
         
         _generateBodyStatements: function (body) {
@@ -480,10 +466,10 @@
         }
     };
     
-    var CodeGenerator = function (builderName, seedProvider, codeWriter, commentWriter) {
+    var CodeGenerator = function (builderName, codeWriter, commentWriter, seedProvider) {
         this._builderName = builderName;
         this._binder = Wind.binders[builderName];
-        this._seedProvider = seedProvider;
+        this._seedProvider = seedProvider || new SeedProvider();
         
         this._codeWriter = codeWriter;
         this._commentWriter = commentWriter;
@@ -561,19 +547,292 @@
             this._codeWriter.writeLine.apply(this._codeWriter, arguments);
             this._commentWriter.writeLine(); // To Remove
             return this;
+        },
+        
+        generate: function (windAst) {
+            this._normalMode = false;
+            this._builderVar = "_builder_$" + this._seedProvider.next("builderId");
+            
+            var funcName = windAst.name || "";
+            var params = _.map(windAst.params, function (m) { return m.name; });
+            
+            this._code("(")
+                ._bothLine("function " + funcName + "(" + params.join(", ") + ") {");
+            this._bothIndentLevel(1);
+            
+            this._codeIndents()._newLine("var " + this._builderVar + " = " + "Wind.builders[" + stringify(this._builderName) + "];");
+            
+            this._codeIndents()._newLine("return " + this._builderVar + ".Start(this,");
+            this._codeIndentLevel(1);
+            
+            this._pos = { };
+            
+            this._bothIndents()._generateWind(windAst.body)._newLine();
+            this._codeIndentLevel(-1);
+            
+            this._codeIndents()._newLine(");");
+            this._bothIndentLevel(-1);
+            
+            this._bothIndents()._both("}")._code(")");
+        },
+        
+        _visitWindStatements: function (statements) {
+            for (var i = 0; i < statements.length; i++) {
+                var stmt = statements[i];
+
+                switch (stmt.type) {
+                    case "Delay":
+                        this._visitWindStatements(stmt.children);
+                        break;
+                    case "Raw":
+                    case "If":
+                    case "Switch":
+                        this._bothIndents()._generateWind(stmt)._newLine();
+                        break;
+                    default:
+                        this._bothIndents()._code("return ")._generateWind(stmt)._newLine(";");
+                        break;
+                }
+            }
+        },
+        
+        _generateWind: function (ast) {
+            var generator = this._windGenerators[ast.type];
+            if (!generator) {
+                debugger;
+                throw new Error("Unsupported type: " + ast.type);
+            }
+            
+            generator.call(this, ast);
+            return this;
+        },
+        
+        _windGenerators: {
+            "Delay": function (ast) {
+                if (ast.children.length === 1) {
+                    var child = ast.children[0];
+                    switch (child.type) {
+                        case "Delay":
+                        case "Combine":
+                        case "While":
+                        case "For":
+                        case "Normal":
+                            this._generateWind(child);
+                            return;
+                    }
+                    
+                    if (child.type === "Raw" && 
+                        child.statement.type === "ReturnStatement" &&
+                        child.statement.argument === null) {
+                        
+                        this._generateWind(child);
+                        return;
+                    }
+                    
+                    this._newLine(this._builderVar + ".Delay(function () {");
+                    this._codeIndentLevel(1);
+
+                    this._visitWindStatements(ast.children);
+                    this._codeIndentLevel(-1);
+
+                    this._codeIndents()._code("})");
+                }
+            },
+            
+            "Bind": function (ast) {
+                var commentPrefix = "";
+                if (ast.isReturn) {
+                    commentPrefix = "return ";
+                } else if (ast.name !== "") {
+                    commentPrefix = "var " + ast.name + " = ";
+                }
+                
+                this._code(this._builderVar + ".Bind(")._comment(commentPrefix + this._binder + "(")._generateRaw(ast.expression)._comment(");")._newLine(", function (" + ast.name + ") {");
+                this._codeIndentLevel(1);
+                
+                if (ast.isReturn) {
+                    this._codeIndents()
+                        ._newLine("return " + this._builderVar + ".Return(" + ast.name + ");");
+                } else {
+                    if (ast.assignee) {
+                        this._bothIndents()
+                            ._generateRaw(ast.assignee)._bothLine(" = " + ast.name + ";");
+                    }
+                    
+                    this._visitWindStatements(ast.following);
+                }
+                this._codeIndentLevel(-1);
+                
+                this._codeIndents()
+                    ._code("})");
+            },
+            
+            "Normal": function (ast) {
+                this._code(this._builderVar + ".Normal()");
+            },
+            
+            "Raw": function (ast) {
+                this._generateRaw(ast.statement);
+            }
+        },
+        
+        /* Raw */
+        
+        _generateRawStatements: function (statements) {
+            this._bothIndents()._bothLine("... statements here ...");
+            return this;
+        },
+        
+        _generateRawBody: function (bodyAst) {
+            if (bodyAst.type === "BlockStatement") {
+                this._both(" ")._generateRaw(bodyAst);
+            } else {
+                this._bothLine();
+                this._bothIndentLevel(1);
+                
+                this._bothIndents()._generateRaw(bodyAst);
+                this._bothIndentLevel(-1);
+            }
+            
+            return this;
+        },
+        
+        _generateRaw: function (ast) {
+            var generator = this._rawGenerators[ast.type];
+            if (!generator) {
+                debugger;
+                throw new Error("Unsupported type: " + ast.type);
+            }
+            
+            generator.call(this, ast);
+            return this;
+        },
+        
+        _rawGenerators: {
+            CallExpression: function (ast) {
+                this._generateRaw(ast.callee)
+                
+                this._both("(");
+                
+                var args = ast.arguments;
+                for (var i = 0; i < args.length; i++) {
+                    this._generateRaw(args[i]);
+                    if (i < args.length - 1) this._both(", ");
+                }
+                
+                this._both(")");
+            },
+            
+            MemberExpression: function (ast) {
+                this._generateRaw(ast.object)._both(".")._generateRaw(ast.property);
+            },
+            
+            Identifier: function (ast) {
+                this._both(ast.name);
+            },
+            
+            IfStatement: function (ast) {
+                this._both("if (")._generateRaw(ast.test)._both(")")._generateRawBody(ast.consequent);
+            },
+            
+            BlockStatement: function (ast) {
+                this._bothLine("{");
+                this._bothIndentLevel(1);
+                
+                this._generateRawStatements(ast.body)
+                this._bothIndentLevel(-1);
+                
+                this._bothIndents()._both("}");
+            },
+            
+            ReturnStatement: function (ast) {
+                if (this._pos.inFunction) {
+                    this._both("return");
+                    
+                    if (ast.argument) {
+                        this._both(" ")._generateRaw(ast.argument);
+                    }
+                        
+                    this._both(";");
+                } else {
+                    this._comment("return")._code("return " + this._builderVar + ".Return(");
+
+                    if (ast.argument) {
+                        this._generateRaw(ast.argument);
+                    }
+                    
+                    this._comment(";").code(");");
+                }
+            
+                this._both(this._builderVar + ".Return(");
+                
+                if (ast.argument) {
+                    this._generateRaw(ast.argument);
+                }
+                
+                this._both(")");
+            }
         }
     };
     
     var Fn = Function, global = Fn('return this')();
+    
+    var merge = function (commentLines, codeLines) {
+        var length = commentLines.length;
+        
+        var maxShift = 0;
+        
+        for (var i = 0; i < length; i++) {
+            var matches = codeLines[i].match(" +");
+            var spaceLength = matches ? matches[0].length : 0;
+            
+            var shift = commentLines[i].length - spaceLength + 10;
+            if (shift > maxShift) {
+                maxShift = shift;
+            }
+        }
+        
+        var shiftBuffer = new Array(maxShift);
+        for (var i = 0; i < maxShift; i++) {
+            shiftBuffer[i] = " ";
+        }
+        
+        var shiftSpaces = shiftBuffer.join("");
+
+        var buffer = [];
+        for (var i = 0; i < length; i++) {
+            var comment = commentLines[i]; 
+            if (comment.replace(/ +/g, "").length > 0) {
+                comment = "/* " + comment + " */   ";
+            }
+            
+            var code = shiftSpaces + codeLines[i];
+            
+            buffer.push(comment);
+            buffer.push(code.substring(comment.length));
+            
+            if (i != length - 1) {
+                buffer.push("\n");
+            }
+        }
+        
+        return buffer.join("");
+    }
     
     var compile = function (builderName, fn) {
         var esprima = (typeof require === "function") ? require("esprima") : global.esprima;
         var inputAst = esprima.parse("(" + fn.toString() + ")");
         var windAst = (new WindAstGenerator(builderName)).generate(inputAst.body[0].expression);
         
+        console.log(windAst);
         
+        var codeWriter = new CodeWriter();
+        var commentWriter = new CodeWriter();
+        (new CodeGenerator(builderName, codeWriter, commentWriter)).generate(windAst);
         
-        return windAst;
+        var newCode = merge(commentWriter.lines, codeWriter.lines);
+        
+        return newCode;
     };
     
     // CommonJS
