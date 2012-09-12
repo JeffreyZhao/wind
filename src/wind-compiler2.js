@@ -219,12 +219,13 @@
     };
     WindAstGenerator.prototype = {
         generate: function (ast) {
-            var rootAst = { type: "Delay", children: [] };
+            // var rootAst = { type: "Delay", children: [] };
             var funcAst = ast.body[0].expression;
 
-            this._generateStatements(funcAst.body.body, 0, rootAst.children);
+            var body = [];
+            this._generateStatements(funcAst.body.body, 0, body);
             
-            return rootAst;
+            return body;
         },
         
         _createBindAst: function (isReturn, argName, assignee, expression) {
@@ -234,14 +235,11 @@
                 argName: argName,
                 assignee: assignee,
                 expression: expression,
-                children: []
+                following: []
             };
         },
         
         _getBindAst: function (ast) {
-            var bindAst = {
-            }
-        
             // $await(xxx);
             var exprStyle = {
                 type: "ExpressionStatement",
@@ -297,7 +295,7 @@
                 children.push(bindAst);
                 
                 if (!bindAst.isReturn) {
-                    this._generateStatements(statements, index + 1, bindAst.children);
+                    this._generateStatements(statements, index + 1, bindAst.following);
                 }
                 
                 return;
@@ -327,15 +325,16 @@
             
             var combineAst = {
                 type: "Combine",
-                first: windAst,
-                second: { type: "Delay", children: [] }
+                start: windAst,
+                following: []
             };
             
             children.push(combineAst);
-            this._generateStatements(statements, index + 1, combineAst.second.children);
+            this._generateStatements(statements, index + 1, combineAst.following);
         },
         
         _noBinding: function (children) {
+            if (!children) return true;
             if (children.length <= 0) return true;
             
             switch (children[children.length - 1].type) {
@@ -365,16 +364,20 @@
         
         _transformers: {
             "WhileStatement": function (ast) {
-                var children = this._generateBodyStatements(ast.body);
-                if (this._noBinding(children))
+                var body = this._generateBodyStatements(ast.body);
+                if (this._noBinding(body))
                     return { type: "Raw", statement: ast };
                 
-                return { type: "While", test: ast.test, children: children };
+                return {
+                    type: "While",
+                    test: ast.test,
+                    body: body
+                };
             },
             
             "ForStatement": function (ast) {
-                var children = this._generateBodyStatements(ast.body);
-                if (this._noBinding(children))
+                var body = this._generateBodyStatements(ast.body);
+                if (this._noBinding(body))
                     return { type: "Raw", statement: ast };
                     
                 return {
@@ -382,7 +385,22 @@
                     init: ast.init,
                     test: ast.text,
                     update: ast.update,
-                    children: children
+                    body: body
+                };
+            },
+            
+            "IfStatement": function (ast) {
+                var consequent = this._generateBodyStatements(ast.consequent);
+                var alternate = ast.alternate ? this._generateBodyStatements(ast.alternate) : null;
+                
+                if (this._noBinding(consequent) && this._noBinding(alternate))
+                    return { type: "Raw", statement: ast };
+                
+                return {
+                    type: "If",
+                    test: ast.test,
+                    consequent: consequent,
+                    alternate: alternate
                 };
             }
         }
@@ -420,16 +438,4 @@
         
         defineModule();
     }
-
-    Wind.binders["async"] = "$await";
-    var result = Wind.compile("async", function (array) {
-        for (var i = 0; i < array.length; i++) {
-            for (var j = 0; j < array.length - i - 1; j++) {
-                var r = $await(compareAsync(array[j], array[j + 1]));
-                if (r > 0) $await(swapAsync(array, j, j + 1));
-            }
-        }
-    });
-    
-    console.log(JSON.stringify(result, null, 2));
 })();
