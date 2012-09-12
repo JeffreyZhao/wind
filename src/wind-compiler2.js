@@ -326,30 +326,6 @@
             
             children.push(combineAst);
             this._generateStatements(statements, index + 1, combineAst.second.children);
-            
-            /*
-            var windAst = this._transform(currStmt);
-
-            if (windAst.type === "Raw") {
-                children.push(windAst);
-                this._generateStatements(statements, index + 1, children);
-                return;
-            }
-
-            if (index === statements.length - 1) {
-                children.push(windAst);
-                return;
-            }
-            
-            var combineAst = {
-                type: "Combine",
-                first: windAst,
-                second: { type: "Delay", children: [] }
-            };
-            
-            children.push(combineAst);
-            this._generateStatements(statements, index + 1, combineAst.second.children);
-            */
         },
         
         _noBinding: function (children) {
