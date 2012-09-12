@@ -212,17 +212,21 @@
         }
     }
     
-    var WindAstGenerator = function (binder, seedProvider) {
-        this._binder = binder;
+    var FunctionAstGenerator = function (builderName, seedProvider) {
+        this._builderName = builderName;
+        this._binder = Wind.binders[builderName];
         this._seedProvider = seedProvider || new SeedProvider();
         this._currentStatements = null;
     };
-    WindAstGenerator.prototype = {
-        generate: function (ast) {
-            var rootAst = { type: "Delay", children: [] };
-            var funcAst = ast.body[0].expression;
+    FunctionAstGenerator.prototype = {
+        generate: function (funcAst) {
+            var rootAst = {
+                type: "Function",
+                name: funcAst.id ? funcAst.id.name : null,
+                body: { type: "Delay", children: [] }
+            };
 
-            this._generateStatements(funcAst.body.body, 0, rootAst.children);
+            this._generateStatements(funcAst.body.body, 0, rootAst.body.children);
             
             return rootAst;
         },
@@ -411,13 +415,96 @@
         }
     };
     
+    var CodeGenerator = function (builderName, seedProvider, codeWriter, commentWriter) {
+        this._builderName = builderName;
+        this._binder = Wind.binders[builderName];
+        this._seedProvider = seedProvider;
+        
+        this._codeWriter = codeWriter;
+        this._commentWriter = commentWriter;
+    }
+    CodeGenerator.prototype = {
+        _code: function () {
+            this._codeWriter.write.apply(this._codeWriter, arguments);
+            return this;
+        },
+        
+        _codeLine: function () {
+            this._codeWriter.writeLine.apply(this._codeWriter, arguments);
+            return this;
+        },
+        
+        _codeIndents: function () {
+            this._codeWriter.writeIndents();
+            return this;
+        },
+        
+        _codeIndentLevel: function (diff) {
+            this._codeWriter.addIndentLevel(diff);
+            return this;
+        },
+        
+        _comment: function () {
+            this._commentWriter.write.apply(this._commentWriter, arguments);
+            return this;
+        },
+        
+        _commentLine: function () {
+            this._commentWriter.writeLine.apply(this._commentWriter, arguments);
+            return this;
+        },
+        
+        _commentIndents: function () {
+            this._commentWriter.writeIndents();
+            return this;
+        },
+        
+        _commentIndentLevel: function (diff) {
+            this._commentWriter.addIndentLevel(diff);
+            return this;
+        },
+        
+        _both: function () {
+            this._codeWriter.write.apply(this._codeWriter, arguments);
+            this._commentWriter.write.apply(this._commentWriter, arguments);
+
+            return this;
+        },
+        
+        _bothLine: function () {
+            this._codeWriter.writeLine.apply(this._codeWriter, arguments);
+            this._commentWriter.writeLine.apply(this._commentWriter, arguments);
+            
+            return this;
+        },
+        
+        _bothIndents: function () {
+            this._codeWriter.writeIndents();
+            this._commentWriter.writeIndents();
+            
+            return this;
+        },
+        
+        _bothIndentLevel: function (diff) {
+            this._codeWriter.addIndentLevel(diff);
+            this._commentWriter.addIndentLevel(diff);
+            
+            return this;
+        },
+        
+        _newLine: function () {
+            this._codeWriter.writeLine.apply(this._codeWriter, arguments);
+            this._commentWriter.writeLine(); // To Remove
+            return this;
+        }
+    };
+    
     var Fn = Function, global = Fn('return this')();
     
     var compile = function (builderName, fn) {
         var esprima = (typeof require === "function") ? require("esprima") : global.esprima;
         var inputAst = esprima.parse("(" + fn.toString() + ")");
-        var binder = Wind.binders[builderName];
-        var windAst = (new WindAstGenerator(binder)).generate(inputAst);
+        var windAst = (new FunctionAstGenerator(builderName)).generate(inputAst.body[0].expression);
         return windAst;
     };
     
