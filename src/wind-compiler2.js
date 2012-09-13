@@ -163,62 +163,6 @@
         return true;
     };
     
-    var sourceMaps = {};
-    
-    var SourceMap = function () {
-        this._records = [];
-    };
-    SourceMap.prototype = {
-        add: function (row, col, origRow, origCol) {
-            this._records.push({
-                row: row,
-                col: col,
-                origRow: origRow,
-                origCol: origCol
-            });
-        }
-    }
-
-    var CodeWriter = function (indent) {
-        this._indent = indent || "    ";
-        this._indentLevel = 0;
-        
-        this.lines = [];
-    }
-    CodeWriter.prototype = {
-        write: function (str) {
-            if (str === undefined) return;
-            
-            if (this.lines.length == 0) {
-                this.lines.push("");
-            }
-
-            this.lines[this.lines.length - 1] += str;
-            return this;
-        },
-        
-        writeLine: function () {
-            this.write.apply(this, arguments);
-            this.lines.push("");
-            return this;
-        },
-        
-        writeIndents: function () {
-            var indents = new Array(this._indentLevel);
-            for (var i = 0; i < this._indentLevel; i++) {
-                indents[i] = this._indent;
-            }
-            
-            this.write(indents.join(""));
-            return this;
-        }, 
-        
-        addIndentLevel: function (diff) {
-            this._indentLevel += diff;
-            return this;
-        }
-    };
-    
     var SeedProvider = function () {
         this._seeds = {};
     }
@@ -486,13 +430,99 @@
         }
     };
     
-    var CodeGenerator = function (builderName, codeWriter, commentWriter, seedProvider) {
+    var SourceMap = function (file, lineShift) {
+        this.file = file;
+        this._lineShift = lineShift;
+        this._columnShift = 0;
+        this._records = [];
+    };
+    SourceMap.prototype = {
+        setColumnShift: function (columnShift) {
+            this._columnShift = columnShift;
+        },
+        
+        record: function (line, column, sourceLine, sourceColumn) {
+            this._records.push({
+                line: line,
+                column: column,
+                sourceLine: sourceLine,
+                sourceColumn: sourceColumn
+            });
+        },
+        
+        getSourcePosition: function (line, column) {
+            column -= this._columnShift;
+            
+            var record = _.each(this._records, function (r) {
+                if (r.line === line && r.column === column) {
+                    return r;
+                }
+            });
+            
+            if (!record) return;
+            
+            return {
+                line: this._lineShift + record.sourceLine,
+                column: record.sourceColumn
+            };
+        }
+    }
+    
+    var CodeWriter = function (indent) {
+        this._indent = indent || "    ";
+        this._indentLevel = 0;
+        
+        this.lines = [ ];
+    }
+    CodeWriter.prototype = {
+        recordPosition: function (sourceMap, sourcePos) {
+            var line = this.lines.length;
+            var column = this.lines[this.lines.length - 1].length;
+            sourceMap.record(line, column, sourcePos.line, sourcePos.column);
+        },
+        
+        write: function (str) {
+            if (str === undefined) return;
+            
+            if (this.lines.length == 0) {
+                this.lines.push("");
+            }
+
+            this.lines[this.lines.length - 1] += str;
+            return this;
+        },
+        
+        writeLine: function () {
+            this.write.apply(this, arguments);
+            this.lines.push("");
+            return this;
+        },
+        
+        writeIndents: function () {
+            var indents = new Array(this._indentLevel);
+            for (var i = 0; i < this._indentLevel; i++) {
+                indents[i] = this._indent;
+            }
+            
+            this.write(indents.join(""));
+            return this;
+        }, 
+        
+        addIndentLevel: function (diff) {
+            this._indentLevel += diff;
+            return this;
+        }
+    };
+    
+    var CodeGenerator = function (builderName, codeWriter, commentWriter, sourceMap, seedProvider) {
         this._builderName = builderName;
         this._binder = Wind.binders[builderName];
-        this._seedProvider = seedProvider || new SeedProvider();
         
         this._codeWriter = codeWriter;
         this._commentWriter = commentWriter;
+
+        this._sourceMap = sourceMap;
+        this._seedProvider = seedProvider || new SeedProvider();
     }
     CodeGenerator.prototype = {
         _code: function () {
@@ -567,6 +597,10 @@
             this._codeWriter.writeLine.apply(this._codeWriter, arguments);
             this._commentWriter.writeLine(); // To Remove
             return this;
+        },
+        
+        _recordPosition: function (ast) {
+            this._codeWriter.recordPosition(this._sourceMap, ast.loc.start);
         },
         
         generate: function (windAst) {
@@ -853,11 +887,12 @@
             },
             
             Identifier: function (ast) {
+                this._recordPosition(ast);
                 this._both(ast.name);
             },
             
             IfStatement: function (ast) {
-                this._bothIndents()._both("if (")._generateRaw(ast.test)._both(")");//._generateRawBody(ast.consequent);
+                this._bothIndents()._both("if (")._generateRaw(ast.test)._both(")");
                 
                 var consequent = ast.consequent;
                 var alternate = ast.alternate;
@@ -1052,7 +1087,7 @@
     
     var Fn = Function, global = Fn('return this')();
     
-    var merge = function (commentLines, codeLines) {
+    var merge = function (commentLines, codeLines, sourceMap) {
         var length = commentLines.length;
         
         var maxShift = 0;
@@ -1065,6 +1100,10 @@
             if (shift > maxShift) {
                 maxShift = shift;
             }
+        }
+        
+        if (sourceMap) {
+            sourceMap.setColumnShift(maxShift);
         }
         
         var shiftBuffer = new Array(maxShift);
@@ -1130,33 +1169,93 @@
         return matches;
     };
     
-    var createSourceMap = function (name) {
+    var normalizeLineBreaks = function (code) {
+        return code.replace(/\r\n/g, "\n");
+    };
+    
+    var numberOfLineBreaks = function (code) {
+        var count = 0;
+        for (var i = 0; i < code.length; i++) {
+            if (code[i] === "\n") count++;
+        }
+        
+        return count;
+    };
+    
+    var createSourceMap = function (code) {
         if (typeof process === "undefined") return;
-        if (process.execPath != "string") return;
+        if (typeof process.execPath !== "string") return;
         
         var stack = new Error().stack;
         var matches = matchAll(/at ([^(]+\((.*):\d+:\d+\)$|(.*):\d+:\d+)$/gm, stack);
-        var filename = _.map(matches, function (m) { return m[2] || m[3]; });
+        var filenames = _.map(matches, function (m) { return m[2] || m[3]; });
         
-        return null;
+        var fs = require("fs");
+        
+        return _.each(filenames, function (f) {
+            if (f === __filename) return;
+            if (f[0] != "/") return;
+            
+            try {
+                var content = normalizeLineBreaks(fs.readFileSync(f, "utf8"));
+                var index = content.indexOf(code);
+                if (index < 0) return;
+                
+                var codeBefore = content.substring(0, index);
+                var lineShift = numberOfLineBreaks(codeBefore);
+                
+                return new SourceMap(f, lineShift);
+            } catch (ex) {
+                return;
+            }
+        });
     };
     
+    var allSourceMaps = {};
+    
+    var rebuildStack = function (stack) {
+        console.log(JSON.stringify(allSourceMaps, null, 2));
+    
+        return stack.replace(/at eval \((.*)\)$/mg, function (s) {
+            var match = /\((.*):(\d+):(\d+)\)/.exec(s);
+            var url = match[1];
+            var line = parseInt(match[2], 10);
+            // V8 stack use 1-based column, but 
+            // we use 0-based during calculation
+            var column = parseInt(match[3], 10) - 1; 
+            
+            var sourceMap = allSourceMaps[url];
+            if (!sourceMap) return s;
+            
+            var pos = sourceMap.getSourcePosition(line, column);
+            if (!pos) return s;
+            
+            var posInfo = sourceMap.file + ":" + pos.line + ":" + (pos.column + 1);
+            
+            return "at eval (" + url + ":" + line + ":" + column + " => " + posInfo + ")"
+        });
+    }
+    
     var compile = function (builderName, fn) {
+        var funcCode = normalizeLineBreaks(fn.toString());
         var esprima = (typeof require === "function") ? require("esprima") : global.esprima;
-        var inputAst = esprima.parse("(" + fn.toString() + ")");
+        var inputAst = esprima.parse("(" + funcCode + ")", { loc: true });
         var windAst = (new WindAstGenerator(builderName)).generate(inputAst.body[0].expression);
         
         console.log(windAst);
         
         var uniqueName = getUniqueName(windAst.name);
-        var sourceMap = createSourceMap();
+        var sourceUrl = "wind/" + uniqueName + ".js";
+        
+        var sourceMap = createSourceMap(funcCode) || new SourceMap(sourceUrl + " (original)", 0);
+        allSourceMaps[sourceUrl] = sourceMap;
         
         var codeWriter = new CodeWriter();
         var commentWriter = new CodeWriter();
-        (new CodeGenerator(builderName, codeWriter, commentWriter)).generate(windAst);
+        (new CodeGenerator(builderName, codeWriter, commentWriter, sourceMap)).generate(windAst);
         
-        var newCode = merge(commentWriter.lines, codeWriter.lines);
-        newCode += "\n//@ sourceURL=wind/" + uniqueName + ".js";
+        var newCode = merge(commentWriter.lines, codeWriter.lines, sourceMap);
+        newCode += "\n//@ sourceURL=" + sourceUrl;
         
         console.log(newCode);
         
@@ -1176,6 +1275,7 @@
             dependencies: { core: "~0.7.0" },
             init: function () {
                 Wind.compile = compile;
+                Wind.rebuildStack = rebuildStack;
             }
         });
     };
