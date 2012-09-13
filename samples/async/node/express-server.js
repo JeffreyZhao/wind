@@ -75,9 +75,12 @@ app.getAsync("/wind/:n", eval(Wind.compile("async", function (req, res) {
 
     var items = [];
     for (var i = 0; i < keys.length; i++) {
-        var r = $await(cache.getAsync(keys[i]));
-        if (!r) r = $await(db.getItemAsync(keys[i]));
-        items.push(r);
+        var res = $await(cache.getAsync(keys[i]));
+        if (!res) {
+            res = $await(db.getItemAsync(keys[i]));
+        }
+        
+        items.push(res);
     }
 
     var timePassed = (new Date()) - time;
@@ -86,8 +89,11 @@ app.getAsync("/wind/:n", eval(Wind.compile("async", function (req, res) {
 })));
 
 var getItemAsync = eval(Wind.compile("async", function (key) {
-    var r = $await(cache.getAsync(key));
-    if (r) return r;
+    var res = $await(cache.getAsync(key));
+    if (res) {
+        return res;
+    }
+    
     return $await(db.getItemAsync(key));
 }));
 

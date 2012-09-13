@@ -47,7 +47,9 @@
             case "sub": // []
             case "call": // ()
                 return 1;
-            case "unary-postfix": // ++ -- - ~ ! delete new typeof void
+            case "UpdateExpression":
+            case "UnaryExpression":
+            case "unary-postfix": // ++ -- - ~ ! delete typeof void
             case "unary-prefix":
                 return 2;
             case "var":
@@ -334,7 +336,6 @@
         
         _generateStatements: function (statements, index, children) {
             if (index >= statements.length) {
-                children.push({ type: "Normal" });
                 return;
             }
             
@@ -367,12 +368,12 @@
             
             this._generateAst(currStmt, children);
             
+            if (index === statements.length - 1) return;
+            
             if (children[children.length - 1].type === "Raw") {
                 this._generateStatements(statements, index + 1, children);
                 return;
             }
-            
-            if (index === statements.length - 1) return;
             
             var combineAst = {
                 type: "Combine",
@@ -578,6 +579,20 @@
             this._bothIndents()._both("}")._code(")");
         },
         
+        _requireLastNormal: function (statements) {
+            if (statements.length === 0) return true;
+            
+            var last = statements[statements.length - 1];
+            switch (last.type) {
+                case "Raw":
+                case "If":
+                case "Switch":
+                    return true;
+                default:
+                    return false;
+            }
+        },
+        
         _generateWindStatements: function (statements) {
             for (var i = 0; i < statements.length; i++) {
                 var stmt = statements[i];
@@ -598,6 +613,10 @@
                         break;
                 }
             }
+            
+            if (this._requireLastNormal(statements)) {
+                this._bothIndents()._code("return ")._generateWind({ type: "Normal"})._newLine(";");
+            }
         },
         
         _generateWind: function (ast) {
@@ -613,14 +632,17 @@
         
         _windGenerators: {
             Delay: function (ast) {
-                if (ast.children.length === 1) {
-                    var child = ast.children[0];
+                var children = ast.children;
+                
+                if (children.length === 0) {
+                    this._generateWind({ type: "Normal" });
+                } else if (children.length === 1) {
+                    var child = children[0];
                     switch (child.type) {
                         case "Delay":
                         case "Combine":
                         case "While":
                         case "For":
-                        case "Normal":
                             this._generateWind(child);
                             return;
                     }
@@ -637,7 +659,7 @@
                 this._newLine(this._builderVar + ".Delay(function () {");
                 this._codeIndentLevel(1);
 
-                this._generateWindStatements(ast.children);
+                this._generateWindStatements(children);
                 this._codeIndentLevel(-1);
 
                 this._codeIndents()._code("})");
@@ -678,6 +700,69 @@
             Raw: function (ast) {
                 this._generateRaw(ast.statement);
             },
+            
+            For: function (ast) {
+                if (ast.test) {
+                    this._codeLine(this._builderVar + ".For(function () {")
+                        ._commentLine("for (");
+                    this._codeIndentLevel(1);
+                    
+                    this._bothIndents()
+                        ._code("return ")
+                        ._comment("; ")
+                            ._generateRaw(ast.test)
+                                ._newLine(";");
+                    this._codeIndentLevel(-1);
+                    
+                    this._bothIndents()._code("}, ");
+                } else {
+                    this._code(this._builderVar + ".For(null, ")
+                        ._comment("for (; ");
+                }
+                
+                if (ast.update) {
+                    this._newLine("function () {");
+                    this._codeIndentLevel(1);
+                    
+                    this._bothIndents()
+                        ._comment("; ")
+                            ._generateRaw(ast.update)
+                                ._codeLine(";")
+                                ._commentLine(") {");
+                    this._codeIndentLevel(-1);
+                    
+                    this._codeIndents()._newLine("},");
+                } else {
+                    this._codeLine("null,")._commentLine("; ) {");
+                }
+                this._bothIndentLevel(1);
+                
+                this._bothIndents()._generateWind(ast.body)._newLine();
+                this._bothIndentLevel(-1);
+                
+                this._bothIndents()._code(")")._comment("}");
+            },
+            
+            If: function (ast) {
+                this._both("if (")._generateRaw(ast.test)._bothLine(") {");
+                this._bothIndentLevel(1);
+                
+                this._generateWindStatements(ast.consequent);
+                this._bothIndentLevel(-1);
+                
+                this._bothIndents()._both("}");
+            },
+            
+            Combine: function (ast) {
+                this._newLine(this._builderVar + ".Combine(");
+                this._codeIndentLevel(1);
+
+                this._bothIndents()._generateWind(ast.first)._newLine(",");
+                this._bothIndents()._generateWind(ast.second)._newLine();
+                this._codeIndentLevel(-1);
+
+                this._codeIndents()._code(")");
+            }
         },
         
         /* Raw */
@@ -928,6 +1013,22 @@
                     this._bothIndentLevel(-1);
                     
                     this._bothIndents()._both("}");
+                }
+            },
+            
+            UnaryExpression: function (ast) {
+                var operator = ast.operator;
+                var arg = ast.argument;
+                
+                this._both(operator);
+                if (operator.length > 2) { // + - !
+                    this._both(" ");
+                }
+                
+                if (getPrecedence(ast) < getPrecedence(arg)) {
+                    this._both("(")._generateRaw(arg)._both(")");
+                } else {
+                    this._generateRaw(arg);
                 }
             }
         }
