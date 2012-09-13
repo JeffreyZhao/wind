@@ -41,8 +41,8 @@
         })();
     
     function getPrecedence(ast) {
-        var type = ast[0];
-        switch (type) {
+        switch (ast.type) {
+            case "MemberExpression": // .
             case "dot": // .
             case "sub": // []
             case "call": // ()
@@ -51,8 +51,8 @@
             case "unary-prefix":
                 return 2;
             case "var":
-            case "binary":
-                switch (ast[1]) {
+            case "BinaryExpression":
+                switch (ast.operator) {
                     case "*":
                     case "/":
                     case "%":
@@ -90,8 +90,11 @@
                 return 13;
             case "assign":
                 return 14;
+            case "NewExpression":
             case "new":
                 return 15;
+            case "Literal":
+            case "Identifier":
             case "seq":
             case "stat":
             case "name":
@@ -364,12 +367,12 @@
             
             this._generateAst(currStmt, children);
             
-            if (index === statements.length - 1) return;
-            
             if (children[children.length - 1].type === "Raw") {
                 this._generateStatements(statements, index + 1, children);
                 return;
             }
+            
+            if (index === statements.length - 1) return;
             
             var combineAst = {
                 type: "Combine",
@@ -556,8 +559,7 @@
             var funcName = windAst.name || "";
             var params = _.map(windAst.params, function (m) { return m.name; });
             
-            this._code("(")
-                ._bothLine("function " + funcName + "(" + params.join(", ") + ") {");
+            this._code("(")._bothLine("function " + funcName + "(" + params.join(", ") + ") {");
             this._bothIndentLevel(1);
             
             this._codeIndents()._newLine("var " + this._builderVar + " = " + "Wind.builders[" + stringify(this._builderName) + "];");
@@ -576,15 +578,17 @@
             this._bothIndents()._both("}")._code(")");
         },
         
-        _visitWindStatements: function (statements) {
+        _generateWindStatements: function (statements) {
             for (var i = 0; i < statements.length; i++) {
                 var stmt = statements[i];
 
                 switch (stmt.type) {
                     case "Delay":
-                        this._visitWindStatements(stmt.children);
+                        this._generateWindStatements(stmt.children);
                         break;
                     case "Raw":
+                        this._generateRaw(stmt.statement);
+                        break;
                     case "If":
                     case "Switch":
                         this._bothIndents()._generateWind(stmt)._newLine();
@@ -608,7 +612,7 @@
         },
         
         _windGenerators: {
-            "Delay": function (ast) {
+            Delay: function (ast) {
                 if (ast.children.length === 1) {
                     var child = ast.children[0];
                     switch (child.type) {
@@ -628,18 +632,18 @@
                         this._generateWind(child);
                         return;
                     }
-                    
-                    this._newLine(this._builderVar + ".Delay(function () {");
-                    this._codeIndentLevel(1);
-
-                    this._visitWindStatements(ast.children);
-                    this._codeIndentLevel(-1);
-
-                    this._codeIndents()._code("})");
                 }
+                
+                this._newLine(this._builderVar + ".Delay(function () {");
+                this._codeIndentLevel(1);
+
+                this._generateWindStatements(ast.children);
+                this._codeIndentLevel(-1);
+
+                this._codeIndents()._code("})");
             },
             
-            "Bind": function (ast) {
+            Bind: function (ast) {
                 var commentPrefix = "";
                 if (ast.isReturn) {
                     commentPrefix = "return ";
@@ -659,7 +663,7 @@
                             ._generateRaw(ast.assignee)._bothLine(" = " + ast.name + ";");
                     }
                     
-                    this._visitWindStatements(ast.following);
+                    this._generateWindStatements(ast.following);
                 }
                 this._codeIndentLevel(-1);
                 
@@ -667,31 +671,49 @@
                     ._code("})");
             },
             
-            "Normal": function (ast) {
+            Normal: function (ast) {
                 this._code(this._builderVar + ".Normal()");
             },
             
-            "Raw": function (ast) {
+            Raw: function (ast) {
                 this._generateRaw(ast.statement);
-            }
+            },
         },
         
         /* Raw */
         
         _generateRawStatements: function (statements) {
-            this._bothIndents()._bothLine("... statements here ...");
+            for (var i = 0; i < statements.length; i++) {
+                this._generateRaw(statements[i]);
+            }
+
             return this;
         },
         
         _generateRawBody: function (bodyAst) {
             if (bodyAst.type === "BlockStatement") {
-                this._both(" ")._generateRaw(bodyAst);
+                this._bothLine(" {");
+                this._bothIndentLevel(1);
+                
+                this._generateRawStatements(bodyAst.body);
+                this._bothIndentLevel(-1);
+                
+                this._bothIndents()._bothLine("}");
             } else {
                 this._bothLine();
                 this._bothIndentLevel(1);
                 
-                this._bothIndents()._generateRaw(bodyAst);
+                this._generateRaw(bodyAst);
                 this._bothIndentLevel(-1);
+            }
+            
+            return this;
+        },
+        
+        _generateRawElements: function (elements) {
+            for (var i = 0; i < elements.length; i++) {
+                this._generateRaw(elements[i]);
+                if (i < elements.length - 1) this._both(", ");
             }
             
             return this;
@@ -704,27 +726,29 @@
                 throw new Error("Unsupported type: " + ast.type);
             }
             
-            generator.call(this, ast);
+            generator.apply(this, arguments);
             return this;
         },
         
         _rawGenerators: {
             CallExpression: function (ast) {
-                this._generateRaw(ast.callee)
-                
-                this._both("(");
-                
-                var args = ast.arguments;
-                for (var i = 0; i < args.length; i++) {
-                    this._generateRaw(args[i]);
-                    if (i < args.length - 1) this._both(", ");
-                }
-                
-                this._both(")");
+                this._generateRaw(ast.callee)._both("(")._generateRawElements(ast.arguments)._both(")");
             },
             
             MemberExpression: function (ast) {
-                this._generateRaw(ast.object)._both(".")._generateRaw(ast.property);
+                this._generateRaw(ast.object);
+                
+                if (ast.computed) {
+                    this._both("[");
+                } else {
+                    this._both(".");
+                }
+                
+                this._generateRaw(ast.property);
+                
+                if (ast.computed) {
+                    this._both("]");
+                }
             },
             
             Identifier: function (ast) {
@@ -732,45 +756,179 @@
             },
             
             IfStatement: function (ast) {
-                this._both("if (")._generateRaw(ast.test)._both(")")._generateRawBody(ast.consequent);
+                this._bothIndents()._both("if (")._generateRaw(ast.test)._both(")");//._generateRawBody(ast.consequent);
+                
+                var consequent = ast.consequent;
+                var alternate = ast.alternate;
+                
+                if (consequent.type === "BlockStatement") {
+                    this._bothLine(" {");
+                    this._bothIndentLevel(1);
+                    
+                    this._generateRawStatements(consequent.body);
+                    this._bothIndentLevel(-1);
+                    
+                    this._bothIndents()._both("}");
+                    
+                    if (!alternate) {
+                        this._bothLine();
+                        return;
+                    }
+                    
+                    throw new Error("Not supported yet");
+                } else {
+                    this._bothLine();
+                    this._bothIndentLevel(1);
+                    
+                    this._generateRaw(consequent);
+                    this._bothIndentLevel(-1);
+                    
+                    if (!alternate) {
+                        return;
+                    }
+                    
+                    throw new Error("Not supported yet");
+                }
             },
             
             BlockStatement: function (ast) {
-                this._bothLine("{");
+                this._bothIndents()._bothLine("{");
                 this._bothIndentLevel(1);
                 
                 this._generateRawStatements(ast.body)
                 this._bothIndentLevel(-1);
                 
-                this._bothIndents()._both("}");
+                this._bothIndents()._bothLine("}");
             },
             
             ReturnStatement: function (ast) {
                 if (this._pos.inFunction) {
-                    this._both("return");
+                    this._bothIndents()._both("return");
                     
                     if (ast.argument) {
                         this._both(" ")._generateRaw(ast.argument);
                     }
                         
-                    this._both(";");
+                    this._bothLine(";");
                 } else {
-                    this._comment("return")._code("return " + this._builderVar + ".Return(");
+                    this._bothIndents()._comment("return")._code("return " + this._builderVar + ".Return(");
 
                     if (ast.argument) {
-                        this._generateRaw(ast.argument);
+                        this._comment(" ")._generateRaw(ast.argument);
                     }
                     
-                    this._comment(";").code(");");
+                    this._commentLine(";")._codeLine(");");
                 }
+            },
             
-                this._both(this._builderVar + ".Return(");
+            VariableDeclaration: function (ast, asExpr) {
+                if (!asExpr) this._bothIndents();
+                this._both(ast.kind)._both(" ");
                 
-                if (ast.argument) {
-                    this._generateRaw(ast.argument);
+                var decls = ast.declarations;
+                for (var i = 0; i < decls.length; i++) {
+                    var d = decls[i];
+                    this._both(d.id.name + " = ")._generateRaw(d.init);
+                    
+                    if (i < decls.length - 1) this._both(", ");
+                }
+                
+                if (!asExpr) this._bothLine(";");
+            },
+            
+            NewExpression: function (ast) {
+                this._both("new ")._generateRaw(ast.callee)._both("(")._generateRawElements(ast.arguments)._both(")");
+            },
+            
+            Literal: function (ast) {
+                this._both(stringify(ast.value));
+            },
+            
+            ArrayExpression: function (ast) {
+                if (ast.elements.length > 0) {
+                    this._both("[ ")._generateRawElements(ast.elements)._both(" ]");
+                } else {
+                    this._both("[]");
+                }
+            },
+            
+            ForStatement: function (ast) {
+                this._bothIndents()._both("for (");
+                
+                if (ast.init) {
+                    this._generateRaw(ast.init, true);
+                }
+                this._both("; ");
+                
+                if (ast.test) {
+                    this._generateRaw(ast.test);
+                }
+                this._both("; ");
+                
+                if (ast.update) {
+                    this._generateRaw(ast.update);
                 }
                 
                 this._both(")");
+                
+                this._generateRawBody(ast.body);
+            },
+            
+            BinaryExpression: function (ast) {
+                var left = ast.left, right = ast.right;
+                
+                if (getPrecedence(ast) < getPrecedence(left)) {
+                    this._both("(")._generateRaw(left)._both(")");
+                } else {
+                    this._generateRaw(left);
+                }
+                
+                this._both(" " + ast.operator + " ");
+                
+                if (getPrecedence(ast) <= getPrecedence(right)) {
+                    this._both("(")._generateRaw(right)._both(")");
+                } else {
+                    this._generateRaw(right);
+                }
+            },
+            
+            UpdateExpression: function (ast) {
+                if (ast.prefix) {
+                    this._both(ast.operator);
+                }
+                
+                this._generateRaw(ast.argument);
+                
+                if (!ast.prefix) {
+                    this._both(ast.operator);
+                }
+            },
+            
+            ExpressionStatement: function (ast) {
+                this._bothIndents()._generateRaw(ast.expression)._bothLine(";");
+            },
+            
+            ObjectExpression: function (ast) {
+                var properties = ast.properties;
+                
+                if (properties.length > 0) {
+                    this._bothLine("{");
+                    this._bothIndentLevel(1);
+                
+                    for (var i = 0; i < properties.length; i++) {
+                        var prop = properties[i];
+                        this._bothIndents()._both(stringify(prop.key.name) + ": ")._generateRaw(prop.value);
+                        
+                        if (i < properties.length - 1) {
+                            this._both(",");
+                        }
+                        
+                        this._bothLine();
+                    }
+                    this._bothIndentLevel(-1);
+                    
+                    this._bothIndents()._both("}");
+                }
             }
         }
     };
@@ -831,6 +989,7 @@
         (new CodeGenerator(builderName, codeWriter, commentWriter)).generate(windAst);
         
         var newCode = merge(commentWriter.lines, codeWriter.lines);
+        console.log(newCode);
         
         return newCode;
     };
