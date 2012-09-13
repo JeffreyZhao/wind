@@ -162,6 +162,22 @@
         
         return true;
     };
+    
+    var sourceMaps = {};
+    
+    var SourceMap = function () {
+        this._records = [];
+    };
+    SourceMap.prototype = {
+        add: function (row, col, origRow, origCol) {
+            this._records.push({
+                row: row,
+                col: col,
+                origRow: origRow,
+                origCol: origCol
+            });
+        }
+    }
 
     var CodeWriter = function (indent) {
         this._indent = indent || "    ";
@@ -1078,6 +1094,53 @@
         return buffer.join("");
     }
     
+    var uniqueNames = {};
+
+    var getUniqueName = function (name) {
+        if (!name) {
+            name = "anonymous";
+        }
+        
+        if (!uniqueNames[name]) {
+            uniqueNames[name] = true;
+            return name;
+        }
+        
+        for (var i = 0; ; i++) {
+            var testName = name + "_" + i;
+            if (!uniqueNames[testName]) {
+                uniqueNames[testName] = true;
+                return testName;
+            }
+        }
+    };
+    
+    var splitLines = function (lines) {
+        return lines.replace(/\r\n/g, "\n").split("\n");
+    }
+    
+    var matchAll = function (regex, str) {
+        var matches = [];
+        
+        var match;
+        while (match = regex.exec(str)) {
+            matches.push(match);
+        }
+        
+        return matches;
+    };
+    
+    var createSourceMap = function (name) {
+        if (typeof process === "undefined") return;
+        if (process.execPath != "string") return;
+        
+        var stack = new Error().stack;
+        var matches = matchAll(/at ([^(]+\((.*):\d+:\d+\)$|(.*):\d+:\d+)$/gm, stack);
+        var filename = _.map(matches, function (m) { return m[2] || m[3]; });
+        
+        return null;
+    };
+    
     var compile = function (builderName, fn) {
         var esprima = (typeof require === "function") ? require("esprima") : global.esprima;
         var inputAst = esprima.parse("(" + fn.toString() + ")");
@@ -1085,11 +1148,16 @@
         
         console.log(windAst);
         
+        var uniqueName = getUniqueName(windAst.name);
+        var sourceMap = createSourceMap();
+        
         var codeWriter = new CodeWriter();
         var commentWriter = new CodeWriter();
         (new CodeGenerator(builderName, codeWriter, commentWriter)).generate(windAst);
         
         var newCode = merge(commentWriter.lines, codeWriter.lines);
+        newCode += "\n//@ sourceURL=wind/" + uniqueName + ".js";
+        
         console.log(newCode);
         
         return newCode;
