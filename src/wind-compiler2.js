@@ -1214,14 +1214,12 @@
     var allSourceMaps = {};
     
     var rebuildStack = function (stack) {
-        console.log(JSON.stringify(allSourceMaps, null, 2));
-    
         return stack.replace(/at eval \((.*)\)$/mg, function (s) {
             var match = /\((.*):(\d+):(\d+)\)/.exec(s);
             var url = match[1];
             var line = parseInt(match[2], 10);
-            // V8 stack use 1-based column, but 
-            // we use 0-based during calculation
+            // V8 uses 1-based column in stack, but 
+            // we use 0-based during calculation.
             var column = parseInt(match[3], 10) - 1; 
             
             var sourceMap = allSourceMaps[url];
@@ -1234,7 +1232,7 @@
             
             return "at eval (" + url + ":" + line + ":" + column + " => " + posInfo + ")"
         });
-    }
+    };
     
     var compile = function (builderName, fn) {
         var funcCode = normalizeLineBreaks(fn.toString());
@@ -1242,7 +1240,7 @@
         var inputAst = esprima.parse("(" + funcCode + ")", { loc: true });
         var windAst = (new WindAstGenerator(builderName)).generate(inputAst.body[0].expression);
         
-        console.log(windAst);
+        // console.log(windAst);
         
         var uniqueName = getUniqueName(windAst.name);
         var sourceUrl = "wind/" + uniqueName + ".js";
@@ -1257,7 +1255,8 @@
         var newCode = merge(commentWriter.lines, codeWriter.lines, sourceMap);
         newCode += "\n//@ sourceURL=" + sourceUrl;
         
-        console.log(newCode);
+        var log = "===== Original =====\n" + funcCode + "\n===== Compiled =====\n" + newCode;
+        Wind.logger.debug(log);
         
         return newCode;
     };
