@@ -64,6 +64,7 @@
                     Wind.Promise = {};
                 }
                 
+                Wind.Promise.PromiseBuilder = PromiseBuilder;
                 Wind.Promise.create = defaultCreate;
             
                 Wind.binders["promise"] = "$await";
