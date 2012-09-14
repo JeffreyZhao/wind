@@ -665,7 +665,7 @@
             return {
                 next: function (_this, callback) {
                     
-                    var onComplete = function (t) {
+                    var onComplete = function () {
                         if (this.error) {
                             callback("throw", this.error);
                         } else {
@@ -687,7 +687,7 @@
                     } else if (task.status == "running") {
                         task.addEventListener("complete", onComplete);
                     } else {
-                        onComplete(task);
+                        onComplete.call(task);
                     }
                 }
             };
@@ -782,7 +782,7 @@
     var defineModule = function () {
         Wind.define({
             name: "async",
-            version: "0.7.0",
+            version: "0.7.1",
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
             dependencies: { builderbase: "~0.7.0" },
