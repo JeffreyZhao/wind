@@ -665,7 +665,7 @@
             return {
                 next: function (_this, callback) {
                     
-                    var onComplete = function (t) {
+                    var onComplete = function () {
                         if (this.error) {
                             callback("throw", this.error);
                         } else {
@@ -687,7 +687,7 @@
                     } else if (task.status == "running") {
                         task.addEventListener("complete", onComplete);
                     } else {
-                        onComplete(task);
+                        onComplete.call(task);
                     }
                 }
             };
