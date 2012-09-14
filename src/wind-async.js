@@ -782,7 +782,7 @@
     var defineModule = function () {
         Wind.define({
             name: "async",
-            version: "0.7.0",
+            version: "0.7.1",
             require: isCommonJS && require,
             autoloads: [ "builderbase" ],
             dependencies: { builderbase: "~0.7.0" },
