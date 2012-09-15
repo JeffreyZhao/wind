@@ -2710,8 +2710,13 @@
                 
                 this._both(" in ")._visitRaw(ast[3])._both(") ");
 
+                var currInLoop = this._pos.inLoop;
+                this._pos.inLoop = true;
+                
                 var body = ast[4];
                 this._visitRawBody(body);
+
+                this._pos.inLoop = currInLoop;
             },
 
             "block": function (ast) {
@@ -2981,7 +2986,7 @@
     var defineModule = function () {
         Wind.define({
             name: "compiler",
-            version: "0.7.1",
+            version: "0.7.2",
             require: isCommonJS && require,
             dependencies: { core: "~0.7.0" },
             init: function () {
